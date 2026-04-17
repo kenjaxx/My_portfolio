@@ -1,0 +1,146 @@
+.nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.4rem 3rem;
+  transition: all 0.3s ease;
+}
+
+.scrolled {
+  background: rgba(10, 10, 15, 0.92);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(0, 212, 255, 0.1);
+  padding: 1rem 3rem;
+}
+
+.logo {
+  font-family: var(--font-mono);
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--cyan);
+  cursor: pointer;
+  letter-spacing: 0.05em;
+  user-select: none;
+}
+
+.logoBracket {
+  color: var(--purple);
+}
+
+.links {
+  display: flex;
+  list-style: none;
+  gap: 2.5rem;
+  align-items: center;
+}
+
+.link {
+  background: none;
+  border: none;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: color 0.2s;
+  padding: 0;
+  letter-spacing: 0.05em;
+}
+
+.link:hover {
+  color: var(--cyan);
+}
+
+.linkNum {
+  color: var(--cyan);
+  margin-right: 0.3em;
+  font-size: 0.75rem;
+}
+
+.hamburger {
+  display: none;
+  flex-direction: column;
+  gap: 5px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+}
+
+.bar, .barOpen, .barOpenMid, .barOpenBot {
+  display: block;
+  width: 24px;
+  height: 2px;
+  background: var(--cyan);
+  border-radius: 2px;
+  transition: all 0.3s ease;
+}
+
+.barOpen {
+  transform: translateY(7px) rotate(45deg);
+}
+
+.barOpenMid {
+  opacity: 0;
+}
+
+.barOpenBot {
+  display: block;
+  width: 24px;
+  height: 2px;
+  background: var(--cyan);
+  border-radius: 2px;
+  transform: translateY(-7px) rotate(-45deg);
+}
+
+.mobileMenu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: rgba(10, 10, 15, 0.97);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  padding: 1.5rem 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+}
+
+.mobileLink {
+  background: none;
+  border: none;
+  font-family: var(--font-mono);
+  font-size: 1rem;
+  color: var(--text-muted);
+  cursor: pointer;
+  text-align: left;
+  padding: 0.4rem 0;
+  transition: color 0.2s;
+}
+
+.mobileLink:hover {
+  color: var(--cyan);
+}
+
+@media (max-width: 768px) {
+  .nav {
+    padding: 1.2rem 1.5rem;
+  }
+
+  .scrolled {
+    padding: 1rem 1.5rem;
+  }
+
+  .links {
+    display: none;
+  }
+
+  .hamburger {
+    display: flex;
+  }
+}
