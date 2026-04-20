@@ -55,30 +55,47 @@ export default function Projects() {
               transition={{ delay: i * 0.15 + 0.2, duration: 0.5 }}
               whileHover={{ y: -8 }}
             >
-              {project.featured && <div className={styles.featuredBadge}>Featured</div>}
-              <div className={styles.cardTop}>
-                <span className={styles.num}># {project.id}</span>
-                <div className={styles.links}>
-                  {project.github && (
-                    <a href={project.github} target="_blank" rel="noopener noreferrer" className={styles.iconLink} title="GitHub">
-                      <GitHubIcon />
-                    </a>
-                  )}
-                  {project.live && (
-                    <a href={project.live} target="_blank" rel="noopener noreferrer" className={styles.iconLink} title="Live Demo">
-                      <ExternalIcon />
-                    </a>
-                  )}
+              {/* Cover image */}
+              {project.image && (
+                <div className={styles.coverWrap}>
+                  <img src={project.image} alt={project.title} className={styles.cover} />
+                  <div className={styles.coverOverlay} />
                 </div>
-              </div>
+              )}
 
-              <h3 className={styles.projectTitle}>{project.title}</h3>
-              <p className={styles.projectDesc}>{project.description}</p>
+              <div className={styles.cardBody}>
+                {project.featured && <div className={styles.featuredBadge}>Featured</div>}
 
-              <div className={styles.tags}>
-                {project.tags.map((tag) => (
-                  <span key={tag} className={styles.tag}>{tag}</span>
-                ))}
+                <div className={styles.cardTop}>
+                  <span className={styles.num}># {project.id}</span>
+                  <div className={styles.links}>
+                    {project.github && (
+                      <a href={project.github} target="_blank" rel="noopener noreferrer" className={styles.iconLink} title="GitHub">
+                        <GitHubIcon />
+                      </a>
+                    )}
+                    {project.live && (
+                      <a href={project.live} target="_blank" rel="noopener noreferrer" className={styles.iconLink} title="Live Demo">
+                        <ExternalIcon />
+                      </a>
+                    )}
+                  </div>
+                </div>
+
+                <h3 className={styles.projectTitle}>{project.title}</h3>
+                <p className={styles.projectDesc}>{project.description}</p>
+
+                <div className={styles.tags}>
+                  {project.tags.map((tag) => (
+                    <span key={tag} className={styles.tag}>{tag}</span>
+                  ))}
+                </div>
+
+                {project.live && (
+                  <a href={project.live} target="_blank" rel="noopener noreferrer" className={styles.liveBtn}>
+                    View Live <ExternalIcon />
+                  </a>
+                )}
               </div>
             </motion.div>
           ))}

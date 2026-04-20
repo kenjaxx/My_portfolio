@@ -32,6 +32,8 @@ export const PROJECTS = [
     'An online shoe store platform where users can browse products, view details, and purchase footwear. Designed with a clean UI and smooth user experience, featuring product listings, cart functionality, and responsive design.',
   tags: ['React', 'Supabase', 'JavaScript', 'CSS'],
   github: 'https://github.com/kenjaxx',
+  live: 'https://your-live-link.com',        
+  image: '/images/shoecommerce.jpg',  
   live: null,
   featured: true,
 },
@@ -43,6 +45,8 @@ export const PROJECTS = [
   tags: ['Python', 'HTML', 'CSS', 'REST API'],
   github: 'https://github.com/kenjaxx',
   live: null,
+  image: '/images/commudev.png',
+  live: null,
   featured: false,
 },
 {
@@ -52,6 +56,8 @@ export const PROJECTS = [
     'A gamified learning application for Grade 3 students that enhances reading and comprehension through interactive activities and challenges. Built with a React frontend, Python backend, and Supabase for database and backend services.',
   tags: ['React', 'Python', 'Supabase', 'JavaScript', 'CSS'],
   github: 'https://github.com/kenjaxx',
+  live: null,
+  image: '/images/commudev.png',
   live: null,
   featured: false,
   }

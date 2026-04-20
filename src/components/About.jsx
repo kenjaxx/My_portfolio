@@ -47,7 +47,7 @@ export default function About() {
             {[
               <>Hey! I'm <span className={styles.cyan}>Kenji Ermita</span>, a passionate Full Stack Developer who loves turning ideas into real, working products. I enjoy crafting everything from pixel-perfect UIs to well-structured backend systems.</>,
               <>I specialize in <span className={styles.purple}>React</span> on the frontend, <span className={styles.purple}>Python & Java</span> on the backend, and <span className={styles.green}>Supabase</span> for real-time databases. Whether it's a web app, a CMS, or a REST API — I build it end-to-end.</>,
-              <>Currently pursuing my degree in <span className={styles.cyan}>IT Student</span>, constantly learning, building side projects, and sharpening my skills one commit at a time.</>,
+              <>Currently pursuing my degree in <span className={styles.cyan}>IT</span>, constantly learning, building side projects, and sharpening my skills one commit at a time.</>,
             ].map((text, i) => (
               <motion.p
                 key={i}
