@@ -3,12 +3,21 @@ import { useInView } from '../hooks/useInView'
 import { CONTACT } from '../data'
 import styles from './Contact.module.css'
 
+function MailIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="M4 4h16v16H4z" />
+      <path d="M22 6l-10 7L2 6" />
+    </svg>
+  )
+}
+
 export default function Contact() {
   const [ref, inView] = useInView()
 
   return (
     <section id="contact" className={styles.section} ref={ref}>
-      <div className={styles.inner} ref={ref}>
+      <div className={styles.inner}>
         <motion.p
           className={styles.label}
           initial={{ opacity: 0, y: 20 }}
@@ -41,6 +50,18 @@ export default function Contact() {
                 Whether you have a project in mind or just want to connect — my inbox is always open.
               </p>
               <div className={styles.links}>
+                {CONTACT.email && (
+                  <a
+                    href={`mailto:${CONTACT.email}`}
+                    className={styles.contactLink}
+                  >
+                    <MailIcon />
+                    <div>
+                      <span className={styles.linkLabel}>Email</span>
+                      <span className={styles.linkValue}>{CONTACT.email}</span>
+                    </div>
+                  </a>
+                )}
                 <a
                   href={CONTACT.github}
                   target="_blank"

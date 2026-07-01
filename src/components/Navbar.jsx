@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { NAV_LINKS } from '../data'
 import styles from './Navbar.module.css'
@@ -6,12 +6,35 @@ import styles from './Navbar.module.css'
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
+  const navRef = useRef(null)
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 40)
     window.addEventListener('scroll', onScroll)
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
+
+  // Close mobile menu on Escape key
+  useEffect(() => {
+    if (!menuOpen) return
+    const onKeyDown = (e) => {
+      if (e.key === 'Escape') setMenuOpen(false)
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [menuOpen])
+
+  // Close mobile menu on outside click
+  useEffect(() => {
+    if (!menuOpen) return
+    const onClick = (e) => {
+      if (navRef.current && !navRef.current.contains(e.target)) {
+        setMenuOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', onClick)
+    return () => document.removeEventListener('mousedown', onClick)
+  }, [menuOpen])
 
   const handleNav = (href) => {
     setMenuOpen(false)
@@ -21,12 +44,21 @@ export default function Navbar() {
 
   return (
     <motion.nav
+      ref={navRef}
       className={`${styles.nav} ${scrolled ? styles.scrolled : ''}`}
       initial={{ y: -80, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.6, ease: 'easeOut' }}
     >
-      <div className={styles.logo} onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
+      <div
+        className={styles.logo}
+        onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') window.scrollTo({ top: 0, behavior: 'smooth' })
+        }}
+      >
         <span className={styles.logoBracket}>&lt;</span>
         KE
         <span className={styles.logoBracket}> /&gt;</span>
@@ -48,7 +80,12 @@ export default function Navbar() {
         ))}
       </ul>
 
-      <button className={styles.hamburger} onClick={() => setMenuOpen(!menuOpen)} aria-label="Toggle menu">
+      <button
+        className={styles.hamburger}
+        onClick={() => setMenuOpen(!menuOpen)}
+        aria-label="Toggle menu"
+        aria-expanded={menuOpen}
+      >
         <span className={menuOpen ? styles.barOpen : styles.bar} />
         <span className={menuOpen ? styles.barOpenMid : styles.bar} />
         <span className={menuOpen ? styles.barOpenBot : styles.bar} />

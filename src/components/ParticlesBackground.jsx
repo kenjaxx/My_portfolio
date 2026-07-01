@@ -1,5 +1,7 @@
 import { useEffect, useRef } from 'react'
 
+const MAX_PARTICLES = 90 // caps the O(n²) connection-line check so large screens stay smooth
+
 export default function ParticlesBackground() {
   const canvasRef = useRef(null)
 
@@ -17,7 +19,10 @@ export default function ParticlesBackground() {
     }
 
     const initPts = () => {
-      const n = Math.floor((canvas.width * canvas.height) / 10000)
+      const n = Math.min(
+        MAX_PARTICLES,
+        Math.floor((canvas.width * canvas.height) / 10000)
+      )
       pts = Array.from({ length: n }, () => ({
         x: Math.random() * canvas.width,
         y: Math.random() * canvas.height,

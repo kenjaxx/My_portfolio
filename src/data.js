@@ -26,44 +26,41 @@ export const SKILLS = [
 
 export const PROJECTS = [
   {
-  id: '001',
-  title: 'Shoecommerce',
-  description:
-    'An online shoe store platform where users can browse products, view details, and purchase footwear. Designed with a clean UI and smooth user experience, featuring product listings, cart functionality, and responsive design.',
-  tags: ['React', 'Supabase', 'JavaScript', 'CSS'],
-  github: 'https://github.com/kenjaxx',
-  live: 'https://your-live-link.com',        
-  image: '/images/shoecommerce.jpg',  
-  live: null,
-  featured: true,
-},
-{
-  id: '002',
-  title: 'Commudev',
-  description:
-    'A community development platform similar to social media applications where users can interact, share updates, and stay informed about community news and events. Focused on engagement, communication, and real-time interaction.',
-  tags: ['Python', 'HTML', 'CSS', 'REST API'],
-  github: 'https://github.com/kenjaxx',
-  live: null,
-  image: '/images/commudev.png',
-  live: null,
-  featured: false,
-},
-{
-  id: '003',
-  title: 'Wildlitz',
-  description:
-    'A gamified learning application for Grade 3 students that enhances reading and comprehension through interactive activities and challenges. Built with a React frontend, Python backend, and Supabase for database and backend services.',
-  tags: ['React', 'Python', 'Supabase', 'JavaScript', 'CSS'],
-  github: 'https://github.com/kenjaxx',
-  live: null,
-  image: '/images/commudev.png',
-  live: null,
-  featured: false,
-  }
+    id: '001',
+    title: 'Shoecommerce',
+    description:
+      'An online shoe store platform where users can browse products, view details, and purchase footwear. Designed with a clean UI and smooth user experience, featuring product listings, cart functionality, and responsive design.',
+    tags: ['React', 'Supabase', 'JavaScript', 'CSS'],
+    github: 'https://github.com/kenjaxx',
+    live: 'https://shoestore-emd2.onrender.com/',
+    image: '/images/shoecommerce.jpg',
+    featured: true,
+  },
+  {
+    id: '002',
+    title: 'Commudev',
+    description:
+      'A community development platform similar to social media applications where users can interact, share updates, and stay informed about community news and events. Focused on engagement, communication, and real-time interaction.',
+    tags: ['Python', 'HTML', 'CSS', 'REST API'],
+    github: 'https://github.com/kenjaxx',
+    live: null,
+    image: '/images/commudev.png',
+    featured: false,
+  },
+  {
+    id: '003',
+    title: 'Wildlitz',
+    description:
+      'A gamified learning application for Grade 3 students that enhances reading and comprehension through interactive activities and challenges. Built with a React frontend, Python backend, and Supabase for database and backend services.',
+    tags: ['React', 'Python', 'Supabase', 'JavaScript', 'CSS'],
+    github: 'https://github.com/kenjaxx',
+    live: null,
+    image: '/images/wildlitz.png', // TODO: add this image to public/images/ — was previously duplicated from Commudev
+    featured: false,
+  },
 ]
 
 export const CONTACT = {
   github: 'https://github.com/kenjaxx',
-  email: null,
+  email: 'kenji.ermita@example.com', // TODO: replace with your real email
 }
