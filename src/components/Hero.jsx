@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import ParticlesBackground from './ParticlesBackground'
-import { ROLES } from '../data'
+import { ROLES, CONTACT } from '../data'
 import styles from './Hero.module.css'
 
 export default function Hero() {
@@ -82,8 +82,8 @@ export default function Hero() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.9, duration: 0.6 }}
         >
-          Building pixel-perfect frontends & robust backends.<br />
-          IT student. Problem solver. Code craftsman.
+          Full Stack Developer.<br />
+          Building pixel-perfect frontends & robust backends.
         </motion.p>
 
         <motion.div
@@ -99,6 +99,18 @@ export default function Hero() {
             View My Work
             <span className={styles.btnArrow}>→</span>
           </button>
+          <a
+            href={CONTACT.resume}
+            download
+            className={styles.btnOutline}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ flexShrink: 0 }}>
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="7 10 12 15 17 10" />
+              <line x1="12" y1="15" x2="12" y2="3" />
+            </svg>
+            Resume
+          </a>
           <a
             href="https://github.com/kenjaxx"
             target="_blank"

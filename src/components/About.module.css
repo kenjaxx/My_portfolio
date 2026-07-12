@@ -170,3 +170,16 @@
     gap: 1.5rem;
   }
 }
+.githubStats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.statsImg {
+  flex: 1 1 260px;
+  max-width: 100%;
+  border-radius: 12px;
+  border: 1px solid rgba(0, 212, 255, 0.12);
+}

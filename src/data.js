@@ -24,43 +24,46 @@ export const SKILLS = [
   { name: 'REST API', icon: '🔌', color: '#00d4ff' },
 ]
 
+// Top 3 featured projects — Billify, Shoecommerce, House Selling Site
 export const PROJECTS = [
   {
     id: '001',
-    title: 'Shoecommerce',
+    title: 'Billify',
     description:
-      'An online shoe store platform where users can browse products, view details, and purchase footwear. Designed with a clean UI and smooth user experience, featuring product listings, cart functionality, and responsive design.',
-    tags: ['React', 'Supabase', 'JavaScript', 'CSS'],
-    github: 'https://github.com/kenjaxx',
-    live: 'https://shoestore-emd2.onrender.com/',
-    image: '/images/shoecommerce.jpg',
+      'A personal bill-management and budgeting dashboard built with React and Supabase. Users can track bills by status (Paid, Unpaid, Overdue), organize spending by category, monitor budgets in real time, and export records to CSV or PDF for reporting.',
+    tags: ['React', 'Supabase'],
+    github: null, // TODO: add the Billify repo link
+    live: 'https://billify-02f8.onrender.com/bills',
+    image: '/images/billify.png',
     featured: true,
   },
   {
     id: '002',
-    title: 'Commudev',
+    title: 'Shoecommerce',
     description:
-      'A community development platform similar to social media applications where users can interact, share updates, and stay informed about community news and events. Focused on engagement, communication, and real-time interaction.',
-    tags: ['Python', 'HTML', 'CSS', 'REST API'],
+      'A full-stack e-commerce app for shoe retail, built end-to-end with React and Supabase. Implements user authentication, a browsable product catalog, cart management, and a complete checkout and order-tracking flow behind a clean, responsive UI.',
+    tags: ['React', 'Supabase', 'JavaScript', 'CSS'],
     github: 'https://github.com/kenjaxx',
-    live: null,
-    image: '/images/commudev.png',
+    live: 'https://shoestore-emd2.onrender.com/',
+    image: '/images/shoecommerce.jpg',
     featured: false,
   },
   {
     id: '003',
-    title: 'Wildlitz',
+    title: 'House Selling Site',
     description:
-      'A gamified learning application for Grade 3 students that enhances reading and comprehension through interactive activities and challenges. Built with a React frontend, Python backend, and Supabase for database and backend services.',
-    tags: ['React', 'Python', 'Supabase', 'JavaScript', 'CSS'],
-    github: 'https://github.com/kenjaxx',
-    live: null,
-    image: '/images/wildlitz.png', // TODO: add this image to public/images/ — was previously duplicated from Commudev
+      'A static real estate listing site built with vanilla HTML, CSS, and JavaScript. Showcases a property with pricing, room details, an image gallery, and clear calls-to-action to schedule a tour or contact the agent directly.',
+    tags: ['HTML', 'CSS', 'JavaScript'],
+    github: 'https://github.com/kenjaxx/house-selling-site',
+    live: 'https://kenjaxx.github.io/house-selling-site/',
+    image: '/images/dreamhome.png',
     featured: false,
   },
 ]
 
 export const CONTACT = {
   github: 'https://github.com/kenjaxx',
-  email: 'kenji.ermita@example.com', // TODO: replace with your real email
+  linkedin: 'https://www.linkedin.com/in/kenji-ermita-1375b1392/',
+  email: 'kenjiermita2020@gmail.com',
+  resume: '/Kenji_Ermita_Resume.pdf',
 }
