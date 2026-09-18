@@ -58,7 +58,9 @@ export default function ParticlesBackground() {
 
         ctx.beginPath()
         ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2)
-        ctx.fillStyle = 'rgba(0, 212, 255, 0.55)'
+        // Dimmed from 0.55 -> 0.35 so the field sits behind the hero's
+        // terminal panel instead of competing with it.
+        ctx.fillStyle = 'rgba(0, 212, 255, 0.35)'
         ctx.fill()
       }
 
@@ -71,7 +73,8 @@ export default function ParticlesBackground() {
             ctx.beginPath()
             ctx.moveTo(pts[i].x, pts[i].y)
             ctx.lineTo(pts[j].x, pts[j].y)
-            ctx.strokeStyle = `rgba(0, 212, 255, ${0.12 * (1 - d / 130)})`
+            // Dimmed from 0.12 -> 0.08 to match the fainter dots above.
+            ctx.strokeStyle = `rgba(0, 212, 255, ${0.08 * (1 - d / 130)})`
             ctx.lineWidth = 0.5
             ctx.stroke()
           }

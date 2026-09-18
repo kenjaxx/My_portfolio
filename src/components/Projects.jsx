@@ -1,5 +1,5 @@
-import { motion } from 'framer-motion'
-import { useState } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { useState, useEffect } from 'react'
 import { useInView } from '../hooks/useInView'
 import { PROJECTS, CONTACT } from '../data'
 import styles from './Projects.module.css'
@@ -22,8 +22,25 @@ function ExternalIcon() {
   )
 }
 
-// Simple "# 00X" monogram cover shown when a project has no screenshot yet
-// (or the image fails to load), so new projects never look broken/empty.
+function ArrowIcon({ flipped }) {
+  return (
+    <svg
+      width="18"
+      height="18"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      style={{ transform: flipped ? 'scaleX(-1)' : undefined }}
+    >
+      <line x1="5" y1="12" x2="19" y2="12" />
+      <polyline points="12 5 19 12 12 19" />
+    </svg>
+  )
+}
+
+// Shown when a project has no screenshot yet (or the image fails to load),
+// so new projects never look broken/empty.
 function CoverFallback({ id }) {
   return (
     <div className={styles.coverFallback}>
@@ -50,12 +67,74 @@ function ProjectCover({ project }) {
         onError={() => setErrored(true)}
       />
       <div className={styles.coverOverlay} />
+      {project.live && (
+        <span className={styles.liveTag}>
+          <span className={styles.liveDot} />
+          Live
+        </span>
+      )}
     </div>
   )
 }
 
+const cardVariants = {
+  enter: (direction) => ({
+    x: direction > 0 ? 70 : -70,
+    y: 24,
+    rotate: direction > 0 ? 7 : -7,
+    scale: 0.94,
+    opacity: 0,
+  }),
+  center: {
+    x: 0,
+    y: 0,
+    rotate: 0,
+    scale: 1,
+    opacity: 1,
+    transition: { type: 'spring', stiffness: 320, damping: 32 },
+  },
+  exit: (direction) => ({
+    x: direction > 0 ? -90 : 90,
+    rotate: direction > 0 ? -9 : 9,
+    scale: 0.92,
+    opacity: 0,
+    transition: { duration: 0.3, ease: 'easeInOut' },
+  }),
+}
+
 export default function Projects() {
   const [ref, inView] = useInView()
+  const [index, setIndex] = useState(0)
+  const [direction, setDirection] = useState(1)
+
+  const total = PROJECTS.length
+  const current = PROJECTS[index]
+  const behind1 = PROJECTS[(index + 1) % total]
+  const behind2 = PROJECTS[(index + 2) % total]
+
+  const goNext = () => {
+    setDirection(1)
+    setIndex((i) => (i + 1) % total)
+  }
+  const goPrev = () => {
+    setDirection(-1)
+    setIndex((i) => (i - 1 + total) % total)
+  }
+  const goTo = (i) => {
+    setDirection(i > index ? 1 : -1)
+    setIndex(i)
+  }
+
+  // Left/right arrow key navigation while the section is in view.
+  useEffect(() => {
+    if (!inView || total <= 1) return
+    const onKey = (e) => {
+      if (e.key === 'ArrowRight') goNext()
+      if (e.key === 'ArrowLeft') goPrev()
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [inView, index, total])
 
   return (
     <section id="projects" className={styles.section} ref={ref}>
@@ -78,54 +157,97 @@ export default function Projects() {
         </motion.h2>
         <div className={styles.divider} />
 
-        <div className={styles.grid}>
-          {PROJECTS.map((project, i) => (
-            <motion.div
-              key={project.id}
-              className={`${styles.card} ${project.featured ? styles.featured : ''}`}
-              initial={{ opacity: 0, y: 40 }}
-              animate={inView ? { opacity: 1, y: 0 } : {}}
-              transition={{ delay: i * 0.15 + 0.2, duration: 0.5 }}
-              whileHover={{ y: -8 }}
-            >
-              <ProjectCover project={project} />
+        <div className={styles.stackArea}>
+          <div className={styles.deck}>
+            {total > 2 && (
+              <div className={styles.backCard} style={{ '--depth': 2 }} aria-hidden="true">
+                <span className={styles.backCardLabel}>{behind2.title}</span>
+              </div>
+            )}
+            {total > 1 && (
+              <div className={styles.backCard} style={{ '--depth': 1 }} aria-hidden="true">
+                <span className={styles.backCardLabel}>{behind1.title}</span>
+              </div>
+            )}
 
-              <div className={styles.cardBody}>
-                {project.featured && <div className={styles.featuredBadge}>Featured</div>}
+            <AnimatePresence mode="popLayout" custom={direction} initial={false}>
+              <motion.div
+                key={current.id}
+                className={styles.frontCard}
+                custom={direction}
+                variants={cardVariants}
+                initial="enter"
+                animate="center"
+                exit="exit"
+                drag={total > 1 ? 'x' : false}
+                dragConstraints={{ left: 0, right: 0 }}
+                dragElastic={0.6}
+                onDragEnd={(e, info) => {
+                  if (info.offset.x < -80) goNext()
+                  else if (info.offset.x > 80) goPrev()
+                }}
+              >
+                {current.featured && (
+                  <span className={styles.featuredBadge}>Featured</span>
+                )}
 
-                <div className={styles.cardTop}>
-                  <span className={styles.num}># {project.id}</span>
-                  <div className={styles.links}>
-                    {project.github && (
-                      <a href={project.github} target="_blank" rel="noopener noreferrer" className={styles.iconLink} title="GitHub">
-                        <GitHubIcon />
-                      </a>
-                    )}
-                    {project.live && (
-                      <a href={project.live} target="_blank" rel="noopener noreferrer" className={styles.iconLink} title="Live Demo">
-                        <ExternalIcon />
-                      </a>
-                    )}
+                <ProjectCover project={current} />
+
+                <div className={styles.cardBody}>
+                  <div className={styles.cardTop}>
+                    <span className={styles.num}># {current.id}</span>
+                    <div className={styles.links}>
+                      {current.github && (
+                        <a href={current.github} target="_blank" rel="noopener noreferrer" className={styles.iconLink} title="GitHub">
+                          <GitHubIcon />
+                        </a>
+                      )}
+                      {current.live && (
+                        <a href={current.live} target="_blank" rel="noopener noreferrer" className={styles.iconLink} title="Live Demo">
+                          <ExternalIcon />
+                        </a>
+                      )}
+                    </div>
+                  </div>
+
+                  <h3 className={styles.projectTitle}>{current.title}</h3>
+                  <p className={styles.projectDesc}>{current.description}</p>
+
+                  <div className={styles.tags}>
+                    {current.tags.map((tag) => (
+                      <span key={tag} className={styles.tag}>{tag}</span>
+                    ))}
                   </div>
                 </div>
+              </motion.div>
+            </AnimatePresence>
+          </div>
 
-                <h3 className={styles.projectTitle}>{project.title}</h3>
-                <p className={styles.projectDesc}>{project.description}</p>
+          <div className={styles.controls}>
+            <button onClick={goPrev} className={styles.navBtn} aria-label="Previous project">
+              <ArrowIcon flipped />
+            </button>
 
-                <div className={styles.tags}>
-                  {project.tags.map((tag) => (
-                    <span key={tag} className={styles.tag}>{tag}</span>
-                  ))}
-                </div>
+            <div className={styles.dots}>
+              {PROJECTS.map((p, i) => (
+                <button
+                  key={p.id}
+                  onClick={() => goTo(i)}
+                  className={`${styles.dot} ${i === index ? styles.dotActive : ''}`}
+                  aria-label={`Go to ${p.title}`}
+                  aria-current={i === index ? 'true' : undefined}
+                />
+              ))}
+            </div>
 
-                {project.live && (
-                  <a href={project.live} target="_blank" rel="noopener noreferrer" className={styles.liveBtn}>
-                    View Live <ExternalIcon />
-                  </a>
-                )}
-              </div>
-            </motion.div>
-          ))}
+            <button onClick={goNext} className={styles.navBtn} aria-label="Next project">
+              <ArrowIcon />
+            </button>
+          </div>
+
+          <p className={styles.counter}>
+            {String(index + 1).padStart(2, '0')} / {String(total).padStart(2, '0')}
+          </p>
         </div>
 
         <motion.div

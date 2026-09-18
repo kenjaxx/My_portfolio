@@ -135,27 +135,6 @@ export default function Skills() {
             </motion.div>
           ))}
         </div>
-
-        <motion.div
-          className={styles.codeBlock}
-          initial={{ opacity: 0, y: 20 }}
-          animate={inView ? { opacity: 1, y: 0 } : {}}
-          transition={{ delay: 0.7, duration: 0.5 }}
-        >
-          <div className={styles.codeHeader}>
-            <span className={styles.dot} style={{ background: '#ff5f57' }} />
-            <span className={styles.dot} style={{ background: '#febc2e' }} />
-            <span className={styles.dot} style={{ background: '#28c840' }} />
-            <span className={styles.fileName}>kenji.config.js</span>
-          </div>
-          <pre className={styles.code}>{`const kenji = {
-  frontend:  ["React", "Next.js", "Tailwind CSS", "TypeScript"],
-  backend:   ["Java", "Python", "Django", "Node.js"],
-  database:  ["Supabase", "MySQL", "PostgreSQL", "Prisma"],
-  devops:    ["AWS", "Vercel", "Railway", "Docker"],
-  currently: "Building something awesome ✦"
-}`}</pre>
-        </motion.div>
       </div>
     </section>
   )

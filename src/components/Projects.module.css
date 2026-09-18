@@ -27,27 +27,48 @@
   width: 100%;
   height: 1px;
   background: linear-gradient(90deg, rgba(0,212,255,0.3), rgba(124,58,237,0.2), transparent);
-  margin-bottom: 3rem;
+  margin-bottom: 3.5rem;
 }
 
-.grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 1.5rem;
+/* --- Stack area --- */
+
+.stackArea {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   margin-bottom: 2.5rem;
 }
 
-.card {
+.deck {
   position: relative;
-  background: var(--surface);
-  border: 1px solid var(--border-purple);
-  border-radius: 16px;
-  padding: 1.8rem;
-  overflow: hidden;
-  transition: box-shadow 0.3s, border-color 0.3s;
+  width: 100%;
+  max-width: 560px;
+  height: 560px;
 }
 
-.card::before {
+.frontCard,
+.backCard {
+  position: absolute;
+  inset: 0;
+  background: var(--surface);
+  border: 1px solid var(--border-purple);
+  border-radius: 20px;
+  overflow: hidden;
+}
+
+.frontCard {
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  cursor: grab;
+  box-shadow: 0 25px 70px rgba(0, 0, 0, 0.4);
+}
+
+.frontCard:active {
+  cursor: grabbing;
+}
+
+.frontCard::before {
   content: '';
   position: absolute;
   top: 0;
@@ -55,20 +76,25 @@
   right: 0;
   height: 2px;
   background: linear-gradient(90deg, var(--cyan), var(--purple));
+  z-index: 2;
 }
 
-.card:hover {
-  border-color: rgba(124, 58, 237, 0.45);
-  box-shadow: 0 20px 60px rgba(124, 58, 237, 0.12);
+.backCard {
+  z-index: calc(10 - var(--depth));
+  transform: translateY(calc(var(--depth) * -16px)) scale(calc(1 - var(--depth) * 0.045));
+  opacity: calc(1 - var(--depth) * 0.32);
+  background: var(--bg3, #13131f);
+  display: flex;
+  align-items: flex-end;
+  padding: 1.5rem;
+  pointer-events: none;
 }
 
-.featured {
-  border-color: rgba(0, 212, 255, 0.25);
-}
-
-.featured:hover {
-  border-color: rgba(0, 212, 255, 0.5);
-  box-shadow: 0 20px 60px rgba(0, 212, 255, 0.1);
+.backCardLabel {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--text-dim);
+  letter-spacing: 0.03em;
 }
 
 .featuredBadge {
@@ -84,13 +110,86 @@
   border: 1px solid rgba(0, 212, 255, 0.25);
   padding: 0.25rem 0.6rem;
   border-radius: 4px;
+  z-index: 3;
+}
+
+.coverWrap {
+  position: relative;
+  width: 100%;
+  height: 240px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.cover {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.coverOverlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom, transparent 40%, #0f0f1a 100%);
+}
+
+.coverFallback {
+  height: 240px;
+  flex-shrink: 0;
+  background:
+    radial-gradient(circle at 20% 20%, rgba(0, 212, 255, 0.12) 0%, transparent 55%),
+    radial-gradient(circle at 80% 80%, rgba(124, 58, 237, 0.12) 0%, transparent 55%),
+    var(--bg3, #13131f);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono);
+  font-size: 1.4rem;
+  letter-spacing: 0.05em;
+  color: rgba(0, 212, 255, 0.35);
+}
+
+.liveTag {
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #0a0a0f;
+  background: var(--green);
+  padding: 0.32rem 0.7rem 0.32rem 0.5rem;
+  border-radius: 20px;
+  z-index: 2;
+}
+
+.liveDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #0a0a0f;
+}
+
+.cardBody {
+  padding: 1.6rem 1.8rem 1.8rem;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
 }
 
 .cardTop {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 1rem;
+  margin-bottom: 0.9rem;
 }
 
 .num {
@@ -118,24 +217,29 @@
 }
 
 .projectTitle {
-  font-size: 1.25rem;
+  font-size: 1.3rem;
   font-weight: 700;
   color: #f1f5f9;
-  margin-bottom: 0.75rem;
+  margin-bottom: 0.6rem;
   letter-spacing: -0.01em;
 }
 
 .projectDesc {
-  font-size: 0.9rem;
+  font-size: 0.88rem;
   color: var(--text-dim);
-  line-height: 1.75;
-  margin-bottom: 1.5rem;
+  line-height: 1.7;
+  margin-bottom: 1.2rem;
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .tags {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
+  margin-top: auto;
 }
 
 .tag {
@@ -148,6 +252,73 @@
   border: 1px solid rgba(0, 212, 255, 0.18);
   letter-spacing: 0.04em;
 }
+
+/* --- Controls under the deck --- */
+
+.controls {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  margin-top: 1.75rem;
+}
+
+.navBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.navBtn:hover {
+  color: var(--cyan);
+  border-color: rgba(0, 212, 255, 0.35);
+  background: rgba(0, 212, 255, 0.06);
+  transform: translateY(-2px);
+}
+
+.dots {
+  display: flex;
+  gap: 0.55rem;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.15);
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  transition: all 0.25s;
+}
+
+.dot:hover {
+  background: rgba(0, 212, 255, 0.4);
+}
+
+.dotActive {
+  width: 22px;
+  border-radius: 4px;
+  background: linear-gradient(90deg, var(--cyan), var(--purple));
+}
+
+.counter {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--text-dim);
+  letter-spacing: 0.08em;
+  margin-top: 0.9rem;
+}
+
+/* --- Footer link --- */
 
 .moreWrap {
   text-align: center;
@@ -173,74 +344,17 @@
   background: rgba(0, 212, 255, 0.04);
 }
 
-.coverWrap {
-  position: relative;
-  width: 100%;
-  height: 180px;
-  overflow: hidden;
-  border-radius: 12px 12px 0 0;
-  margin: -1.8rem -1.8rem 0;
-  width: calc(100% + 3.6rem);
-}
+@media (max-width: 640px) {
+  .deck {
+    height: 600px;
+  }
 
-.cover {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  transition: transform 0.4s ease;
-}
+  .coverWrap,
+  .coverFallback {
+    height: 200px;
+  }
 
-.card:hover .cover {
-  transform: scale(1.05);
-}
-
-.coverOverlay {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(to bottom, transparent 40%, #0f0f1a 100%);
-}
-
-/* Shown instead of coverWrap when a project has no screenshot (or the
-   image fails to load) — keeps new projects looking intentional rather
-   than broken while you add real screenshots later. */
-.coverFallback {
-  height: 140px;
-  margin: -1.8rem -1.8rem 0;
-  width: calc(100% + 3.6rem);
-  border-radius: 12px 12px 0 0;
-  background:
-    radial-gradient(circle at 20% 20%, rgba(0, 212, 255, 0.12) 0%, transparent 55%),
-    radial-gradient(circle at 80% 80%, rgba(124, 58, 237, 0.12) 0%, transparent 55%),
-    var(--bg3, #13131f);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-family: var(--font-mono);
-  font-size: 1.4rem;
-  letter-spacing: 0.05em;
-  color: rgba(0, 212, 255, 0.35);
-}
-
-.cardBody {
-  padding-top: 1.2rem;
-}
-
-.liveBtn {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  margin-top: 1rem;
-  font-family: var(--font-mono);
-  font-size: 0.78rem;
-  color: var(--green);
-  border: 1px solid rgba(0, 255, 136, 0.2);
-  padding: 0.35rem 0.8rem;
-  border-radius: 4px;
-  transition: all 0.2s;
-  text-decoration: none;
-}
-
-.liveBtn:hover {
-  background: rgba(0, 255, 136, 0.08);
-  border-color: rgba(0, 255, 136, 0.4);
+  .controls {
+    gap: 1rem;
+  }
 }
