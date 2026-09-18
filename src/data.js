@@ -11,35 +11,52 @@ export const ROLES = [
   'Problem Solver',
 ]
 
-// Grouped to match how the tech is actually used (mirrors the
-// kenji.config.js block below it), rather than one flat, ungrouped grid.
+// Split into "Languages" vs "Tools & Frameworks" (mirrors the reference
+// skills-widget layout: group label + count badge, grid of icon cards).
 export const SKILL_GROUPS = [
   {
-    key: 'frontend',
-    label: 'Frontend',
+    key: 'languages',
+    label: 'Languages',
     skills: [
-      { name: 'React', icon: '⚛', color: '#61dafb' },
-      { name: 'JavaScript', icon: '✦', color: '#f7df1e' },
-      { name: 'HTML', icon: '🌐', color: '#e34f26' },
-      { name: 'CSS', icon: '🎨', color: '#1572b6' },
-    ],
-  },
-  {
-    key: 'backend',
-    label: 'Backend',
-    skills: [
-      { name: 'Java', icon: '☕', color: '#f89820' },
-      { name: 'Python', icon: '🐍', color: '#3776ab' },
-      { name: 'REST API', icon: '🔌', color: '#00d4ff' },
+      { name: 'JavaScript', color: '#f7df1e' },
+      { name: 'TypeScript', color: '#3178c6' },
+      { name: 'Python', color: '#3776ab' },
+      { name: 'Java', color: '#f89820' },
+      { name: 'HTML', color: '#e34f26' },
+      { name: 'CSS', color: '#1572b6' },
+      { name: 'SQL', color: '#4479a1' },
     ],
   },
   {
     key: 'tools',
-    label: 'Database & Tools',
+    label: 'Tools & Frameworks',
     skills: [
-      { name: 'Supabase', icon: '⚡', color: '#3ecf8e' },
-      { name: 'WordPress', icon: '📝', color: '#21759b' },
-      { name: 'Git', icon: '⎇', color: '#f05032' },
+      { name: 'React', color: '#61dafb' },
+      { name: 'Next.js', color: '#ffffff' },
+      { name: 'Tailwind CSS', color: '#38bdf8' },
+      { name: 'Django', color: '#0c4b33' },
+      { name: 'Node.js', color: '#3c873a' },
+      { name: 'REST API', color: '#00d4ff' },
+      { name: 'Supabase', color: '#3ecf8e' },
+      { name: 'Firebase', color: '#ffca28' },
+      { name: 'MySQL', color: '#4479a1' },
+      { name: 'PostgreSQL', color: '#336791' },
+      { name: 'Prisma', color: '#2d3748' },
+      { name: 'XAMPP', color: '#fb7a24' },
+      { name: 'WordPress', color: '#21759b' },
+      { name: 'Git', color: '#f05032' },
+      { name: 'GitHub', color: '#ffffff' },
+      { name: 'VS Code', color: '#007acc' },
+      { name: 'Claude Code', color: '#d97757' },
+      { name: 'Gemini', color: '#8e75f2' },
+      { name: 'Postman', color: '#ff6c37' },
+      { name: 'Bash', color: '#4eaa25' },
+      { name: 'PowerShell', color: '#5391fe' },
+      { name: 'AWS', color: '#ff9900' },
+      { name: 'Android', color: '#3ddc84' },
+      { name: 'Vercel', color: '#ffffff' },
+      { name: 'Railway', color: '#a06afe' },
+      { name: 'ServiceNow', color: '#62d84e' },
     ],
   },
 ]
