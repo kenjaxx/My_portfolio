@@ -11,8 +11,6 @@ export const ROLES = [
   'Problem Solver',
 ]
 
-// Split into "Languages" vs "Tools & Frameworks" (mirrors the reference
-// skills-widget layout: group label + count badge, grid of icon cards).
 export const SKILL_GROUPS = [
   {
     key: 'languages',
@@ -108,6 +106,45 @@ export const CONTACT = {
 // Add your own photos to /public/images/ with these filenames (or update
 // the paths here to match whatever you name them).
 export const PROFILE = {
-  heroPhoto: '/images/profile-hero.jpg', // larger photo used in the Hero section
-  avatarPhoto: '/images/profile-avatar.jpg', // tighter head-and-shoulders crop used in About
+  heroPhoto: '/images/profile-hero.jpg',
+  aboutPhoto: '/images/profile-about.jpg', // your graduation photo
+  schoolLogo: '/images/citu-logo.png', // CIT-U seal
 }
+
+// Content for the redesigned About section (big photo + editorial layout).
+// Fill in the TODOs with your real info.
+export const ABOUT = {
+  badge: 'About',
+  headingLead: '',
+  headingAccent: 'Full Stack Developer.',
+  bio: "BSIT graduate who loves turning ideas into real, working products — from pixel-perfect React UIs to well-structured Python & Java backends, with Supabase powering real-time data underneath. Whether it's a web app, a CMS, or a REST API, I build it end-to-end.",
+  stats: [
+    { num: '10+', label: 'Technologies' },
+    { num: '5+', label: 'Projects Built' },
+    { num: '∞', label: 'Lines of Code' },
+  ],
+  location: 'Cebu, Philippines',
+  phone: '',
+  photoCaption: 'Cebu, Philippines',
+  education: {
+    school: 'Cebu Institute of Technology - University (CIT-U)',
+    degree: 'BS Information Technology',
+    period: 'IT Graduate',
+  },
+}
+
+// Flat list used by the animated tech timeline strip in Hero.
+export const TIMELINE_SKILLS = [
+  { name: 'React', color: '#61dafb' },
+  { name: 'Python', color: '#3776ab' },
+  { name: 'Java', color: '#f89820' },
+  { name: 'JavaScript', color: '#f7df1e' },
+  { name: 'TypeScript', color: '#3178c6' },
+  { name: 'Node.js', color: '#3c873a' },
+  { name: 'Supabase', color: '#3ecf8e' },
+  { name: 'HTML', color: '#e34f26' },
+  { name: 'CSS', color: '#1572b6' },
+  { name: 'Git', color: '#f05032' },
+  { name: 'AWS', color: '#ff9900' },
+  { name: 'SQL', color: '#4479a1' },
+]

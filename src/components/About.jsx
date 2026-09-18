@@ -1,7 +1,7 @@
 import { motion } from 'framer-motion'
 import { useState } from 'react'
 import { useInView } from '../hooks/useInView'
-import { PROFILE } from '../data'
+import { PROFILE, ABOUT, CONTACT } from '../data'
 import styles from './About.module.css'
 
 const fadeUp = {
@@ -9,27 +9,47 @@ const fadeUp = {
   visible: (i = 0) => ({
     opacity: 1,
     y: 0,
-    transition: { delay: i * 0.15, duration: 0.6, ease: 'easeOut' },
+    transition: { delay: i * 0.12, duration: 0.6, ease: 'easeOut' },
   }),
 }
 
-function Avatar() {
+function Photo() {
   const [errored, setErrored] = useState(false)
 
   return (
-    <div className={styles.avatar}>
+    <div className={styles.photoFrame}>
       {errored ? (
-        <span>KE</span>
+        <div className={styles.photoFallback}>
+          <span>KE</span>
+        </div>
       ) : (
         <img
-          src={PROFILE.avatarPhoto}
+          src={PROFILE.aboutPhoto}
           alt="Kenji Ermita"
-          className={styles.avatarPhoto}
+          className={styles.photo}
           onError={() => setErrored(true)}
         />
       )}
-      <div className={styles.avatarRing} />
+      <span className={styles.cornerTL} />
+      <span className={styles.cornerBR} />
     </div>
+  )
+}
+
+function SchoolBadge() {
+  const [errored, setErrored] = useState(false)
+
+  if (errored || !PROFILE.schoolLogo) {
+    return <div className={styles.eduBadge}>KE</div>
+  }
+
+  return (
+    <img
+      src={PROFILE.schoolLogo}
+      alt={ABOUT.education.school}
+      className={styles.eduBadgeImg}
+      onError={() => setErrored(true)}
+    />
   )
 }
 
@@ -39,57 +59,100 @@ export default function About() {
   return (
     <section id="about" className={styles.section} ref={ref}>
       <div className={styles.inner}>
-        <motion.p className={styles.label} variants={fadeUp} initial="hidden" animate={inView ? 'visible' : 'hidden'} custom={0}>
-          &gt; about_me
-        </motion.p>
-        <motion.h2 className={styles.title} variants={fadeUp} initial="hidden" animate={inView ? 'visible' : 'hidden'} custom={1}>
-          Who I Am
-        </motion.h2>
-
         <div className={styles.grid}>
           <motion.div
-            className={styles.avatarWrap}
+            className={styles.photoCol}
             variants={fadeUp}
             initial="hidden"
             animate={inView ? 'visible' : 'hidden'}
-            custom={2}
+            custom={0}
           >
-            <Avatar />
-            <div className={styles.statusBadge}>
-              <span className={styles.statusDot} />
-              Available for projects
-            </div>
+            <Photo />
+            <p className={styles.photoCaption}>
+              <span className={styles.figTag}>FIG.01</span> {ABOUT.photoCaption}
+            </p>
           </motion.div>
 
           <div className={styles.textCol}>
-            {[
-              <>Hey! I'm <span className={styles.cyan}>Kenji Ermita</span>, a Full Stack Developer who loves turning ideas into real, working products. I enjoy crafting everything from pixel-perfect UIs to well-structured backend systems.</>,
-              <>I specialize in <span className={styles.purple}>React</span> on the frontend, <span className={styles.purple}>Python & Java</span> on the backend, and <span className={styles.green}>Supabase</span> for real-time databases. Whether it's a web app, a CMS, or a REST API — I build it end-to-end.</>,
-              <>I hold a degree in <span className={styles.cyan}>Information Technology</span>, and spent time as an IT Intern doing WordPress security audits and uptime monitoring — constantly learning, building side projects, and sharpening my skills one commit at a time.</>,
-            ].map((text, i) => (
-              <motion.p
-                key={i}
-                className={styles.para}
-                variants={fadeUp}
-                initial="hidden"
-                animate={inView ? 'visible' : 'hidden'}
-                custom={i + 3}
-              >
-                {text}
-              </motion.p>
-            ))}
+            <motion.span
+              className={styles.badge}
+              variants={fadeUp}
+              initial="hidden"
+              animate={inView ? 'visible' : 'hidden'}
+              custom={1}
+            >
+              {ABOUT.badge}
+            </motion.span>
 
-            <motion.div className={styles.stats} variants={fadeUp} initial="hidden" animate={inView ? 'visible' : 'hidden'} custom={6}>
-              {[
-                { num: '10+', label: 'Technologies' },
-                { num: '5+', label: 'Projects Built' },
-                { num: '∞', label: 'Lines of Code' },
-              ].map((s) => (
+            <motion.h2
+              className={styles.heading}
+              variants={fadeUp}
+              initial="hidden"
+              animate={inView ? 'visible' : 'hidden'}
+              custom={2}
+            >
+              {ABOUT.headingLead && `${ABOUT.headingLead} `}
+              <span className={styles.headingAccent}>{ABOUT.headingAccent}</span>
+            </motion.h2>
+
+            <motion.p
+              className={styles.bio}
+              variants={fadeUp}
+              initial="hidden"
+              animate={inView ? 'visible' : 'hidden'}
+              custom={3}
+            >
+              {ABOUT.bio}
+            </motion.p>
+
+            <motion.div
+              className={styles.stats}
+              variants={fadeUp}
+              initial="hidden"
+              animate={inView ? 'visible' : 'hidden'}
+              custom={4}
+            >
+              {ABOUT.stats.map((s) => (
                 <div key={s.label} className={styles.stat}>
                   <span className={styles.statNum}>{s.num}</span>
                   <span className={styles.statLabel}>{s.label}</span>
                 </div>
               ))}
+            </motion.div>
+
+            <motion.div
+              className={styles.metaBlock}
+              variants={fadeUp}
+              initial="hidden"
+              animate={inView ? 'visible' : 'hidden'}
+              custom={5}
+            >
+              <div className={styles.statusRow}>
+                <span className={styles.statusDot} />
+                Available for projects
+              </div>
+
+              <div className={styles.contactRow}>
+                {CONTACT.email && <span>{CONTACT.email}</span>}
+                {ABOUT.phone && <span>{ABOUT.phone}</span>}
+                {ABOUT.location && <span>{ABOUT.location}</span>}
+              </div>
+            </motion.div>
+
+            <motion.div
+              className={styles.eduCard}
+              variants={fadeUp}
+              initial="hidden"
+              animate={inView ? 'visible' : 'hidden'}
+              custom={6}
+            >
+              <SchoolBadge />
+              <div>
+                <p className={styles.eduSchool}>{ABOUT.education.school}</p>
+                <p className={styles.eduDegree}>
+                  {ABOUT.education.degree} · {ABOUT.education.period}
+                </p>
+              </div>
             </motion.div>
           </div>
         </div>

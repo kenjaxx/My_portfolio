@@ -1,0 +1,143 @@
+.wrap {
+  position: relative;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100vw;
+  margin-top: 3.5rem;
+  padding-top: 1.5rem;
+  overflow: hidden;
+}
+
+.counter {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 0.6rem;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  margin-bottom: 2.5rem;
+}
+
+.counterIndex {
+  color: var(--purple);
+  font-weight: 700;
+}
+
+.counterName {
+  color: #f1f5f9;
+  font-weight: 700;
+}
+
+.counterTag {
+  color: var(--text-dim);
+}
+
+.track {
+  position: relative;
+  height: 130px;
+  width: 100%;
+}
+
+.baseline {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: repeating-linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.12) 0px,
+    rgba(255, 255, 255, 0.12) 1px,
+    transparent 1px,
+    transparent 26px
+  );
+}
+
+.rail {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  display: flex;
+  align-items: flex-end;
+  gap: 3.5rem;
+  padding: 0 2rem;
+  width: max-content;
+}
+
+.node {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.stem {
+  width: 1px;
+  height: var(--offset);
+  background: linear-gradient(to bottom, color-mix(in srgb, var(--skill-color) 70%, transparent), transparent);
+}
+
+.dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--skill-color);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--skill-color) 70%, transparent);
+  margin: 0.5rem 0;
+}
+
+.badge {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid color-mix(in srgb, var(--skill-color) 35%, rgba(255, 255, 255, 0.1));
+  border-radius: 8px;
+  padding: 0.5rem 0.85rem;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.badgeIcon {
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+.spark {
+  position: absolute;
+  bottom: -1px;
+  transform: translateX(-50%);
+  z-index: 2;
+  pointer-events: none;
+}
+
+.sparkCore {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #fff 0%, var(--cyan) 40%, var(--purple) 100%);
+  box-shadow: 0 0 14px rgba(0, 212, 255, 0.8), 0 0 28px rgba(124, 58, 237, 0.5);
+}
+
+.sparkTrail {
+  position: absolute;
+  top: 50%;
+  right: 100%;
+  width: 60px;
+  height: 3px;
+  transform: translateY(-50%);
+  background: linear-gradient(to left, rgba(0, 212, 255, 0.6), transparent);
+  border-radius: 2px;
+}
+
+@media (max-width: 640px) {
+  .track {
+    height: 100px;
+  }
+
+  .rail {
+    gap: 2rem;
+  }
+}

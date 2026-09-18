@@ -4,6 +4,7 @@
   display: flex;
   flex-direction: column;
   justify-content: center;
+  align-items: center;
   overflow: hidden;
   padding: 8rem 3rem 4rem;
 }
@@ -35,17 +36,19 @@
 .inner {
   position: relative;
   z-index: 1;
-  max-width: 1200px;
+  max-width: 800px;
   width: 100%;
   margin: 0 auto;
-  display: grid;
-  grid-template-columns: 1.15fr 0.85fr;
-  align-items: center;
-  gap: 4rem;
+  display: flex;
+  justify-content: center;
 }
 
 .textSide {
-  text-align: left;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
 }
 
 .greeting {
@@ -82,6 +85,7 @@
   min-height: 2rem;
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 0.2em;
 }
 
@@ -115,6 +119,8 @@
   display: flex;
   gap: 1rem;
   flex-wrap: wrap;
+  justify-content: center;
+  margin-bottom: 2rem;
 }
 
 .btnPrimary {
@@ -171,109 +177,8 @@
   transform: translateY(-3px);
 }
 
-/* --- Photo side --- */
-
-.photoSide {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1.2rem;
-}
-
-.photoFrame {
-  position: relative;
-  width: 100%;
-  max-width: 340px;
-  aspect-ratio: 4 / 5;
-  border-radius: 20px;
-  overflow: hidden;
-  isolation: isolate;
-}
-
-/* Offset gradient frame sitting behind the photo — echoes the gradient
-   top-bar used on the project cards, so the hero ties visually to the
-   rest of the page rather than being a one-off treatment. */
-.photoFrameAccent {
-  position: absolute;
-  inset: 14px -14px -14px 14px;
-  border-radius: 20px;
-  background: linear-gradient(135deg, var(--cyan), var(--purple));
-  opacity: 0.5;
-  z-index: -1;
-}
-
-.photo {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-  /* Desaturate the source photo so the duotone overlay below reads as a
-     deliberate two-tone treatment rather than a color cast on top of a
-     full-color image. */
-  filter: grayscale(1) contrast(1.05) brightness(0.95);
-}
-
-/* Duotone tint: a cyan-to-purple gradient blended over the desaturated
-   photo using mix-blend-mode, so any headshot automatically matches the
-   site's palette instead of looking like a stock photo dropped on top. */
-.photoFrame::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(155deg, rgba(0, 212, 255, 0.85) 0%, rgba(124, 58, 237, 0.85) 100%);
-  mix-blend-mode: color;
-  pointer-events: none;
-}
-
-.photoFrame::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 20px;
-  z-index: 2;
-  pointer-events: none;
-}
-
-.photoFallback {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: linear-gradient(135deg, #1a1040, #0c1a2e);
-  font-family: var(--font-mono);
-  font-size: 3rem;
-  font-weight: 700;
-  color: var(--cyan);
-}
-
-.cornerTL,
-.cornerBR {
-  position: absolute;
-  width: 22px;
-  height: 22px;
-  z-index: 3;
-  pointer-events: none;
-}
-
-.cornerTL {
-  top: 10px;
-  left: 10px;
-  border-top: 2px solid rgba(255, 255, 255, 0.6);
-  border-left: 2px solid rgba(255, 255, 255, 0.6);
-}
-
-.cornerBR {
-  bottom: 10px;
-  right: 10px;
-  border-bottom: 2px solid rgba(255, 255, 255, 0.6);
-  border-right: 2px solid rgba(255, 255, 255, 0.6);
-}
-
 .statusChip {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 0.5rem;
   font-family: var(--font-mono);
@@ -283,6 +188,8 @@
   border: 1px solid rgba(0, 255, 136, 0.15);
   padding: 0.4rem 0.9rem;
   border-radius: 20px;
+  width: fit-content;
+  margin: 0 auto;
 }
 
 .statusDot {
@@ -324,40 +231,6 @@
 @keyframes float {
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(6px); }
-}
-
-@media (max-width: 900px) {
-  .inner {
-    grid-template-columns: 1fr;
-    gap: 3rem;
-    text-align: center;
-  }
-
-  .textSide {
-    text-align: center;
-    order: 2;
-  }
-
-  .bio {
-    margin-left: auto;
-    margin-right: auto;
-  }
-
-  .buttons {
-    justify-content: center;
-  }
-
-  .roleWrap {
-    justify-content: center;
-  }
-
-  .photoSide {
-    order: 1;
-  }
-
-  .photoFrame {
-    max-width: 260px;
-  }
 }
 
 @media (max-width: 640px) {
