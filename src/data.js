@@ -11,17 +11,37 @@ export const ROLES = [
   'Problem Solver',
 ]
 
-export const SKILLS = [
-  { name: 'React', icon: '⚛', color: '#61dafb' },
-  { name: 'Java', icon: '☕', color: '#f89820' },
-  { name: 'Python', icon: '🐍', color: '#3776ab' },
-  { name: 'Supabase', icon: '⚡', color: '#3ecf8e' },
-  { name: 'HTML', icon: '🌐', color: '#e34f26' },
-  { name: 'CSS', icon: '🎨', color: '#1572b6' },
-  { name: 'WordPress', icon: '📝', color: '#21759b' },
-  { name: 'JavaScript', icon: '✦', color: '#f7df1e' },
-  { name: 'Git', icon: '⎇', color: '#f05032' },
-  { name: 'REST API', icon: '🔌', color: '#00d4ff' },
+// Grouped to match how the tech is actually used (mirrors the
+// kenji.config.js block below it), rather than one flat, ungrouped grid.
+export const SKILL_GROUPS = [
+  {
+    key: 'frontend',
+    label: 'Frontend',
+    skills: [
+      { name: 'React', icon: '⚛', color: '#61dafb' },
+      { name: 'JavaScript', icon: '✦', color: '#f7df1e' },
+      { name: 'HTML', icon: '🌐', color: '#e34f26' },
+      { name: 'CSS', icon: '🎨', color: '#1572b6' },
+    ],
+  },
+  {
+    key: 'backend',
+    label: 'Backend',
+    skills: [
+      { name: 'Java', icon: '☕', color: '#f89820' },
+      { name: 'Python', icon: '🐍', color: '#3776ab' },
+      { name: 'REST API', icon: '🔌', color: '#00d4ff' },
+    ],
+  },
+  {
+    key: 'tools',
+    label: 'Database & Tools',
+    skills: [
+      { name: 'Supabase', icon: '⚡', color: '#3ecf8e' },
+      { name: 'WordPress', icon: '📝', color: '#21759b' },
+      { name: 'Git', icon: '⎇', color: '#f05032' },
+    ],
+  },
 ]
 
 // Top 3 featured projects — Billify, Shoecommerce, House Selling Site
@@ -66,4 +86,11 @@ export const CONTACT = {
   linkedin: 'https://www.linkedin.com/in/kenji-ermita-1375b1392/',
   email: 'kenjiermita2020@gmail.com',
   resume: '/Kenji_Ermita_Resume.pdf',
+}
+
+// Add your own photos to /public/images/ with these filenames (or update
+// the paths here to match whatever you name them).
+export const PROFILE = {
+  heroPhoto: '/images/profile-hero.jpg', // larger photo used in the Hero section
+  avatarPhoto: '/images/profile-avatar.jpg', // tighter head-and-shoulders crop used in About
 }

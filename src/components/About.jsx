@@ -1,5 +1,7 @@
 import { motion } from 'framer-motion'
+import { useState } from 'react'
 import { useInView } from '../hooks/useInView'
+import { PROFILE } from '../data'
 import styles from './About.module.css'
 
 const fadeUp = {
@@ -11,6 +13,26 @@ const fadeUp = {
   }),
 }
 
+function Avatar() {
+  const [errored, setErrored] = useState(false)
+
+  return (
+    <div className={styles.avatar}>
+      {errored ? (
+        <span>KE</span>
+      ) : (
+        <img
+          src={PROFILE.avatarPhoto}
+          alt="Kenji Ermita"
+          className={styles.avatarPhoto}
+          onError={() => setErrored(true)}
+        />
+      )}
+      <div className={styles.avatarRing} />
+    </div>
+  )
+}
+
 export default function About() {
   const [ref, inView] = useInView()
 
@@ -18,12 +40,11 @@ export default function About() {
     <section id="about" className={styles.section} ref={ref}>
       <div className={styles.inner}>
         <motion.p className={styles.label} variants={fadeUp} initial="hidden" animate={inView ? 'visible' : 'hidden'} custom={0}>
-          01. &gt; about_me
+          &gt; about_me
         </motion.p>
         <motion.h2 className={styles.title} variants={fadeUp} initial="hidden" animate={inView ? 'visible' : 'hidden'} custom={1}>
           Who I Am
         </motion.h2>
-        <div className={styles.divider} />
 
         <div className={styles.grid}>
           <motion.div
@@ -33,10 +54,7 @@ export default function About() {
             animate={inView ? 'visible' : 'hidden'}
             custom={2}
           >
-            <div className={styles.avatar}>
-              <span>KE</span>
-              <div className={styles.avatarRing} />
-            </div>
+            <Avatar />
             <div className={styles.statusBadge}>
               <span className={styles.statusDot} />
               Available for projects

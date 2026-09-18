@@ -66,7 +66,7 @@ export default function Projects() {
           animate={inView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.5 }}
         >
-          03. &gt; my_work
+          &gt; my_work
         </motion.p>
         <motion.h2
           className={styles.title}

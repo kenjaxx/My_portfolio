@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion'
 import { useInView } from '../hooks/useInView'
-import { SKILLS } from '../data'
+import { SKILL_GROUPS } from '../data'
 import styles from './Skills.module.css'
 
 export default function Skills() {
@@ -15,7 +15,7 @@ export default function Skills() {
           animate={inView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.5 }}
         >
-          02. &gt; tech_stack
+          &gt; tech_stack
         </motion.p>
         <motion.h2
           className={styles.title}
@@ -25,21 +25,29 @@ export default function Skills() {
         >
           Skills & Tools
         </motion.h2>
-        <div className={styles.divider} />
 
-        <div className={styles.grid}>
-          {SKILLS.map((skill, i) => (
+        <div className={styles.groups}>
+          {SKILL_GROUPS.map((group, gi) => (
             <motion.div
-              key={skill.name}
-              className={styles.card}
-              initial={{ opacity: 0, scale: 0.85, y: 20 }}
-              animate={inView ? { opacity: 1, scale: 1, y: 0 } : {}}
-              transition={{ delay: i * 0.06 + 0.2, duration: 0.4 }}
-              whileHover={{ y: -6, borderColor: skill.color || 'var(--cyan)' }}
+              key={group.key}
+              className={styles.group}
+              initial={{ opacity: 0, y: 20 }}
+              animate={inView ? { opacity: 1, y: 0 } : {}}
+              transition={{ delay: gi * 0.12 + 0.2, duration: 0.5 }}
             >
-              <span className={styles.icon}>{skill.icon}</span>
-              <span className={styles.name}>{skill.name}</span>
-              <div className={styles.cardGlow} style={{ background: `radial-gradient(circle at 50% 120%, ${skill.color}18, transparent 70%)` }} />
+              <span className={styles.groupLabel}>{group.label}</span>
+              <div className={styles.grid}>
+                {group.skills.map((skill) => (
+                  <div
+                    key={skill.name}
+                    className={styles.card}
+                    style={{ '--skill-color': skill.color || 'var(--cyan)' }}
+                  >
+                    <span className={styles.icon}>{skill.icon}</span>
+                    <span className={styles.name}>{skill.name}</span>
+                  </div>
+                ))}
+              </div>
             </motion.div>
           ))}
         </div>
@@ -48,7 +56,7 @@ export default function Skills() {
           className={styles.codeBlock}
           initial={{ opacity: 0, y: 20 }}
           animate={inView ? { opacity: 1, y: 0 } : {}}
-          transition={{ delay: 0.9, duration: 0.5 }}
+          transition={{ delay: 0.7, duration: 0.5 }}
         >
           <div className={styles.codeHeader}>
             <span className={styles.dot} style={{ background: '#ff5f57' }} />

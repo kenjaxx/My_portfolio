@@ -32,7 +32,7 @@ export default function Contact() {
           animate={inView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.5 }}
         >
-          04. &gt; get_in_touch
+          &gt; get_in_touch
         </motion.p>
         <motion.h2
           className={styles.title}
@@ -99,17 +99,22 @@ export default function Contact() {
                   <span className={styles.dot} style={{ background: '#ff5f57' }} />
                   <span className={styles.dot} style={{ background: '#febc2e' }} />
                   <span className={styles.dot} style={{ background: '#28c840' }} />
-                  <span className={styles.termTitle}>terminal</span>
+                  <span className={styles.termTitle}>status-check.sh</span>
                 </div>
                 <div className={styles.termBody}>
-                  <p><span className={styles.prompt}>$ </span><span className={styles.cmd}>whoami</span></p>
-                  <p className={styles.output}>kenji_ermita — full_stack_dev</p>
-                  <p><span className={styles.prompt}>$ </span><span className={styles.cmd}>cat skills.txt</span></p>
-                  <p className={styles.output}>React · Java · Python · Supabase</p>
-                  <p><span className={styles.prompt}>$ </span><span className={styles.cmd}>echo $STATUS</span></p>
-                  <p className={styles.output} style={{ color: 'var(--green)' }}>open_to_opportunities</p>
-                  <p><span className={styles.prompt}>$ </span><span className={styles.cmd}>git log --oneline -1</span></p>
-                  <p className={styles.output}>a1b2c3d building the future...</p>
+                  {/*
+                    Deliberately different flavor from the Skills section's
+                    kenji.config.js block (an object literal): this reads
+                    like a live availability check rather than a second
+                    copy of the same "$ command / output" list.
+                  */}
+                  <p><span className={styles.prompt}>$ </span><span className={styles.cmd}>curl -s kenji.dev/api/status</span></p>
+                  <p className={styles.output}>{'{'}</p>
+                  <p className={styles.output}>&nbsp;&nbsp;"status": <span style={{ color: 'var(--green)' }}>"accepting_new_projects"</span>,</p>
+                  <p className={styles.output}>&nbsp;&nbsp;"reply_time": "&lt; 24h",</p>
+                  <p className={styles.output}>&nbsp;&nbsp;"timezone": "GMT+8",</p>
+                  <p className={styles.output}>&nbsp;&nbsp;"open_to": ["freelance", "internship", "collab"]</p>
+                  <p className={styles.output}>{'}'}</p>
                   <p className={styles.cursorLine}>
                     <span className={styles.prompt}>$ </span>
                     <span className={styles.termCursor}>▋</span>
