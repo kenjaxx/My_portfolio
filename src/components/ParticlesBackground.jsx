@@ -8,9 +8,17 @@ export default function ParticlesBackground() {
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) return
+
+    // Skip the animation entirely for users who prefer reduced motion.
+    const prefersReducedMotion = window.matchMedia(
+      '(prefers-reduced-motion: reduce)'
+    ).matches
+    if (prefersReducedMotion) return
+
     const ctx = canvas.getContext('2d')
     let animId
     let pts = []
+    let isVisible = true
 
     const resize = () => {
       canvas.width = canvas.offsetWidth
@@ -33,6 +41,11 @@ export default function ParticlesBackground() {
     }
 
     const draw = () => {
+      // Bail out of the render loop (no rAF re-queue) once the canvas has
+      // scrolled off-screen — no point burning CPU/battery animating
+      // particles nobody can see.
+      if (!isVisible) return
+
       ctx.clearRect(0, 0, canvas.width, canvas.height)
       const W = canvas.width
       const H = canvas.height
@@ -74,9 +87,39 @@ export default function ParticlesBackground() {
     const ro = new ResizeObserver(resize)
     ro.observe(canvas)
 
+    // Pause/resume the rAF loop based on viewport visibility of the canvas itself.
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        isVisible = entry.isIntersecting
+        if (isVisible) {
+          cancelAnimationFrame(animId)
+          draw()
+        }
+      },
+      { threshold: 0 }
+    )
+    io.observe(canvas)
+
+    // Also pause when the browser tab itself is hidden (another tab/app in focus).
+    const onVisibilityChange = () => {
+      if (document.hidden) {
+        isVisible = false
+      } else {
+        io.takeRecords()
+        isVisible = canvas.getBoundingClientRect().top < window.innerHeight
+        if (isVisible) {
+          cancelAnimationFrame(animId)
+          draw()
+        }
+      }
+    }
+    document.addEventListener('visibilitychange', onVisibilityChange)
+
     return () => {
       cancelAnimationFrame(animId)
       ro.disconnect()
+      io.disconnect()
+      document.removeEventListener('visibilitychange', onVisibilityChange)
     }
   }, [])
 

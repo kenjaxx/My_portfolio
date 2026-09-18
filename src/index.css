@@ -69,3 +69,38 @@ button:focus-visible,
   outline-offset: 3px;
   border-radius: 4px;
 }
+
+/* Skip-to-content link: hidden until keyboard-focused, so screen reader /
+   keyboard users can jump past the nav straight to <main>. */
+.skipLink {
+  position: absolute;
+  top: -60px;
+  left: 1rem;
+  z-index: 2000;
+  background: var(--bg2);
+  color: var(--cyan);
+  border: 1px solid var(--cyan);
+  padding: 0.75rem 1.25rem;
+  border-radius: 8px;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  transition: top 0.2s ease;
+}
+
+.skipLink:focus {
+  top: 1rem;
+}
+
+/* Respect the OS-level "reduce motion" accessibility setting.
+   This disables our hand-rolled CSS keyframe animations (cursor blink,
+   scroll-hint float, avatar ring spin, status dot pulse, etc).
+   Framer Motion's own animations are handled separately via
+   <MotionConfig reducedMotion="user"> in App.jsx. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}

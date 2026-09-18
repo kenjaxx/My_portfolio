@@ -32,6 +32,24 @@
       href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Rajdhani:wght@300;400;500;600;700&display=swap"
       rel="stylesheet"
     />
+
+    <!-- JSON-LD structured data: helps search engines understand this is a
+         person/portfolio page rather than a generic site, which can improve
+         how it's represented in search results (knowledge panels, rich results). -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "Person",
+        "name": "Kenji Ermita",
+        "url": "https://kenjaxx.dev/",
+        "jobTitle": "Full Stack Developer",
+        "knowsAbout": ["React", "JavaScript", "Python", "Java", "Supabase", "REST APIs", "WordPress"],
+        "sameAs": [
+          "https://github.com/kenjaxx",
+          "https://www.linkedin.com/in/kenji-ermita-1375b1392/"
+        ]
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>

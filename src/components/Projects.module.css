@@ -200,6 +200,27 @@
   background: linear-gradient(to bottom, transparent 40%, #0f0f1a 100%);
 }
 
+/* Shown instead of coverWrap when a project has no screenshot (or the
+   image fails to load) — keeps new projects looking intentional rather
+   than broken while you add real screenshots later. */
+.coverFallback {
+  height: 140px;
+  margin: -1.8rem -1.8rem 0;
+  width: calc(100% + 3.6rem);
+  border-radius: 12px 12px 0 0;
+  background:
+    radial-gradient(circle at 20% 20%, rgba(0, 212, 255, 0.12) 0%, transparent 55%),
+    radial-gradient(circle at 80% 80%, rgba(124, 58, 237, 0.12) 0%, transparent 55%),
+    var(--bg3, #13131f);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono);
+  font-size: 1.4rem;
+  letter-spacing: 0.05em;
+  color: rgba(0, 212, 255, 0.35);
+}
+
 .cardBody {
   padding-top: 1.2rem;
 }

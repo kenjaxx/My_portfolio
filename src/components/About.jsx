@@ -73,27 +73,6 @@ export default function About() {
                 </div>
               ))}
             </motion.div>
-
-            <motion.div
-              className={styles.githubStats}
-              variants={fadeUp}
-              initial="hidden"
-              animate={inView ? 'visible' : 'hidden'}
-              custom={7}
-            >
-              <img
-                className={styles.statsImg}
-                src="https://github-readme-stats.vercel.app/api?username=kenjaxx&show_icons=true&hide_border=true&bg_color=00000000&title_color=00d4ff&icon_color=7c3aed&text_color=94a3b8"
-                alt="Kenji's GitHub stats"
-                loading="lazy"
-              />
-              <img
-                className={styles.statsImg}
-                src="https://github-readme-stats.vercel.app/api/top-langs/?username=kenjaxx&layout=compact&hide_border=true&bg_color=00000000&title_color=00d4ff&text_color=94a3b8"
-                alt="Kenji's most used languages"
-                loading="lazy"
-              />
-            </motion.div>
           </div>
         </div>
       </div>

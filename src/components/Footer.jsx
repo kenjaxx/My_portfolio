@@ -8,7 +8,7 @@ export default function Footer() {
           <span className={styles.bracket}>&lt;</span>KE<span className={styles.bracket}> /&gt;</span>
         </div>
         <p className={styles.copy}>
-           designed &amp; built by{' '}
+          Designed &amp; built by{' '}
           <span className={styles.name}>Kenji Ermita</span>
           {' '}— {new Date().getFullYear()}
         </p>

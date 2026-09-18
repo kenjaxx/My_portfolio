@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion'
+import { useState } from 'react'
 import { useInView } from '../hooks/useInView'
-import { PROJECTS } from '../data'
+import { PROJECTS, CONTACT } from '../data'
 import styles from './Projects.module.css'
 
 function GitHubIcon() {
@@ -18,6 +19,38 @@ function ExternalIcon() {
       <polyline points="15 3 21 3 21 9" />
       <line x1="10" y1="14" x2="21" y2="3" />
     </svg>
+  )
+}
+
+// Simple "# 00X" monogram cover shown when a project has no screenshot yet
+// (or the image fails to load), so new projects never look broken/empty.
+function CoverFallback({ id }) {
+  return (
+    <div className={styles.coverFallback}>
+      <span>{`</${id}>`}</span>
+    </div>
+  )
+}
+
+function ProjectCover({ project }) {
+  const [errored, setErrored] = useState(false)
+
+  if (!project.image || errored) {
+    return <CoverFallback id={project.id} />
+  }
+
+  return (
+    <div className={styles.coverWrap}>
+      <img
+        src={project.image}
+        alt={project.title}
+        className={styles.cover}
+        loading="lazy"
+        decoding="async"
+        onError={() => setErrored(true)}
+      />
+      <div className={styles.coverOverlay} />
+    </div>
   )
 }
 
@@ -55,13 +88,7 @@ export default function Projects() {
               transition={{ delay: i * 0.15 + 0.2, duration: 0.5 }}
               whileHover={{ y: -8 }}
             >
-              {/* Cover image */}
-              {project.image && (
-                <div className={styles.coverWrap}>
-                  <img src={project.image} alt={project.title} className={styles.cover} />
-                  <div className={styles.coverOverlay} />
-                </div>
-              )}
+              <ProjectCover project={project} />
 
               <div className={styles.cardBody}>
                 {project.featured && <div className={styles.featuredBadge}>Featured</div>}
@@ -107,7 +134,7 @@ export default function Projects() {
           animate={inView ? { opacity: 1 } : {}}
           transition={{ delay: 0.8 }}
         >
-          <a href="https://github.com/kenjaxx" target="_blank" rel="noopener noreferrer" className={styles.moreLink}>
+          <a href={CONTACT.github} target="_blank" rel="noopener noreferrer" className={styles.moreLink}>
             <GitHubIcon />
             See more on GitHub →
           </a>

@@ -56,6 +56,7 @@
   padding: 0.2rem 0.1rem;
   letter-spacing: 0.05em;
   border-radius: 4px;
+  position: relative;
 }
 
 .link:hover {
@@ -66,6 +67,23 @@
   outline: 2px solid var(--cyan);
   outline-offset: 4px;
   color: var(--cyan);
+}
+
+/* Scroll-spy active state: underline + highlighted text for whichever
+   section is currently in view. */
+.linkActive {
+  color: var(--cyan);
+}
+
+.linkActive::after {
+  content: '';
+  position: absolute;
+  left: 0.1rem;
+  right: 0.1rem;
+  bottom: -6px;
+  height: 2px;
+  background: linear-gradient(90deg, var(--cyan), var(--purple));
+  border-radius: 2px;
 }
 
 .linkNum {
@@ -150,6 +168,10 @@
 .mobileLink:focus-visible {
   outline: 2px solid var(--cyan);
   outline-offset: 2px;
+  color: var(--cyan);
+}
+
+.mobileLinkActive {
   color: var(--cyan);
 }
 
