@@ -34,7 +34,7 @@ const TIMELINE = [
     id: 'now',
     eyebrow: 'Now',
     title: 'Open to opportunities',
-    text: 'Freelance, internship, and collaboration work.',
+    text: 'Open to work, freelance opportunities, and exciting collaborations.',
     done: false,
   },
 ]

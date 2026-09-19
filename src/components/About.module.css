@@ -7,11 +7,12 @@
   margin: 0 auto;
 }
 
+/* align-items: center puts the photo at the vertical middle of the text */
 .grid {
   display: grid;
-  grid-template-columns: 400px 1fr;
-  gap: 3.5rem;
-  align-items: start;
+  grid-template-columns: 300px 1fr;
+  gap: 4rem;
+  align-items: center;
 }
 
 /* --- Photo column --- */
@@ -21,20 +22,89 @@
   flex-direction: column;
 }
 
-.photoFrame {
+/* Square stage. Everything inside is sized in % of it, so the whole
+   composition scales together on smaller screens. */
+.stage {
   position: relative;
   width: 100%;
-  aspect-ratio: 4 / 5;
-  border-radius: 14px;
+  aspect-ratio: 1 / 1;
+  isolation: isolate;
+}
+
+/* Soft glow behind the photo that slowly changes shape */
+.blob {
+  position: absolute;
+  left: 5%;
+  top: 5%;
+  width: 90%;
+  height: 90%;
+  z-index: 0;
+  background: radial-gradient(
+    circle at 30% 30%,
+    rgba(0, 212, 255, 0.42),
+    rgba(124, 58, 237, 0.32) 60%,
+    transparent 72%
+  );
+  animation: blobMorph 8s ease-in-out infinite;
+  pointer-events: none;
+}
+
+/* Dashed ring, a little larger than the stage, slowly turning */
+.orbit {
+  position: absolute;
+  inset: -5%;
+  z-index: 1;
+  border-radius: 50%;
+  border: 1px dashed rgba(255, 255, 255, 0.18);
+  animation: orbitSpin 16s linear infinite;
+  pointer-events: none;
+}
+
+.orbit i {
+  position: absolute;
+  left: 50%;
+  border-radius: 50%;
+}
+
+.orbitDotA {
+  top: -4px;
+  width: 8px;
+  height: 8px;
+  margin-left: -4px;
+  background: var(--cyan);
+  box-shadow: 0 0 10px var(--cyan);
+}
+
+.orbitDotB {
+  bottom: -3px;
+  width: 6px;
+  height: 6px;
+  margin-left: -3px;
+  background: var(--purple);
+  box-shadow: 0 0 8px var(--purple);
+}
+
+/* The photo: 68% x 85% of the stage, rounded top (arch), soft bottom.
+   It sits above the orbit, so the dots pass behind it. */
+.arch {
+  position: absolute;
+  left: 16%;
+  top: 7.5%;
+  width: 68%;
+  height: 85%;
+  z-index: 2;
   overflow: hidden;
+  border-radius: 50% 50% 14px 14px / 40% 40% 14px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
   background: linear-gradient(135deg, #1a1040, #0c1a2e);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 24px 50px rgba(0, 0, 0, 0.45);
 }
 
 .photo {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  object-position: center top;
   display: block;
 }
 
@@ -50,26 +120,22 @@
   color: var(--cyan);
 }
 
-.cornerTL,
-.cornerBR {
-  position: absolute;
-  width: 22px;
-  height: 22px;
-  pointer-events: none;
+@keyframes orbitSpin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
-.cornerTL {
-  top: 10px;
-  left: 10px;
-  border-top: 2px solid rgba(255, 255, 255, 0.6);
-  border-left: 2px solid rgba(255, 255, 255, 0.6);
-}
-
-.cornerBR {
-  bottom: 10px;
-  right: 10px;
-  border-bottom: 2px solid rgba(255, 255, 255, 0.6);
-  border-right: 2px solid rgba(255, 255, 255, 0.6);
+@keyframes blobMorph {
+  0%,
+  100% {
+    border-radius: 50% 50% 45% 55%;
+    transform: rotate(0deg) scale(1);
+  }
+  50% {
+    border-radius: 60% 40% 55% 45%;
+    transform: rotate(180deg) scale(1.08);
+  }
 }
 
 /* --- Text column --- */
@@ -100,11 +166,14 @@
   font-weight: 800;
   line-height: 1.25;
   letter-spacing: -0.02em;
-  color: var(--text-muted);
+  color: #f8fafc;
 }
 
-.headingAccent {
-  color: #f1f5f9;
+.headingGradient {
+  background: linear-gradient(135deg, var(--cyan), var(--purple));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .bio {
@@ -113,6 +182,14 @@
   font-size: 1rem;
   max-width: 620px;
 }
+
+/* Keywords take their brand color from the --kw variable */
+.kw {
+  color: var(--kw);
+  font-weight: 600;
+}
+
+/* --- Stats --- */
 
 .stats {
   display: flex;
@@ -134,6 +211,7 @@
   font-weight: 700;
   color: var(--cyan);
   line-height: 1;
+  font-variant-numeric: tabular-nums;
 }
 
 .statLabel {
@@ -141,6 +219,30 @@
   color: var(--text-muted);
   letter-spacing: 0.05em;
 }
+
+.bar {
+  display: block;
+  width: 36px;
+  height: 2px;
+  margin-top: 0.35rem;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+}
+
+.barFill {
+  display: block;
+  height: 100%;
+  width: 0;
+  background: linear-gradient(90deg, var(--cyan), var(--purple));
+  transition: width 1.4s ease-out;
+}
+
+.barOn {
+  width: 100%;
+}
+
+/* --- Status / contact / resume --- */
 
 .metaBlock {
   display: flex;
@@ -167,8 +269,13 @@
 }
 
 @keyframes pulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(0, 255, 136, 0.4); }
-  50% { box-shadow: 0 0 0 5px rgba(0, 255, 136, 0); }
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(0, 255, 136, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 5px rgba(0, 255, 136, 0);
+  }
 }
 
 .contactRow {
@@ -203,10 +310,61 @@
   transform: translateY(-2px);
 }
 
-.cardsRow {
+/* --- Timeline (education + experience) --- */
+
+.timeline {
+  list-style: none;
+  position: relative;
+  margin: 0;
+  padding: 0 0 0 26px;
   display: flex;
   flex-direction: column;
   gap: 0.9rem;
+}
+
+/* Vertical line running through the dots */
+.timeline::before {
+  content: '';
+  position: absolute;
+  left: 5px;
+  top: 26px;
+  bottom: 26px;
+  width: 2px;
+  border-radius: 2px;
+  background: linear-gradient(var(--cyan), var(--purple), var(--green));
+}
+
+.tlItem {
+  position: relative;
+}
+
+.dot {
+  position: absolute;
+  left: -26px;
+  top: 50%;
+  width: 12px;
+  height: 12px;
+  margin-top: -6px;
+  border-radius: 50%;
+  background: var(--cyan);
+  box-shadow: 0 0 10px var(--cyan);
+}
+
+/* The current role: glowing green dot that pulses */
+.dotNow {
+  background: var(--green);
+  box-shadow: 0 0 0 0 rgba(0, 255, 136, 0.55), 0 0 10px var(--green);
+  animation: nowPulse 2s ease-in-out infinite;
+}
+
+@keyframes nowPulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(0, 255, 136, 0.55), 0 0 10px var(--green);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(0, 255, 136, 0), 0 0 16px var(--green);
+  }
 }
 
 .eduCard {
@@ -217,6 +375,13 @@
   border: 1px solid rgba(255, 255, 255, 0.07);
   border-radius: 12px;
   padding: 1rem 1.2rem;
+  transition: transform 0.25s, border-color 0.25s, background 0.25s;
+}
+
+.eduCard:hover {
+  transform: translateX(4px);
+  border-color: rgba(0, 212, 255, 0.4);
+  background: rgba(0, 212, 255, 0.04);
 }
 
 .eduBadge {
@@ -246,6 +411,16 @@
   flex-shrink: 0;
 }
 
+.eduBadgeImg {
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+  object-fit: contain;
+  background: #fff;
+  padding: 4px;
+  flex-shrink: 0;
+}
+
 .eduSchool {
   font-weight: 600;
   color: #f1f5f9;
@@ -258,29 +433,30 @@
   margin-top: 0.15rem;
 }
 
-.eduBadgeImg {
-  width: 42px;
-  height: 42px;
-  border-radius: 10px;
-  object-fit: contain;
-  background: #fff;
-  padding: 4px;
-  flex-shrink: 0;
+/* --- Reduced motion: keep the layout, stop the moving parts --- */
+
+@media (prefers-reduced-motion: reduce) {
+  .orbit,
+  .blob {
+    animation: none;
+  }
 }
+
+/* --- Tablet / mobile --- */
 
 @media (max-width: 900px) {
   .grid {
     grid-template-columns: 1fr;
-    gap: 2.5rem;
-  }
-
-  .photoFrame {
-    max-width: 340px;
-    margin: 0 auto;
+    gap: 3rem;
   }
 
   .photoCol {
     align-items: center;
+  }
+
+  .stage {
+    max-width: 280px;
+    margin: 0 auto;
   }
 
   .badge {
@@ -301,16 +477,19 @@
     justify-content: center;
   }
 
-  .cardsRow {
-    align-items: center;
-  }
-
-  .eduCard {
-    max-width: 420px;
-    width: 100%;
-  }
-
   .resumeBtn {
     align-self: center;
+  }
+
+  .timeline {
+    width: 100%;
+    max-width: 440px;
+    text-align: left;
+  }
+}
+
+@media (max-width: 480px) {
+  .stats {
+    gap: 1.5rem;
   }
 }

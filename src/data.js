@@ -125,16 +125,29 @@ export const PROFILE = {
 
 // Content for the redesigned About section (big photo + editorial layout).
 // Fill in the TODOs with your real info.
+// Content for the About section.
+// Content for the About section.
 export const ABOUT = {
   badge: 'About',
-  headingLead: '',
-  headingAccent: 'Full Stack Developer.',
+  headingGradient: 'Full Stack',
+  headingRest: 'Developer.',
   bio: "BSIT graduate who loves turning ideas into real, working products — from pixel-perfect React UIs to well-structured Python & Java backends, with Supabase powering real-time data underneath. Whether it's a web app, a CMS, or a REST API, I build it end-to-end.",
+
+  // Words in the bio that get their brand color.
+  keywords: {
+    React: '#61dafb',
+    Python: '#ffd43b',
+    Java: '#f89820',
+    Supabase: '#3ecf8e',
+  },
+
+  // `num` + `suffix` count up. `text` is shown as-is (no counting).
   stats: [
-    { num: '10+', label: 'Technologies' },
-    { num: '5+', label: 'Projects Built' },
-    { num: '1', label: 'Internship (OJT)' },
+    { num: 30, suffix: '+', label: 'Technologies' },
+    { num: 4, suffix: '', label: 'Live apps' },
+    { text: '<24h', label: 'Reply time' },
   ],
+
   location: 'Cebu, Philippines',
   phone: '',
   photoCaption: 'Cebu, Philippines',
