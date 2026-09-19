@@ -59,7 +59,7 @@ export const SKILL_GROUPS = [
   },
 ]
 
-// Top 3 featured projects — Billify, Shoecommerce, House Selling Site
+// Featured/recent projects — Billify, Closet AI, Shoecommerce, House Selling Site
 export const PROJECTS = [
   {
     id: '001',
@@ -69,11 +69,22 @@ export const PROJECTS = [
     tags: ['React', 'Supabase'],
     github: null, // TODO: add the Billify repo link
     live: 'https://billify-02f8.onrender.com/bills',
-    image: '/images/billify.png',
+    image: '/images/billify-cover.png',
     featured: true,
   },
   {
     id: '002',
+    title: 'Closet — AI Outfit Matcher',
+    description:
+      "A mobile-first PWA that lets you snap a photo of a clothing item, has Gemini AI tag it (category, color, pattern, style, formality, season) and file it into a digital closet, then suggests outfit pairings from your existing wardrobe for any occasion or the day's weather. Extra touches include duplicate-item detection, a \"neglected pieces\" nudge, wardrobe gap analysis, and a save-to-lookbook feature — all running on free-tier Firebase, Cloudinary, and Gemini.",
+    tags: ['React', 'Vite', 'Tailwind CSS', 'Firebase', 'Cloudinary', 'Gemini API', 'PWA'],
+    github: null, // TODO: add the Closet AI repo link (or leave null if private)
+    live: 'https://closet-ai-ebc44.web.app', // TODO: confirm this actually loads before shipping
+    image: '/images/closet-ai-cover.png',
+    featured: false, // TODO: flip to true if you want this instead of Billify featured
+  },
+  {
+    id: '003',
     title: 'Shoecommerce',
     description:
       'A full-stack e-commerce app for shoe retail, built end-to-end with React and Supabase. Implements user authentication, a browsable product catalog, cart management, and a complete checkout and order-tracking flow behind a clean, responsive UI.',
@@ -84,14 +95,14 @@ export const PROJECTS = [
     featured: false,
   },
   {
-    id: '003',
+    id: '004',
     title: 'House Selling Site',
     description:
       'A static real estate listing site built with vanilla HTML, CSS, and JavaScript. Showcases a property with pricing, room details, an image gallery, and clear calls-to-action to schedule a tour or contact the agent directly.',
     tags: ['HTML', 'CSS', 'JavaScript'],
     github: 'https://github.com/kenjaxx/house-selling-site',
     live: 'https://kenjaxx.github.io/house-selling-site/',
-    image: '/images/dreamhome.png',
+    image: '/images/house-selling-cover.png',
     featured: false,
   },
 ]
