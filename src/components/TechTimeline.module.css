@@ -8,7 +8,11 @@
   overflow: hidden;
 }
 
+/* ---------- Counter text ---------- */
+
 .counter {
+  position: relative;
+  z-index: 3;
   display: flex;
   align-items: baseline;
   justify-content: center;
@@ -26,11 +30,55 @@
 .counterName {
   color: #f1f5f9;
   font-weight: 700;
+  text-shadow: 0 0 12px currentColor;
+  animation: counterPop 0.35s ease-out;
 }
 
 .counterTag {
   color: var(--text-dim);
 }
+
+@keyframes counterPop {
+  0% {
+    opacity: 0;
+    transform: translateY(-6px) scale(1.15);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* ---------- Connector: counter -> lit badge ---------- */
+
+.connector {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 2;
+  overflow: visible;
+}
+
+.connectorPath {
+  fill: none;
+  stroke-width: 1.5;
+  stroke-dasharray: 4 4;
+  stroke-linejoin: round;
+  opacity: 0;
+  filter: drop-shadow(0 0 4px currentColor);
+  transition: opacity 0.25s;
+  animation: dashFlow 0.8s linear infinite;
+}
+
+@keyframes dashFlow {
+  to {
+    stroke-dashoffset: -8;
+  }
+}
+
+/* ---------- Track ---------- */
 
 .track {
   position: relative;
@@ -62,7 +110,10 @@
   gap: 3.5rem;
   padding: 0 2rem;
   width: max-content;
+  will-change: transform;
 }
+
+/* ---------- Nodes ---------- */
 
 .node {
   position: relative;
@@ -74,7 +125,12 @@
 .stem {
   width: 1px;
   height: var(--offset);
-  background: linear-gradient(to bottom, color-mix(in srgb, var(--skill-color) 70%, transparent), transparent);
+  background: linear-gradient(
+    to bottom,
+    color-mix(in srgb, var(--skill-color) 70%, transparent),
+    transparent
+  );
+  transition: width 0.3s, box-shadow 0.3s;
 }
 
 .dot {
@@ -84,6 +140,7 @@
   background: var(--skill-color);
   box-shadow: 0 0 8px color-mix(in srgb, var(--skill-color) 70%, transparent);
   margin: 0.5rem 0;
+  transition: transform 0.3s, box-shadow 0.3s;
 }
 
 .badge {
@@ -98,6 +155,12 @@
   font-size: 0.78rem;
   color: var(--text-muted);
   white-space: nowrap;
+  transition:
+    background 0.3s,
+    border-color 0.3s,
+    color 0.3s,
+    box-shadow 0.3s,
+    transform 0.3s;
 }
 
 .badgeIcon {
@@ -105,31 +168,98 @@
   flex-shrink: 0;
 }
 
+/* ---------- Lit state (the rocket just touched this badge) ---------- */
+
+.active .badge {
+  color: #fff;
+  border-color: var(--skill-color);
+  background: color-mix(in srgb, var(--skill-color) 16%, rgba(255, 255, 255, 0.02));
+  box-shadow:
+    0 0 18px color-mix(in srgb, var(--skill-color) 55%, transparent),
+    inset 0 0 12px color-mix(in srgb, var(--skill-color) 20%, transparent);
+  transform: translateY(-3px) scale(1.06);
+}
+
+.active .dot {
+  transform: scale(1.9);
+  box-shadow:
+    0 0 14px var(--skill-color),
+    0 0 26px color-mix(in srgb, var(--skill-color) 60%, transparent);
+}
+
+.active .stem {
+  width: 2px;
+  box-shadow: 0 0 10px color-mix(in srgb, var(--skill-color) 70%, transparent);
+}
+
+/* ---------- Rocket ---------- */
+/* JS moves .spark with translate3d and sets --boost (0 to 1) as it speeds up.
+   .spark is a zero-size anchor sitting on the baseline at the rocket's x. */
+
 .spark {
   position: absolute;
-  bottom: -1px;
-  transform: translateX(-50%);
+  left: 0;
+  bottom: 0;
+  width: 0;
+  height: 0;
   z-index: 2;
   pointer-events: none;
+  will-change: transform;
+  --boost: 0;
 }
 
-.sparkCore {
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  background: radial-gradient(circle, #fff 0%, var(--cyan) 40%, var(--purple) 100%);
-  box-shadow: 0 0 14px rgba(0, 212, 255, 0.8), 0 0 28px rgba(124, 58, 237, 0.5);
-}
-
-.sparkTrail {
+/* Right edge is 14px past the anchor, so the 28px body is centered on it and
+   the flame trails out to the left. */
+.rocket {
   position: absolute;
-  top: 50%;
-  right: 100%;
-  width: 60px;
-  height: 3px;
-  transform: translateY(-50%);
-  background: linear-gradient(to left, rgba(0, 212, 255, 0.6), transparent);
-  border-radius: 2px;
+  right: -14px;
+  bottom: 10px;
+  display: flex;
+  align-items: center;
+  filter: drop-shadow(0 0 calc(3px + var(--boost) * 10px) rgba(0, 212, 255, 0.75));
+  animation: rocketBob 1.6s ease-in-out infinite;
+}
+
+.rocketBody {
+  display: block;
+  flex-shrink: 0;
+  transform: scale(calc(1 + var(--boost) * 0.25));
+  transform-origin: 30% 50%;
+}
+
+.flame {
+  width: calc(10px + var(--boost) * 42px);
+  height: calc(6px + var(--boost) * 4px);
+  margin-right: -3px;
+  border-radius: 50% 0 0 50%;
+  background: linear-gradient(to left, #ffffff 0%, var(--cyan) 35%, transparent 100%);
+  transform-origin: right center;
+  animation: flameFlicker 0.12s ease-in-out infinite alternate;
+}
+
+@keyframes flameFlicker {
+  from {
+    transform: scaleY(1) scaleX(1);
+  }
+  to {
+    transform: scaleY(0.72) scaleX(0.9);
+  }
+}
+
+@keyframes rocketBob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-3px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spark {
+    display: none;
+  }
 }
 
 @media (max-width: 640px) {
