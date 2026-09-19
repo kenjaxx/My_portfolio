@@ -109,6 +109,7 @@ export const PROFILE = {
   heroPhoto: '/images/profile-hero.jpg',
   aboutPhoto: '/images/profile-about.jpg', // your graduation photo
   schoolLogo: '/images/citu-logo.png', // CIT-U seal
+  experienceLogo: '/images/knowles-logo.png',
 }
 
 // Content for the redesigned About section (big photo + editorial layout).
@@ -121,7 +122,7 @@ export const ABOUT = {
   stats: [
     { num: '10+', label: 'Technologies' },
     { num: '5+', label: 'Projects Built' },
-    { num: '∞', label: 'Lines of Code' },
+    { num: '1', label: 'Internship (OJT)' },
   ],
   location: 'Cebu, Philippines',
   phone: '',
@@ -130,6 +131,11 @@ export const ABOUT = {
     school: 'Cebu Institute of Technology - University (CIT-U)',
     degree: 'BS Information Technology',
     period: 'IT Graduate',
+  },
+  experience: {
+    company: 'Knowles Training Institute',
+    role: 'IT Intern (OJT)',
+    period: '2026 · Remote, Singapore',
   },
 }
 

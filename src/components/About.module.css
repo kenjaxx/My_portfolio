@@ -19,7 +19,6 @@
 .photoCol {
   display: flex;
   flex-direction: column;
-  gap: 0.9rem;
 }
 
 .photoFrame {
@@ -71,18 +70,6 @@
   right: 10px;
   border-bottom: 2px solid rgba(255, 255, 255, 0.6);
   border-right: 2px solid rgba(255, 255, 255, 0.6);
-}
-
-.photoCaption {
-  font-family: var(--font-mono);
-  font-size: 0.75rem;
-  color: var(--text-dim);
-  letter-spacing: 0.05em;
-}
-
-.figTag {
-  color: var(--cyan);
-  margin-right: 0.5em;
 }
 
 /* --- Text column --- */
@@ -151,7 +138,7 @@
 
 .statLabel {
   font-size: 0.8rem;
-  color: var(--text-dim);
+  color: var(--text-muted);
   letter-spacing: 0.05em;
 }
 
@@ -189,8 +176,37 @@
   flex-wrap: wrap;
   gap: 0.5rem 1.5rem;
   font-family: var(--font-mono);
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.resumeBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  align-self: flex-start;
+  font-family: var(--font-mono);
   font-size: 0.82rem;
-  color: var(--text-dim);
+  font-weight: 600;
+  color: var(--cyan);
+  border: 1px solid rgba(0, 212, 255, 0.3);
+  background: rgba(0, 212, 255, 0.05);
+  padding: 0.6rem 1.1rem;
+  border-radius: 8px;
+  transition: all 0.2s;
+  width: fit-content;
+}
+
+.resumeBtn:hover {
+  background: rgba(0, 212, 255, 0.12);
+  border-color: rgba(0, 212, 255, 0.5);
+  transform: translateY(-2px);
+}
+
+.cardsRow {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
 }
 
 .eduCard {
@@ -201,7 +217,6 @@
   border: 1px solid rgba(255, 255, 255, 0.07);
   border-radius: 12px;
   padding: 1rem 1.2rem;
-  margin-top: 0.4rem;
 }
 
 .eduBadge {
@@ -219,6 +234,18 @@
   flex-shrink: 0;
 }
 
+.expBadge {
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, var(--purple), var(--cyan));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #0a0a0f;
+  flex-shrink: 0;
+}
+
 .eduSchool {
   font-weight: 600;
   color: #f1f5f9;
@@ -227,8 +254,18 @@
 
 .eduDegree {
   font-size: 0.82rem;
-  color: var(--text-dim);
+  color: var(--text-muted);
   margin-top: 0.15rem;
+}
+
+.eduBadgeImg {
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+  object-fit: contain;
+  background: #fff;
+  padding: 4px;
+  flex-shrink: 0;
 }
 
 @media (max-width: 900px) {
@@ -264,16 +301,16 @@
     justify-content: center;
   }
 
+  .cardsRow {
+    align-items: center;
+  }
+
   .eduCard {
     max-width: 420px;
+    width: 100%;
   }
-}
-.eduBadgeImg {
-  width: 42px;
-  height: 42px;
-  border-radius: 10px;
-  object-fit: contain;
-  background: #fff;
-  padding: 4px;
-  flex-shrink: 0;
+
+  .resumeBtn {
+    align-self: center;
+  }
 }
