@@ -1,8 +1,28 @@
-import { motion, AnimatePresence } from 'framer-motion'
-import { useState, useEffect } from 'react'
+import { motion } from 'framer-motion'
+import { useEffect, useRef, useState } from 'react'
 import { useInView } from '../hooks/useInView'
 import { PROJECTS, CONTACT } from '../data'
 import styles from './Projects.module.css'
+
+// 'left'  -> cards drift from right to left
+// 'right' -> cards drift from left to right
+const DIRECTION = 'left'
+
+// Constant drift speed in pixels per second. Bigger = faster.
+const SPEED = 40
+
+// How long a swipe keeps gliding. Higher = the flick slows down sooner.
+const FRICTION = 2
+
+// Max glide speed (px/s) a hard flick can reach.
+const MAX_FLICK = 4500
+
+// Pixels the pointer must move before it counts as a drag (not a click).
+const DRAG_THRESHOLD = 6
+
+// Copies of the project list in EACH half of the loop. With only a few
+// projects, 2 keeps the strip wider than any screen so there are no gaps.
+const COPIES_PER_HALF = 2
 
 function GitHubIcon() {
   return (
@@ -14,7 +34,7 @@ function GitHubIcon() {
 
 function ExternalIcon() {
   return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
       <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
       <polyline points="15 3 21 3 21 9" />
       <line x1="10" y1="14" x2="21" y2="3" />
@@ -22,25 +42,7 @@ function ExternalIcon() {
   )
 }
 
-function ArrowIcon({ flipped }) {
-  return (
-    <svg
-      width="18"
-      height="18"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      style={{ transform: flipped ? 'scaleX(-1)' : undefined }}
-    >
-      <line x1="5" y1="12" x2="19" y2="12" />
-      <polyline points="12 5 19 12 12 19" />
-    </svg>
-  )
-}
-
-// Shown when a project has no screenshot yet (or the image fails to load),
-// so new projects never look broken/empty.
+// Shown when a project has no screenshot yet (or the image fails to load).
 function CoverFallback({ id }) {
   return (
     <div className={styles.coverFallback}>
@@ -64,6 +66,7 @@ function ProjectCover({ project }) {
         className={styles.cover}
         loading="lazy"
         decoding="async"
+        draggable="false"
         onError={() => setErrored(true)}
       />
       <div className={styles.coverOverlay} />
@@ -77,64 +80,276 @@ function ProjectCover({ project }) {
   )
 }
 
-const cardVariants = {
-  enter: (direction) => ({
-    x: direction > 0 ? 70 : -70,
-    y: 24,
-    rotate: direction > 0 ? 7 : -7,
-    scale: 0.94,
-    opacity: 0,
-  }),
-  center: {
-    x: 0,
-    y: 0,
-    rotate: 0,
-    scale: 1,
-    opacity: 1,
-    transition: { type: 'spring', stiffness: 320, damping: 32 },
-  },
-  exit: (direction) => ({
-    x: direction > 0 ? -90 : 90,
-    rotate: direction > 0 ? -9 : 9,
-    scale: 0.92,
-    opacity: 0,
-    transition: { duration: 0.3, ease: 'easeInOut' },
-  }),
+// `isClone` marks the duplicated cards that only exist to make the loop
+// seamless: they are hidden from screen readers and skipped by Tab.
+function ProjectCard({ project, isClone }) {
+  const tabIndex = isClone ? -1 : undefined
+
+  return (
+    <article className={styles.card} aria-hidden={isClone || undefined}>
+      {project.featured && <span className={styles.featuredBadge}>Featured</span>}
+
+      <ProjectCover project={project} />
+
+      <div className={styles.cardBody}>
+        <span className={styles.num}># {project.id}</span>
+
+        <h3 className={styles.projectTitle}>{project.title}</h3>
+        <p className={styles.projectDesc}>{project.description}</p>
+
+        <div className={styles.tags}>
+          {project.tags.map((tag) => (
+            <span key={tag} className={styles.tag}>
+              {tag}
+            </span>
+          ))}
+        </div>
+
+        <div className={styles.actions}>
+          {project.live ? (
+            <a
+              href={project.live}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={styles.liveBtn}
+              aria-label={`View ${project.title} live`}
+              draggable="false"
+              tabIndex={tabIndex}
+            >
+              View Live
+              <ExternalIcon />
+            </a>
+          ) : (
+            <span className={styles.liveBtnDisabled}>Live demo coming soon</span>
+          )}
+
+          {project.github && (
+            <a
+              href={project.github}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={styles.codeBtn}
+              aria-label={`${project.title} source code on GitHub`}
+              draggable="false"
+              tabIndex={tabIndex}
+            >
+              <GitHubIcon />
+              Code
+            </a>
+          )}
+        </div>
+      </div>
+    </article>
+  )
+}
+
+/*
+  Drives the strip. It drifts at a constant speed, and the visitor can
+  drag (mouse), swipe (touch) or two-finger scroll (trackpad) to move it
+  themselves. Letting go after a flick keeps the strip gliding fast, then it
+  eases back down to the normal drift speed. Hovering does NOT pause it.
+*/
+function useCarousel({ enabled }) {
+  const viewportRef = useRef(null)
+  const trackRef = useRef(null)
+
+  useEffect(() => {
+    if (!enabled) return
+    const viewport = viewportRef.current
+    const track = trackRef.current
+    if (!viewport || !track) return
+
+    const drift = DIRECTION === 'right' ? SPEED : -SPEED
+    const s = {
+      x: 0, // current translateX of the track
+      half: 0, // width of one half of the loop
+      extra: 0, // extra glide speed from a flick (px/s)
+      vel: 0, // smoothed finger speed while dragging (px/s)
+      raf: 0,
+      last: 0,
+      pressed: false,
+      dragging: false,
+      suppressClick: false,
+      focused: false,
+      pointerId: null,
+      startX: 0,
+      lastX: 0,
+      lastT: 0,
+    }
+
+    const apply = () => {
+      track.style.transform = `translate3d(${s.x}px, 0, 0)`
+    }
+
+    // Keep x inside (-half, 0] so the loop wraps invisibly.
+    const wrap = () => {
+      if (!s.half) return
+      s.x = s.x % s.half
+      if (s.x > 0) s.x -= s.half
+    }
+
+    const measure = () => {
+      s.half = track.scrollWidth / 2
+      wrap()
+      apply()
+    }
+
+    const tick = (now) => {
+      const dt = Math.min((now - s.last) / 1000, 0.05)
+      s.last = now
+
+      if (!s.dragging) {
+        s.extra *= Math.exp(-FRICTION * dt)
+        if (Math.abs(s.extra) < 1) s.extra = 0
+        const base = s.focused ? 0 : drift
+        s.x += (base + s.extra) * dt
+        wrap()
+        apply()
+      }
+      s.raf = requestAnimationFrame(tick)
+    }
+
+    const start = () => {
+      if (s.raf) return
+      s.last = performance.now()
+      s.raf = requestAnimationFrame(tick)
+    }
+    const stop = () => {
+      cancelAnimationFrame(s.raf)
+      s.raf = 0
+    }
+
+    // ---- Drag / swipe ----
+    const onDown = (e) => {
+      if (e.pointerType === 'mouse' && e.button !== 0) return
+      s.pressed = true
+      s.suppressClick = false
+      s.pointerId = e.pointerId
+      s.startX = s.lastX = e.clientX
+      s.lastT = performance.now()
+      s.vel = 0
+    }
+
+    const onMove = (e) => {
+      if (!s.pressed || e.pointerId !== s.pointerId) return
+
+      if (!s.dragging) {
+        if (Math.abs(e.clientX - s.startX) < DRAG_THRESHOLD) return
+        s.dragging = true
+        s.extra = 0
+        viewport.setPointerCapture(e.pointerId)
+        viewport.setAttribute('data-dragging', 'true')
+      }
+
+      const now = performance.now()
+      const dx = e.clientX - s.lastX
+      const dt = Math.max((now - s.lastT) / 1000, 0.001)
+      s.vel = 0.75 * s.vel + 0.25 * (dx / dt)
+
+      s.x += dx
+      wrap()
+      apply()
+      s.lastX = e.clientX
+      s.lastT = now
+    }
+
+    const onUp = (e) => {
+      if (!s.pressed || e.pointerId !== s.pointerId) return
+      s.pressed = false
+
+      if (s.dragging) {
+        s.dragging = false
+        s.suppressClick = true // don't open a link at the end of a swipe
+        viewport.removeAttribute('data-dragging')
+        // If the finger rested before lifting, there is no flick.
+        const idle = performance.now() - s.lastT
+        s.extra = idle > 80 ? 0 : Math.max(-MAX_FLICK, Math.min(MAX_FLICK, s.vel))
+        if (viewport.hasPointerCapture(e.pointerId)) {
+          viewport.releasePointerCapture(e.pointerId)
+        }
+      }
+    }
+
+    const onClickCapture = (e) => {
+      if (s.suppressClick) {
+        e.preventDefault()
+        e.stopPropagation()
+        s.suppressClick = false
+      }
+    }
+
+    // ---- Trackpad / horizontal wheel ----
+    const onWheel = (e) => {
+      if (Math.abs(e.deltaX) <= Math.abs(e.deltaY)) return
+      e.preventDefault()
+      s.x -= e.deltaX
+      wrap()
+      apply()
+    }
+
+    // ---- Keyboard: only pause the drift while tabbing through links ----
+    const onFocusIn = (e) => {
+      if (e.target.matches?.(':focus-visible')) s.focused = true
+    }
+    const onFocusOut = () => {
+      s.focused = false
+    }
+
+    // Only animate while the strip is on screen.
+    const io = new IntersectionObserver(
+      ([entry]) => (entry.isIntersecting ? start() : stop()),
+      { threshold: 0 }
+    )
+    io.observe(viewport)
+
+    const ro = new ResizeObserver(measure)
+    ro.observe(track)
+    measure()
+
+    viewport.addEventListener('pointerdown', onDown)
+    viewport.addEventListener('pointermove', onMove)
+    viewport.addEventListener('pointerup', onUp)
+    viewport.addEventListener('pointercancel', onUp)
+    viewport.addEventListener('click', onClickCapture, true)
+    viewport.addEventListener('wheel', onWheel, { passive: false })
+    viewport.addEventListener('focusin', onFocusIn)
+    viewport.addEventListener('focusout', onFocusOut)
+
+    return () => {
+      stop()
+      io.disconnect()
+      ro.disconnect()
+      viewport.removeEventListener('pointerdown', onDown)
+      viewport.removeEventListener('pointermove', onMove)
+      viewport.removeEventListener('pointerup', onUp)
+      viewport.removeEventListener('pointercancel', onUp)
+      viewport.removeEventListener('click', onClickCapture, true)
+      viewport.removeEventListener('wheel', onWheel)
+      viewport.removeEventListener('focusin', onFocusIn)
+      viewport.removeEventListener('focusout', onFocusOut)
+    }
+  }, [enabled])
+
+  return { viewportRef, trackRef }
 }
 
 export default function Projects() {
   const [ref, inView] = useInView()
-  const [index, setIndex] = useState(0)
-  const [direction, setDirection] = useState(1)
 
-  const total = PROJECTS.length
-  const current = PROJECTS[index]
-  const behind1 = PROJECTS[(index + 1) % total]
-  const behind2 = PROJECTS[(index + 2) % total]
+  // Visitors who prefer reduced motion get a plain, natively scrollable row
+  // instead of the auto-moving strip.
+  const [reduced] = useState(
+    () =>
+      typeof window !== 'undefined' &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  )
 
-  const goNext = () => {
-    setDirection(1)
-    setIndex((i) => (i + 1) % total)
-  }
-  const goPrev = () => {
-    setDirection(-1)
-    setIndex((i) => (i - 1 + total) % total)
-  }
-  const goTo = (i) => {
-    setDirection(i > index ? 1 : -1)
-    setIndex(i)
-  }
+  const { viewportRef, trackRef } = useCarousel({ enabled: !reduced })
 
-  // Left/right arrow key navigation while the section is in view.
-  useEffect(() => {
-    if (!inView || total <= 1) return
-    const onKey = (e) => {
-      if (e.key === 'ArrowRight') goNext()
-      if (e.key === 'ArrowLeft') goPrev()
-    }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [inView, index, total])
+  // The track holds two identical halves; sliding by exactly one half looks
+  // identical to the start, so the loop never visibly jumps.
+  const half = Array.from({ length: COPIES_PER_HALF }, () => PROJECTS).flat()
+  const loop = reduced ? PROJECTS : [...half, ...half]
 
   return (
     <section id="projects" className={styles.section} ref={ref}>
@@ -156,107 +371,42 @@ export default function Projects() {
           Projects
         </motion.h2>
         <div className={styles.divider} />
+      </div>
 
-        <div className={styles.stackArea}>
-          <div className={styles.deck}>
-            {total > 2 && (
-              <div className={styles.backCard} style={{ '--depth': 2 }} aria-hidden="true">
-                <span className={styles.backCardLabel}>{behind2.title}</span>
-              </div>
-            )}
-            {total > 1 && (
-              <div className={styles.backCard} style={{ '--depth': 1 }} aria-hidden="true">
-                <span className={styles.backCardLabel}>{behind1.title}</span>
-              </div>
-            )}
-
-            <AnimatePresence mode="popLayout" custom={direction} initial={false}>
-              <motion.div
-                key={current.id}
-                className={styles.frontCard}
-                custom={direction}
-                variants={cardVariants}
-                initial="enter"
-                animate="center"
-                exit="exit"
-                drag={total > 1 ? 'x' : false}
-                dragConstraints={{ left: 0, right: 0 }}
-                dragElastic={0.6}
-                onDragEnd={(e, info) => {
-                  if (info.offset.x < -80) goNext()
-                  else if (info.offset.x > 80) goPrev()
-                }}
-              >
-                {current.featured && (
-                  <span className={styles.featuredBadge}>Featured</span>
-                )}
-
-                <ProjectCover project={current} />
-
-                <div className={styles.cardBody}>
-                  <div className={styles.cardTop}>
-                    <span className={styles.num}># {current.id}</span>
-                    <div className={styles.links}>
-                      {current.github && (
-                        <a href={current.github} target="_blank" rel="noopener noreferrer" className={styles.iconLink} title="GitHub">
-                          <GitHubIcon />
-                        </a>
-                      )}
-                      {current.live && (
-                        <a href={current.live} target="_blank" rel="noopener noreferrer" className={styles.iconLink} title="Live Demo">
-                          <ExternalIcon />
-                        </a>
-                      )}
-                    </div>
-                  </div>
-
-                  <h3 className={styles.projectTitle}>{current.title}</h3>
-                  <p className={styles.projectDesc}>{current.description}</p>
-
-                  <div className={styles.tags}>
-                    {current.tags.map((tag) => (
-                      <span key={tag} className={styles.tag}>{tag}</span>
-                    ))}
-                  </div>
-                </div>
-              </motion.div>
-            </AnimatePresence>
-          </div>
-
-          <div className={styles.controls}>
-            <button onClick={goPrev} className={styles.navBtn} aria-label="Previous project">
-              <ArrowIcon flipped />
-            </button>
-
-            <div className={styles.dots}>
-              {PROJECTS.map((p, i) => (
-                <button
-                  key={p.id}
-                  onClick={() => goTo(i)}
-                  className={`${styles.dot} ${i === index ? styles.dotActive : ''}`}
-                  aria-label={`Go to ${p.title}`}
-                  aria-current={i === index ? 'true' : undefined}
-                />
-              ))}
-            </div>
-
-            <button onClick={goNext} className={styles.navBtn} aria-label="Next project">
-              <ArrowIcon />
-            </button>
-          </div>
-
-          <p className={styles.counter}>
-            {String(index + 1).padStart(2, '0')} / {String(total).padStart(2, '0')}
-          </p>
+      {/* Full-width strip, breaks out of the 1100px column like the tech timeline */}
+      <motion.div
+        ref={viewportRef}
+        className={`${styles.viewport} ${reduced ? styles.reduced : ''}`}
+        initial={{ opacity: 0 }}
+        animate={inView ? { opacity: 1 } : {}}
+        transition={{ delay: 0.3, duration: 0.6 }}
+      >
+        <div ref={trackRef} className={styles.track}>
+          {loop.map((project, i) => (
+            <ProjectCard
+              key={`${project.id}-${i}`}
+              project={project}
+              isClone={i >= PROJECTS.length}
+            />
+          ))}
         </div>
+      </motion.div>
 
+      <p className={styles.hint}>Drag or swipe to browse</p>
+
+      <div className={styles.inner}>
         <motion.div
           className={styles.moreWrap}
           initial={{ opacity: 0 }}
           animate={inView ? { opacity: 1 } : {}}
           transition={{ delay: 0.8 }}
         >
-          <a href={CONTACT.github} target="_blank" rel="noopener noreferrer" className={styles.moreLink}>
+          <a
+            href={CONTACT.github}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={styles.moreLink}
+          >
             <GitHubIcon />
             See more on GitHub →
           </a>

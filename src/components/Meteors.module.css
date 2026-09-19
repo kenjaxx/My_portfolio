@@ -1,0 +1,52 @@
+.wrap {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Meteor head */
+.meteor {
+  position: absolute;
+  width: 2px;
+  height: 2px;
+  border-radius: 50%;
+  background: var(--meteor-color, var(--cyan));
+  box-shadow: 0 0 6px 1px var(--meteor-color, var(--cyan));
+  opacity: 0; /* hidden until its delay is over */
+  pointer-events: none;
+  animation-name: meteor;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+  will-change: transform, opacity;
+}
+
+/* Meteor tail */
+.meteor::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 70px;
+  height: 1px;
+  transform: translateY(-50%);
+  background: linear-gradient(90deg, var(--meteor-color, var(--cyan)), transparent);
+  pointer-events: none;
+}
+
+/* The element is rotated so its tail points up-right, then slid along its
+   own axis, which sends the head down-left with the tail trailing behind. */
+@keyframes meteor {
+  0% {
+    transform: rotate(calc(var(--angle) * -1)) translateX(0);
+    opacity: 1;
+  }
+  70% {
+    opacity: 1;
+  }
+  100% {
+    transform: rotate(calc(var(--angle) * -1)) translateX(calc(var(--distance) * -1));
+    opacity: 0;
+  }
+}

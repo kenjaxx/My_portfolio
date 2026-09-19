@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import ParticlesBackground from './ParticlesBackground'
+import Meteors from './Meteors'
 import TechTimeline from './TechTimeline'
 import { ROLES, CONTACT } from '../data'
 import styles from './Hero.module.css'
@@ -64,6 +65,7 @@ export default function Hero() {
   return (
     <section className={styles.hero}>
       <ParticlesBackground />
+      <Meteors number={18} />
       <div className={styles.glowOrb1}></div>
       <div className={styles.glowOrb2}></div>
 
