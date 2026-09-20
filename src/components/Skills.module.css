@@ -20,49 +20,59 @@
   font-size: clamp(2rem, 4vw, 3rem);
   font-weight: 800;
   color: #f1f5f9;
-  margin-bottom: 3rem;
+  margin-bottom: 2.5rem;
   letter-spacing: -0.02em;
 }
 
-.groups {
-  display: flex;
-  flex-direction: column;
-  gap: 3rem;
+/* --- Tab switcher --- */
+
+.tabs {
+  display: inline-flex;
+  gap: 0.3rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 0.35rem;
+  margin-bottom: 2.5rem;
 }
 
-.group {
-  display: flex;
-  flex-direction: column;
-}
-
-/* Group header: bold label + a muted count badge, like "Languages  11" */
-.groupHeader {
-  display: flex;
-  align-items: baseline;
-  gap: 0.6rem;
-  margin-bottom: 0.9rem;
-}
-
-.groupName {
+.tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: none;
+  border: none;
+  cursor: pointer;
   font-family: var(--font-display);
-  font-size: 1.15rem;
-  font-weight: 700;
-  color: #f1f5f9;
-  letter-spacing: -0.01em;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  padding: 0.65rem 1.2rem;
+  border-radius: 9px;
+  transition: color 0.2s, background 0.2s;
 }
 
-.groupCount {
+.tab:hover {
+  color: var(--text);
+}
+
+.tab:focus-visible {
+  outline: 2px solid var(--cyan);
+  outline-offset: 2px;
+}
+
+.tabActive {
+  color: #0a0a0f;
+  background: linear-gradient(135deg, var(--cyan), var(--purple));
+}
+
+.tabCount {
   font-family: var(--font-mono);
-  font-size: 0.85rem;
-  color: var(--text-dim);
+  font-size: 0.75rem;
+  opacity: 0.75;
 }
 
-.groupDivider {
-  width: 100%;
-  height: 1px;
-  background: rgba(255, 255, 255, 0.08);
-  margin-bottom: 1.5rem;
-}
+/* --- Grid of glowing tiles --- */
 
 .grid {
   display: grid;
@@ -72,28 +82,42 @@
 
 .card {
   position: relative;
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid color-mix(in srgb, var(--skill-color) 30%, rgba(255, 255, 255, 0.08));
   border-radius: 14px;
   padding: 1.5rem 1rem;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.75rem;
-  transition: border-color 0.2s, transform 0.2s, background 0.2s;
+  gap: 0.85rem;
+  box-shadow: 0 0 18px color-mix(in srgb, var(--skill-color) 18%, transparent);
+  transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s, background 0.2s;
 }
 
 .card:hover {
-  border-color: color-mix(in srgb, var(--skill-color) 55%, transparent);
+  border-color: color-mix(in srgb, var(--skill-color) 65%, transparent);
   background: color-mix(in srgb, var(--skill-color) 6%, transparent);
+  box-shadow: 0 0 28px color-mix(in srgb, var(--skill-color) 35%, transparent);
   transform: translateY(-3px);
 }
 
-.icon {
-  font-size: 2rem;
-  line-height: 1;
+/* Icon sits inside a circular badge tinted with the skill's color */
+.iconBadge {
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   flex-shrink: 0;
+  background: color-mix(in srgb, var(--skill-color) 16%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--skill-color) 35%, transparent);
+}
+
+.icon {
+  font-size: 1.5rem;
+  line-height: 1;
 }
 
 .name {
@@ -107,5 +131,16 @@
 @media (max-width: 640px) {
   .grid {
     grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  }
+
+  .tabs {
+    width: 100%;
+  }
+
+  .tab {
+    flex: 1;
+    justify-content: center;
+    font-size: 0.85rem;
+    padding: 0.6rem 0.5rem;
   }
 }

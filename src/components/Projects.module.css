@@ -60,35 +60,29 @@
 
 /* --- Card --- */
 
+/* --- Card --- */
+
 .card {
   position: relative;
   flex: 0 0 auto;
   width: 380px;
-  /* margin (not gap) so each half of the track is exactly 50% wide */
   margin-right: 1.75rem;
   display: flex;
   flex-direction: column;
   background: var(--surface);
-  border: 1px solid var(--border-purple);
-  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-left: 3px solid var(--project-color, var(--purple));
+  border-radius: 0 20px 20px 0;
   overflow: hidden;
-  transition: border-color 0.25s, box-shadow 0.25s;
-}
-
-.card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 2px;
-  background: linear-gradient(90deg, var(--cyan), var(--purple));
-  z-index: 2;
+  box-shadow: 0 0 24px color-mix(in srgb, var(--project-color, var(--purple)) 18%, transparent);
+  transition: border-color 0.25s, box-shadow 0.25s, transform 0.25s;
 }
 
 .card:hover {
-  border-color: rgba(0, 212, 255, 0.4);
-  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.45);
+  border-left-color: var(--project-color, var(--purple));
+  box-shadow: 0 0 36px color-mix(in srgb, var(--project-color, var(--purple)) 38%, transparent),
+    0 25px 60px rgba(0, 0, 0, 0.45);
+  transform: translateY(-3px);
 }
 
 .featuredBadge {
@@ -172,7 +166,7 @@
 }
 
 .cardBody {
-  padding: 1.4rem 1.6rem 1.6rem;
+  padding: 1.6rem 1.7rem 1.8rem;
   display: flex;
   flex-direction: column;
   flex: 1;
@@ -182,24 +176,25 @@
 .num {
   font-family: var(--font-mono);
   font-size: 0.75rem;
-  color: var(--purple);
-  letter-spacing: 0.08em;
-  margin-bottom: 0.8rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--project-color, var(--purple)) 75%, white 15%);
+  margin-bottom: 1rem;
 }
 
 .projectTitle {
-  font-size: 1.3rem;
+  font-size: 1.35rem;
   font-weight: 700;
-  color: #f1f5f9;
-  margin-bottom: 0.6rem;
+  color: #ffffff;
+  margin-bottom: 0.75rem;
   letter-spacing: -0.01em;
 }
 
 .projectDesc {
-  font-size: 0.88rem;
-  color: var(--text-dim);
-  line-height: 1.7;
-  margin-bottom: 1.2rem;
+  font-size: 0.9rem;
+  color: #b7c0d1;
+  line-height: 1.85;
+  margin-bottom: 1.3rem;
   display: -webkit-box;
   -webkit-line-clamp: 4;
   -webkit-box-orient: vertical;
@@ -211,17 +206,18 @@
   flex-wrap: wrap;
   gap: 0.5rem;
   margin-top: auto;
+  margin-bottom: 1.3rem;
 }
 
 .tag {
   font-family: var(--font-mono);
   font-size: 0.7rem;
-  padding: 0.25rem 0.65rem;
+  font-weight: 700;
+  padding: 0.28rem 0.7rem;
   border-radius: 4px;
-  background: rgba(0, 212, 255, 0.06);
-  color: var(--cyan);
-  border: 1px solid rgba(0, 212, 255, 0.18);
-  letter-spacing: 0.04em;
+  background: var(--cyan);
+  color: #06222b;
+  letter-spacing: 0.02em;
 }
 
 /* --- Live / code buttons --- */
@@ -230,7 +226,6 @@
   display: flex;
   align-items: stretch;
   gap: 0.75rem;
-  margin-top: 1.3rem;
 }
 
 .liveBtn {

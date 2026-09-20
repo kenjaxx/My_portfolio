@@ -287,12 +287,7 @@ export default function About() {
                 {ABOUT.location && <span>{ABOUT.location}</span>}
               </div>
 
-              {CONTACT.resume && (
-                <a href={CONTACT.resume} download className={styles.resumeBtn}>
-                  <DownloadIcon />
-                  Download Resume
-                </a>
-              )}
+            
             </motion.div>
 
             <ol className={styles.timeline}>

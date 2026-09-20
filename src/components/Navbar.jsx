@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { NAV_LINKS } from '../data'
+import { NAV_LINKS, CONTACT } from '../data'
 import styles from './Navbar.module.css'
 
 export default function Navbar() {
@@ -26,7 +26,6 @@ export default function Navbar() {
 
     const observer = new IntersectionObserver(
       (entries) => {
-        // Pick the intersecting entry closest to the top of the viewport.
         const visible = entries
           .filter((e) => e.isIntersecting)
           .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top)
@@ -36,8 +35,6 @@ export default function Navbar() {
         }
       },
       {
-        // Treat a section as "active" once it crosses the upper third of
-        // the viewport, and stop tracking it once it leaves the lower third.
         rootMargin: '-30% 0px -60% 0px',
         threshold: 0,
       }
@@ -47,7 +44,6 @@ export default function Navbar() {
     return () => observer.disconnect()
   }, [])
 
-  // Close mobile menu on Escape key
   useEffect(() => {
     if (!menuOpen) return
     const onKeyDown = (e) => {
@@ -57,7 +53,6 @@ export default function Navbar() {
     return () => window.removeEventListener('keydown', onKeyDown)
   }, [menuOpen])
 
-  // Close mobile menu on outside click
   useEffect(() => {
     if (!menuOpen) return
     const onClick = (e) => {
@@ -117,6 +112,12 @@ export default function Navbar() {
         ))}
       </ul>
 
+      {CONTACT.resume && (
+        <a href={CONTACT.resume} download className={styles.ctaBtn}>
+          Resume
+        </a>
+      )}
+
       <button
         className={styles.hamburger}
         onClick={() => setMenuOpen(!menuOpen)}
@@ -147,9 +148,14 @@ export default function Navbar() {
                 <span className={styles.linkNum}>0{i + 1}.</span> {link.label}
               </button>
             ))}
+            {CONTACT.resume && (
+              <a href={CONTACT.resume} download className={styles.mobileCta}>
+                Resume
+              </a>
+            )}
           </motion.div>
         )}
       </AnimatePresence>
     </motion.nav>
   )
-}
+} 

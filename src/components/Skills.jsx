@@ -1,4 +1,5 @@
-import { motion } from 'framer-motion'
+import { useState } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import {
   FaJava,
   FaPython,
@@ -32,15 +33,6 @@ import styles from './Skills.module.css'
 // existed unchanged in every published version of react-icons — this
 // avoids the "does not provide an export" errors caused by an outdated
 // react-icons install missing newer Simple Icons (Si*) exports.
-//
-// Once you run `npm install react-icons@latest`, you can swap any of
-// these for a real brand logo from react-icons/si, e.g.:
-//   TypeScript: SiTypescript, 'Next.js': SiNextdotjs, Django: SiDjango,
-//   Supabase: SiSupabase, Firebase: SiFirebase, PostgreSQL: SiPostgresql,
-//   Prisma: SiPrisma, 'VS Code': SiVisualstudiocode, Postman: SiPostman,
-//   Bash: SiGnubash, Vercel: SiVercel, PowerShell: SiPowershell,
-//   XAMPP: SiXampp, 'Claude Code': SiClaude, Gemini: SiGooglegemini,
-//   Railway: SiRailway, ServiceNow: SiServicenow
 const ICONS = {
   JavaScript: FaJs,
   TypeScript: FaCode,
@@ -77,8 +69,17 @@ const ICONS = {
   ServiceNow: FaCogs,
 }
 
+const gridVariants = {
+  hidden: { opacity: 0, y: 12 },
+  visible: { opacity: 1, y: 0 },
+  exit: { opacity: 0, y: -12 },
+}
+
 export default function Skills() {
   const [ref, inView] = useInView()
+  const [activeKey, setActiveKey] = useState(SKILL_GROUPS[0]?.key)
+
+  const activeGroup = SKILL_GROUPS.find((g) => g.key === activeKey) ?? SKILL_GROUPS[0]
 
   return (
     <section id="skills" className={styles.section} ref={ref}>
@@ -100,41 +101,58 @@ export default function Skills() {
           Skills & Tools
         </motion.h2>
 
-        <div className={styles.groups}>
-          {SKILL_GROUPS.map((group, gi) => (
-            <motion.div
+        <motion.div
+          className={styles.tabs}
+          role="tablist"
+          aria-label="Skill categories"
+          initial={{ opacity: 0, y: 20 }}
+          animate={inView ? { opacity: 1, y: 0 } : {}}
+          transition={{ delay: 0.15, duration: 0.5 }}
+        >
+          {SKILL_GROUPS.map((group) => (
+            <button
               key={group.key}
-              className={styles.group}
-              initial={{ opacity: 0, y: 20 }}
-              animate={inView ? { opacity: 1, y: 0 } : {}}
-              transition={{ delay: gi * 0.15 + 0.2, duration: 0.5 }}
+              role="tab"
+              type="button"
+              aria-selected={activeKey === group.key}
+              className={`${styles.tab} ${activeKey === group.key ? styles.tabActive : ''}`}
+              onClick={() => setActiveKey(group.key)}
             >
-              <div className={styles.groupHeader}>
-                <span className={styles.groupName}>{group.label}</span>
-                <span className={styles.groupCount}>{group.skills.length}</span>
-              </div>
-              <div className={styles.groupDivider} />
-
-              <div className={styles.grid}>
-                {group.skills.map((skill) => {
-                  const Icon = ICONS[skill.name]
-                  return (
-                    <div
-                      key={skill.name}
-                      className={styles.card}
-                      style={{ '--skill-color': skill.color || 'var(--cyan)' }}
-                    >
-                      {Icon && (
-                        <Icon className={styles.icon} style={{ color: skill.color }} />
-                      )}
-                      <span className={styles.name}>{skill.name}</span>
-                    </div>
-                  )
-                })}
-              </div>
-            </motion.div>
+              {group.label}
+              <span className={styles.tabCount}>{group.skills.length}</span>
+            </button>
           ))}
-        </div>
+        </motion.div>
+
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={activeGroup.key}
+            className={styles.grid}
+            variants={gridVariants}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+            transition={{ duration: 0.3 }}
+          >
+            {activeGroup.skills.map((skill) => {
+              const Icon = ICONS[skill.name]
+              return (
+                <div
+                  key={skill.name}
+                  className={styles.card}
+                  style={{ '--skill-color': skill.color || 'var(--cyan)' }}
+                >
+                  <span className={styles.iconBadge}>
+                    {Icon && (
+                      <Icon className={styles.icon} style={{ color: skill.color }} />
+                    )}
+                  </span>
+                  <span className={styles.name}>{skill.name}</span>
+                </div>
+              )
+            })}
+          </motion.div>
+        </AnimatePresence>
       </div>
     </section>
   )

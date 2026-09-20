@@ -4,9 +4,10 @@
   left: 0;
   right: 0;
   z-index: 1000;
-  display: flex;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
   align-items: center;
-  justify-content: space-between;
+  gap: 1.5rem;
   padding: 1.4rem 3rem;
   transition: all 0.3s ease;
 }
@@ -19,14 +20,13 @@
 }
 
 .logo {
-  font-family: var(--font-mono);
-  font-size: 1.15rem;
-  font-weight: 700;
+  font-family: 'Archivo Black', sans-serif;
+  font-size: 1rem;
   color: var(--cyan);
   cursor: pointer;
-  letter-spacing: 0.05em;
   user-select: none;
   border-radius: 4px;
+  justify-self: start;
 }
 
 .logo:focus-visible {
@@ -38,23 +38,27 @@
   color: var(--purple);
 }
 
+/* Centered between the logo and the resume button */
 .links {
   display: flex;
   list-style: none;
   gap: 2.5rem;
   align-items: center;
+  justify-content: center;
+  justify-self: center;
 }
 
 .link {
   background: none;
   border: none;
-  font-family: var(--font-mono);
-  font-size: 0.85rem;
+  font-family: 'Archivo Black', sans-serif;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
   color: var(--text-muted);
   cursor: pointer;
   transition: color 0.2s;
   padding: 0.2rem 0.1rem;
-  letter-spacing: 0.05em;
   border-radius: 4px;
   position: relative;
 }
@@ -69,8 +73,6 @@
   color: var(--cyan);
 }
 
-/* Scroll-spy active state: underline + highlighted text for whichever
-   section is currently in view. */
 .linkActive {
   color: var(--cyan);
 }
@@ -89,7 +91,29 @@
 .linkNum {
   color: var(--cyan);
   margin-right: 0.3em;
-  font-size: 0.75rem;
+  font-size: 0.65rem;
+}
+
+/* Resume CTA, anchored on the right */
+.ctaBtn {
+  display: inline-flex;
+  align-items: center;
+  font-family: 'Archivo Black', sans-serif;
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: #0a0a0f;
+  background: var(--cyan);
+  padding: 0.55rem 1rem;
+  border-radius: 8px;
+  transition: opacity 0.2s, transform 0.2s;
+  justify-self: end;
+  white-space: nowrap;
+}
+
+.ctaBtn:hover {
+  opacity: 0.88;
+  transform: translateY(-1px);
 }
 
 .hamburger {
@@ -101,6 +125,7 @@
   cursor: pointer;
   padding: 4px;
   border-radius: 4px;
+  justify-self: end;
 }
 
 .hamburger:focus-visible {
@@ -151,8 +176,10 @@
 .mobileLink {
   background: none;
   border: none;
-  font-family: var(--font-mono);
-  font-size: 1rem;
+  font-family: 'Archivo Black', sans-serif;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
   color: var(--text-muted);
   cursor: pointer;
   text-align: left;
@@ -175,8 +202,24 @@
   color: var(--cyan);
 }
 
+.mobileCta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Archivo Black', sans-serif;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: #0a0a0f;
+  background: var(--cyan);
+  padding: 0.7rem 1rem;
+  border-radius: 8px;
+  margin-top: 0.4rem;
+}
+
 @media (max-width: 768px) {
   .nav {
+    grid-template-columns: auto auto;
     padding: 1.2rem 1.5rem;
   }
 
@@ -184,7 +227,8 @@
     padding: 1rem 1.5rem;
   }
 
-  .links {
+  .links,
+  .ctaBtn {
     display: none;
   }
 

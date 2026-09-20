@@ -60,6 +60,7 @@ export const SKILL_GROUPS = [
 ]
 
 // Featured/recent projects — Billify, Closet AI, Shoecommerce, House Selling Site
+// Featured/recent projects — Billify, Closet AI, Shoecommerce, House Selling Site
 export const PROJECTS = [
   {
     id: '001',
@@ -67,10 +68,11 @@ export const PROJECTS = [
     description:
       'A personal bill-management and budgeting dashboard built with React and Supabase. Users can track bills by status (Paid, Unpaid, Overdue), organize spending by category, monitor budgets in real time, and export records to CSV or PDF for reporting.',
     tags: ['React', 'Supabase'],
-    github: null, // TODO: add the Billify repo link
+    github: null,
     live: 'https://billify-02f8.onrender.com/bills',
     image: '/images/billify-cover.png',
     featured: true,
+    color: '#00d4ff',
   },
   {
     id: '002',
@@ -78,10 +80,11 @@ export const PROJECTS = [
     description:
       "A mobile-first PWA that lets you snap a photo of a clothing item, has Gemini AI tag it (category, color, pattern, style, formality, season) and file it into a digital closet, then suggests outfit pairings from your existing wardrobe for any occasion or the day's weather. Extra touches include duplicate-item detection, a \"neglected pieces\" nudge, wardrobe gap analysis, and a save-to-lookbook feature — all running on free-tier Firebase, Cloudinary, and Gemini.",
     tags: ['React', 'Vite', 'Tailwind CSS', 'Firebase', 'Cloudinary', 'Gemini API', 'PWA'],
-    github: null, // TODO: add the Closet AI repo link (or leave null if private)
-    live: 'https://closet-ai-ebc44.web.app', // TODO: confirm this actually loads before shipping
+    github: null,
+    live: 'https://closet-ai-ebc44.web.app',
     image: '/images/closet-ai-cover.png',
-    featured: false, // TODO: flip to true if you want this instead of Billify featured
+    featured: false,
+    color: '#00ff88',
   },
   {
     id: '003',
@@ -93,6 +96,7 @@ export const PROJECTS = [
     live: 'https://shoestore-emd2.onrender.com/',
     image: '/images/shoecommerce.jpg',
     featured: false,
+    color: '#7c3aed',
   },
   {
     id: '004',
@@ -104,6 +108,7 @@ export const PROJECTS = [
     live: 'https://kenjaxx.github.io/house-selling-site/',
     image: '/images/house-selling-cover.png',
     featured: false,
+    color: '#7c3aed',
   },
 ]
 

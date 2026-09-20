@@ -82,17 +82,23 @@ function ProjectCover({ project }) {
 
 // `isClone` marks the duplicated cards that only exist to make the loop
 // seamless: they are hidden from screen readers and skipped by Tab.
+// `isClone` marks the duplicated cards that only exist to make the loop
+// seamless: they are hidden from screen readers and skipped by Tab.
 function ProjectCard({ project, isClone }) {
   const tabIndex = isClone ? -1 : undefined
 
   return (
-    <article className={styles.card} aria-hidden={isClone || undefined}>
+    <article
+      className={styles.card}
+      aria-hidden={isClone || undefined}
+      style={{ '--project-color': project.color || 'var(--purple)' }}
+    >
       {project.featured && <span className={styles.featuredBadge}>Featured</span>}
 
       <ProjectCover project={project} />
 
       <div className={styles.cardBody}>
-        <span className={styles.num}># {project.id}</span>
+        <span className={styles.num}>Project {project.id}</span>
 
         <h3 className={styles.projectTitle}>{project.title}</h3>
         <p className={styles.projectDesc}>{project.description}</p>
