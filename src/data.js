@@ -116,7 +116,7 @@ export const CONTACT = {
   github: 'https://github.com/kenjaxx',
   linkedin: 'https://www.linkedin.com/in/kenji-ermita-1375b1392/',
   email: 'kenjiermita2020@gmail.com',
-  resume: '/Kenji_Ermita_Resume.pdf',
+  resume: '/Kenji_Ermita_Resume_.pdf',
 }
 
 // Add your own photos to /public/images/ with these filenames (or update
