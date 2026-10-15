@@ -3,6 +3,7 @@ import { motion } from 'framer-motion'
 import ParticlesBackground from './ParticlesBackground'
 import Meteors from './Meteors'
 import TechTimeline from './TechTimeline'
+import TechText from './TechText'
 import { ROLES, CONTACT } from '../data'
 import styles from './Hero.module.css'
 
@@ -70,7 +71,7 @@ export default function Hero() {
       <div className={styles.glowOrb2}></div>
 
       <div className={styles.inner}>
-        <div className={styles.left}>
+        <div className={styles.center}>
           <motion.div
             className={styles.tab}
             initial={{ opacity: 0, y: 20 }}
@@ -81,16 +82,39 @@ export default function Hero() {
             hello_world.js
           </motion.div>
 
-          <motion.h1
-            className={styles.name}
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.35, duration: 0.7 }}
-          >
-            Kenji
-            <br />
-            <span className={styles.nameAccent}>Ermita</span>
-          </motion.h1>
+          <motion.div
+  className={styles.name}
+  role="heading"
+  aria-level={1}
+  initial={{ opacity: 0, y: 30 }}
+  animate={{ opacity: 1, y: 0 }}
+  transition={{ delay: 0.35, duration: 0.7 }}
+>
+  <TechText
+    text="Kenji Ermita"
+    fontFamily="Rajdhani"
+    fontWeight={700}
+    fontSize={150}
+    letterSpacing={-0.03}
+    color="#ffffff"
+    accentColor="#00d4ff"
+    align="center"
+    reveal="letter"
+    dashLength={4}
+    dashGap={2}
+    strokeWidth={1.5}
+    specks={15}
+    selection
+    labels
+    draggable
+    bounce={0.4}
+    clickKick
+    intro="type"
+    introDuration={2}
+    guides={false}
+    sweep
+  />
+</motion.div>
 
           <motion.div
             className={styles.roleBlock}
@@ -142,45 +166,6 @@ export default function Hero() {
             </a>
           </motion.div>
         </div>
-
-        <motion.div
-          className={styles.right}
-          initial={{ opacity: 0, x: 30 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.7, duration: 0.7 }}
-        >
-          <div className={styles.terminal}>
-            <div className={styles.termHeader}>
-              <span className={styles.dot} style={{ background: '#ff5f57' }} />
-              <span className={styles.dot} style={{ background: '#febc2e' }} />
-              <span className={styles.dot} style={{ background: '#28c840' }} />
-              <span className={styles.termTitle}>status.sh</span>
-            </div>
-            <div className={styles.termBody}>
-              <p>
-                <span className={styles.prompt}>$ </span>
-                <span className={styles.cmd}>whoami</span>
-              </p>
-              <p className={styles.out}>kenji_ermita.dev</p>
-              <p>
-                <span className={styles.prompt}>$ </span>
-                <span className={styles.cmd}>cat status.json</span>
-              </p>
-              <p className={styles.out}>{'{'}</p>
-              <p className={styles.out}>
-                &nbsp;&nbsp;"status": <span className={styles.green}>"accepting_new_projects"</span>,
-              </p>
-              <p className={styles.out}>&nbsp;&nbsp;"reply_time": "&lt; 24h",</p>
-              <p className={styles.out}>&nbsp;&nbsp;"timezone": "GMT+8"</p>
-              <p className={styles.out}>{'}'}</p>
-              <p className={styles.statusLine}>
-                <span className={styles.prompt}>$ </span>
-                <span className={styles.statusDot} />
-                available_for_work
-              </p>
-            </div>
-          </div>
-        </motion.div>
       </div>
 
       <motion.div
