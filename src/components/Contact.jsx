@@ -27,7 +27,7 @@ const TIMELINE = [
     id: 'apps',
     eyebrow: 'Projects',
     title: 'Four live apps',
-    text: 'Billify, Shoecommerce, Closet, and House Selling Site.',
+    text: 'Billify, Rehearse, Closet, and House Selling Site.',
     done: true,
   },
   {

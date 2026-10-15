@@ -59,8 +59,7 @@ export const SKILL_GROUPS = [
   },
 ]
 
-// Featured/recent projects — Billify, Closet AI, Shoecommerce, House Selling Site
-// Featured/recent projects — Billify, Closet AI, Shoecommerce, House Selling Site
+
 export const PROJECTS = [
   {
     id: '001',
@@ -88,13 +87,13 @@ export const PROJECTS = [
   },
   {
     id: '003',
-    title: 'Shoecommerce',
+    title: 'Rehearse',
     description:
-      'A full-stack e-commerce app for shoe retail, built end-to-end with React and Supabase. Implements user authentication, a browsable product catalog, cart management, and a complete checkout and order-tracking flow behind a clean, responsive UI.',
-    tags: ['React', 'Supabase', 'JavaScript', 'CSS'],
-    github: 'https://github.com/kenjaxx',
-    live: 'https://shoestore-emd2.onrender.com/',
-    image: '/images/shoecommerce.jpg',
+      'A voice-driven mock interview app that scores answers on content, clarity and confidence. Practice out loud or type, with speech-to-text, filler-word and pace tracking, STAR checks, AI follow-up questions and sample answers. Features a secure serverless backend with Firebase Auth, App Check and per-user rate limiting, plus saved session history with progress charts and PDF export.',
+    tags: ['React', 'Firebase', 'Gemini API', 'Vercel', 'JavaScript'],
+    github: 'https://github.com/kenjaxx/ai-interview-simulator',
+    live: 'https://ai-interview-simulator-ochre.vercel.app/',
+    image: '/images/ai-interview-simulator.jpg',
     featured: false,
     color: '#7c3aed',
   },
