@@ -1,9 +1,9 @@
-import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import ParticlesBackground from './ParticlesBackground'
 import Meteors from './Meteors'
 import TechTimeline from './TechTimeline'
-import TechText from './TechText'
+import ParticleText from './ParticleText'
+import RotatingText from './RotatingText'
 import { ROLES, CONTACT } from '../data'
 import styles from './Hero.module.css'
 
@@ -26,39 +26,6 @@ function GitHubIcon() {
 }
 
 export default function Hero() {
-  const [roleIndex, setRoleIndex] = useState(0)
-  const [displayed, setDisplayed] = useState('')
-  const [deleting, setDeleting] = useState(false)
-  const [charIndex, setCharIndex] = useState(0)
-
-  useEffect(() => {
-    const current = ROLES[roleIndex]
-    let timeout
-
-    if (!deleting) {
-      if (charIndex < current.length) {
-        timeout = setTimeout(() => {
-          setDisplayed(current.substring(0, charIndex + 1))
-          setCharIndex((c) => c + 1)
-        }, 80)
-      } else {
-        timeout = setTimeout(() => setDeleting(true), 2000)
-      }
-    } else {
-      if (charIndex > 0) {
-        timeout = setTimeout(() => {
-          setDisplayed(current.substring(0, charIndex - 1))
-          setCharIndex((c) => c - 1)
-        }, 45)
-      } else {
-        setDeleting(false)
-        setRoleIndex((r) => (r + 1) % ROLES.length)
-      }
-    }
-
-    return () => clearTimeout(timeout)
-  }, [charIndex, deleting, roleIndex])
-
   const scrollToProjects = () => {
     document.querySelector('#projects')?.scrollIntoView({ behavior: 'smooth' })
   }
@@ -83,38 +50,37 @@ export default function Hero() {
           </motion.div>
 
           <motion.div
-  className={styles.name}
-  role="heading"
-  aria-level={1}
-  initial={{ opacity: 0, y: 30 }}
-  animate={{ opacity: 1, y: 0 }}
-  transition={{ delay: 0.35, duration: 0.7 }}
->
-  <TechText
-    text="Kenji Ermita"
-    fontFamily="Rajdhani"
-    fontWeight={700}
-    fontSize={150}
-    letterSpacing={-0.03}
-    color="#ffffff"
-    accentColor="#00d4ff"
-    align="center"
-    reveal="letter"
-    dashLength={4}
-    dashGap={2}
-    strokeWidth={1.5}
-    specks={15}
-    selection
-    labels
-    draggable
-    bounce={0.4}
-    clickKick
-    intro="type"
-    introDuration={2}
-    guides={false}
-    sweep
-  />
-</motion.div>
+            className={styles.name}
+            role="heading"
+            aria-level={1}
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.35, duration: 0.7 }}
+          >
+            <ParticleText
+              text="Kenji Ermita"
+              fontFamily="Rajdhani"
+              fontWeight={700}
+              fontSize="clamp(3.5rem, 11vw, 8rem)"
+              color="#ffffff"
+              highlightColor="#00d4ff"
+              highlightMode="motion"
+              shape="circle"
+              intro="gather"
+              scatter={180}
+              gatherDuration={1600}
+              stagger={420}
+              particleSize={2}
+              density={4}
+              clickBurst
+              burstStrength={1}
+              pointerRepel={40}
+              repelRadius={120}
+              idleDrift={0.7}
+              trigger="mount"
+              glow
+            />
+          </motion.div>
 
           <motion.div
             className={styles.roleBlock}
@@ -126,7 +92,16 @@ export default function Hero() {
               <span className={styles.prompt}>$ </span>role --current
             </p>
             <p className={styles.roleOut}>
-              <span className={styles.roleVal}>{displayed}</span>
+              <RotatingText
+                texts={ROLES}
+                effect="slide"
+                direction="up"
+                staggerFrom="first"
+                staggerDuration={0.03}
+                rotationInterval={2500}
+                mainClassName={styles.roleVal}
+                splitLevelClassName={styles.roleWord}
+              />
               <span className={styles.cursor}>▌</span>
             </p>
           </motion.div>

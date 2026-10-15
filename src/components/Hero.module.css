@@ -78,7 +78,7 @@
 .name {
   width: 100%;
   max-width: 900px;
-  height: clamp(130px, 22vw, 230px);
+  height: clamp(200px, 26vw, 260px);
   margin: 0 0 0.4rem;
 }
 
@@ -197,3 +197,9 @@
     max-width: none;
   }
 }
+
+.roleWord {
+  overflow: hidden;
+  padding-bottom: 0.15em;
+}
+
