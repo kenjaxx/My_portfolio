@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react'
 import { useInView } from '../hooks/useInView'
 import { PROFILE, ABOUT, CONTACT } from '../data'
 import styles from './About.module.css'
-
+import Lanyard from './Lanyard'
 const fadeUp = {
   hidden: { opacity: 0, y: 40 },
   visible: (i = 0) => ({
@@ -101,6 +101,18 @@ function BriefcaseIcon() {
       <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
     </svg>
   )
+}
+
+
+
+
+function supportsWebGL() {
+  try {
+    const c = document.createElement('canvas')
+    return !!(c.getContext('webgl2') || c.getContext('webgl'))
+  } catch {
+    return false
+  }
 }
 
 /* ---------- Photo: arch, morphing glow, orbiting dots ---------- */
@@ -203,14 +215,43 @@ export default function About() {
       <div className={styles.inner}>
         <div className={styles.grid}>
           <motion.div
-            className={styles.photoCol}
-            variants={fadeUp}
-            initial="hidden"
-            animate={inView ? 'visible' : 'hidden'}
-            custom={0}
-          >
-            <Photo />
-          </motion.div>
+  className={styles.photoCol}
+  variants={fadeUp}
+  initial="hidden"
+  animate={inView ? 'visible' : 'hidden'}
+  custom={0}
+>
+  {supportsWebGL() ? (
+    <div className={styles.lanyardWrap}>
+      {/* Mounted only once the section is in view, so the drop-in intro
+          plays when the visitor actually scrolls here. */}
+      {inView && (
+        <Lanyard
+          frontImage={PROFILE.aboutPhoto}
+          imageFit="cover"
+          cardColor="#0f0f1a"
+          orientation="portrait"
+          finish="glossy"
+          cornerRadius={0.35}
+          size={0.55}
+          anchor="center"
+          strapLength={0.45}
+          strapColor="#00d4ff"
+          strapWidth={0.65}
+          metal="silver"
+          gravity={1}
+          damping={0.5}
+          elasticity={0.5}
+          breeze={0.3}
+          interactive
+          intro
+        />
+      )}
+    </div>
+  ) : (
+    <Photo />
+  )}
+</motion.div>
 
           <div className={styles.textCol}>
             <motion.span
