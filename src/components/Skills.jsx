@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useState, useMemo, useRef, useEffect, useCallback, memo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { createPortal } from 'react-dom'
 import {
   FaJava,
   FaPython,
@@ -26,13 +27,15 @@ import {
 } from 'react-icons/fa'
 import { useInView } from '../hooks/useInView'
 import { SKILL_GROUPS } from '../data'
+import { LEVELS, STATUS, getSkillInfo, getProjectsFor } from '../skillInfo'
+import GlassIcons from './GlassIcons'
 import styles from './Skills.module.css'
 
-// Maps a skill's display name to its brand-icon component. Every icon
-// here comes from react-icons/fa (Font Awesome) only, since that set has
-// existed unchanged in every published version of react-icons — this
-// avoids the "does not provide an export" errors caused by an outdated
-// react-icons install missing newer Simple Icons (Si*) exports.
+// Memoised so opening/closing the popup doesn't re-render the glass grid.
+const Glass = memo(GlassIcons)
+
+// Maps a skill's display name to its icon. Every icon comes from
+// react-icons/fa only, so no extra install is needed.
 const ICONS = {
   JavaScript: FaJs,
   TypeScript: FaCode,
@@ -69,17 +72,296 @@ const ICONS = {
   ServiceNow: FaCogs,
 }
 
-const gridVariants = {
-  hidden: { opacity: 0, y: 12 },
-  visible: { opacity: 1, y: 0 },
-  exit: { opacity: 0, y: -12 },
+/* ---------- Color helpers: skill color -> glass plate gradient ---------- */
+
+const WHITE = [255, 255, 255]
+const BLACK = [0, 0, 0]
+const GRAPHITE = 'linear-gradient(135deg, hsl(250, 6%, 46%), hsl(250, 8%, 22%))'
+
+const hexToRgb = (hex) => {
+  const n = parseInt(hex.replace('#', ''), 16)
+  return [(n >> 16) & 255, (n >> 8) & 255, n & 255]
 }
+const mix = (a, b, t) => a.map((v, i) => Math.round(v + (b[i] - v) * t))
+const luminance = ([r, g, b]) => (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255
+const css = ([r, g, b]) => `rgb(${r}, ${g}, ${b})`
+
+const gradientCache = new Map()
+
+function plateGradient(hex) {
+  const key = hex || '#00d4ff'
+  if (gradientCache.has(key)) return gradientCache.get(key)
+
+  const rgb = hexToRgb(key)
+  const lum = luminance(rgb)
+  let result
+
+  if (lum > 0.9) {
+    // Near-white brands (Next.js, GitHub, Vercel): a white icon on a white
+    // plate would vanish, so they get a graphite plate instead.
+    result = GRAPHITE
+  } else {
+    let from
+    let to
+    if (lum < 0.14) {
+      from = mix(rgb, WHITE, 0.38)
+      to = mix(rgb, WHITE, 0.12)
+    } else if (lum > 0.6) {
+      from = mix(rgb, BLACK, 0.08)
+      to = mix(rgb, BLACK, 0.38)
+    } else {
+      from = mix(rgb, WHITE, 0.2)
+      to = mix(rgb, BLACK, 0.22)
+    }
+    result = `linear-gradient(135deg, ${css(from)}, ${css(to)})`
+  }
+
+  gradientCache.set(key, result)
+  return result
+}
+
+/* Accent color for the meter and bars in the popup. */
+const accentOf = (hex) => (hex && luminance(hexToRgb(hex)) < 0.12 ? '#6ee7b7' : hex || '#00d4ff')
+
+/* ---------- Small hooks / icons ---------- */
+
+function useIsMobile() {
+  const [mobile, setMobile] = useState(
+    () => typeof window !== 'undefined' && window.matchMedia('(max-width: 640px)').matches
+  )
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 640px)')
+    const onChange = () => setMobile(mq.matches)
+    onChange()
+    mq.addEventListener('change', onChange)
+    return () => mq.removeEventListener('change', onChange)
+  }, [])
+  return mobile
+}
+
+function CloseIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
+      <line x1="5" y1="5" x2="19" y2="19" />
+      <line x1="19" y1="5" x2="5" y2="19" />
+    </svg>
+  )
+}
+
+/* ---------- The skill popup ---------- */
+
+function SkillModal({ selected, onClose }) {
+  const closeRef = useRef(null)
+  const detailRef = useRef(null)
+
+  useEffect(() => {
+    if (!selected) return
+
+    const onKeyDown = (e) => {
+      if (e.key === 'Escape') onClose()
+    }
+
+    // Lock page scrolling without touching body overflow (hiding the
+    // scrollbar changes the page width and forces a re-layout, which was
+    // a source of lag before).
+    const blockScroll = (e) => {
+      const detail = detailRef.current
+      if (detail && detail.contains(e.target) && detail.scrollHeight > detail.clientHeight) {
+        return
+      }
+      e.preventDefault()
+    }
+
+    window.addEventListener('keydown', onKeyDown)
+    window.addEventListener('wheel', blockScroll, { passive: false })
+    window.addEventListener('touchmove', blockScroll, { passive: false })
+    closeRef.current?.focus({ preventScroll: true })
+
+    return () => {
+      window.removeEventListener('keydown', onKeyDown)
+      window.removeEventListener('wheel', blockScroll)
+      window.removeEventListener('touchmove', blockScroll)
+    }
+  }, [selected, onClose])
+
+  const goToProjects = () => {
+    onClose()
+    setTimeout(() => {
+      document.querySelector('#projects')?.scrollIntoView({ behavior: 'smooth' })
+    }, 60)
+  }
+
+  return createPortal(
+    <AnimatePresence>
+      {selected && (() => {
+        const { skill, Icon, dx, dy } = selected
+        const info = getSkillInfo(skill.name)
+        const status = STATUS[info.status] || STATUS.familiar
+        const projects = getProjectsFor(skill.name)
+        const accent = accentOf(skill.color)
+
+        return (
+          <motion.div
+            className={styles.overlay}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            onClick={onClose}
+          >
+            <motion.div
+              ref={detailRef}
+              className={styles.detail}
+              style={{ '--skill-color': accent }}
+              role="dialog"
+              aria-modal="true"
+              aria-label={`${skill.name} skill details`}
+              // Grows out of the tile that was clicked. Only transform and
+              // opacity are animated, so it stays on the GPU.
+              initial={{ opacity: 0, scale: 0.4, x: dx, y: dy }}
+              animate={{ opacity: 1, scale: 1, x: 0, y: 0 }}
+              exit={{ opacity: 0, scale: 0.7, x: dx * 0.4, y: dy * 0.4 }}
+              transition={{
+                type: 'spring',
+                stiffness: 320,
+                damping: 30,
+                mass: 0.8,
+                opacity: { duration: 0.15 },
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button
+                ref={closeRef}
+                type="button"
+                className={styles.closeBtn}
+                onClick={onClose}
+                aria-label="Close skill details"
+              >
+                <CloseIcon />
+              </button>
+
+              <div className={styles.head}>
+                <span className={styles.iconTile} style={{ background: plateGradient(skill.color) }}>
+                  {Icon && <Icon />}
+                </span>
+                <div className={styles.headText}>
+                  <h3 className={styles.skillName}>{skill.name}</h3>
+                  <span
+                    className={styles.badge}
+                    style={{ '--badge': status.color }}
+                  >
+                    <span className={styles.badgeDot} />
+                    {status.label}
+                  </span>
+                </div>
+              </div>
+
+              <div className={styles.levelRow}>
+                <span className={styles.levelName}>{LEVELS[info.level]}</span>
+                <span className={styles.levelNum}>{info.level} / 5</span>
+              </div>
+              <div
+                className={styles.meter}
+                role="img"
+                aria-label={`${LEVELS[info.level]}, level ${info.level} of 5`}
+              >
+                {[1, 2, 3, 4, 5].map((n) => (
+                  <span
+                    key={n}
+                    className={`${styles.seg} ${n <= info.level ? styles.segOn : ''}`}
+                    style={{ animationDelay: `${0.25 + n * 0.07}s` }}
+                  />
+                ))}
+              </div>
+
+              {info.blurb && <p className={styles.blurb}>{info.blurb}</p>}
+
+              {info.subs && info.subs.length > 0 && (
+                <div className={styles.block}>
+                  <p className={styles.blockTitle}>Breakdown</p>
+                  <div className={styles.subs}>
+                    {info.subs.map((s, i) => (
+                      <div key={s.name} className={styles.sub}>
+                        <div className={styles.subTop}>
+                          <span>{s.name}</span>
+                          <span className={styles.subNum}>{s.value}/5</span>
+                        </div>
+                        <div className={styles.track}>
+                          <span
+                            className={styles.fill}
+                            style={{ '--v': s.value, animationDelay: `${0.35 + i * 0.08}s` }}
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {projects.length > 0 && (
+                <div className={styles.block}>
+                  <p className={styles.blockTitle}>Used in</p>
+                  <div className={styles.chips}>
+                    {projects.map((p) => (
+                      <button
+                        key={p.id}
+                        type="button"
+                        className={styles.projChip}
+                        onClick={goToProjects}
+                        title="Jump to the Projects section"
+                      >
+                        {p.title}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </motion.div>
+          </motion.div>
+        )
+      })()}
+    </AnimatePresence>,
+    document.body
+  )
+}
+
+/* ---------- Section ---------- */
 
 export default function Skills() {
   const [ref, inView] = useInView()
   const [activeKey, setActiveKey] = useState(SKILL_GROUPS[0]?.key)
+  const [selected, setSelected] = useState(null)
+  const isMobile = useIsMobile()
 
   const activeGroup = SKILL_GROUPS.find((g) => g.key === activeKey) ?? SKILL_GROUPS[0]
+
+  const handlePick = useCallback((skill, event) => {
+    const Icon = ICONS[skill.name]
+    // Keyboard activation has no pointer position, so grow from the centre.
+    const hasPointer = event && (event.clientX || event.clientY)
+    const dx = hasPointer ? event.clientX - window.innerWidth / 2 : 0
+    const dy = hasPointer ? event.clientY - window.innerHeight / 2 : 0
+    setSelected({ skill, Icon, dx, dy })
+  }, [])
+
+  const closeModal = useCallback(() => setSelected(null), [])
+
+  // Rebuilt only when the tab changes, so the glass grid stays still while
+  // the popup opens and closes.
+  const items = useMemo(
+    () =>
+      activeGroup.skills.map((skill) => {
+        const Icon = ICONS[skill.name]
+        return {
+          id: skill.name,
+          label: skill.name,
+          color: plateGradient(skill.color),
+          icon: Icon ? <Icon /> : null,
+          onClick: (event) => handlePick(skill, event),
+        }
+      }),
+    [activeGroup, handlePick]
+  )
 
   return (
     <section id="skills" className={styles.section} ref={ref}>
@@ -124,36 +406,40 @@ export default function Skills() {
           ))}
         </motion.div>
 
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={activeGroup.key}
-            className={styles.grid}
-            variants={gridVariants}
-            initial="hidden"
-            animate="visible"
-            exit="exit"
-            transition={{ duration: 0.3 }}
-          >
-            {activeGroup.skills.map((skill) => {
-              const Icon = ICONS[skill.name]
-              return (
-                <div
-                  key={skill.name}
-                  className={styles.card}
-                  style={{ '--skill-color': skill.color || 'var(--cyan)' }}
-                >
-                  <span className={styles.iconBadge}>
-                    {Icon && (
-                      <Icon className={styles.icon} style={{ color: skill.color }} />
-                    )}
-                  </span>
-                  <span className={styles.name}>{skill.name}</span>
-                </div>
-              )
-            })}
-          </motion.div>
-        </AnimatePresence>
+        <div className={styles.glassWrap}>
+          {/* Mounted once the section is visible, so the WebGL glass isn't
+              created while the visitor is still at the top of the page. */}
+          {inView && (
+            <Glass
+              items={items}
+              size={isMobile ? 56 : 64}
+              gap={isMobile ? 30 : 44}
+              columns={7}
+              roundness={0.6}
+              refraction={0.8}
+              bevel={0.6}
+              dispersion={0}
+              frost={0.2}
+              shine={0.85}
+              tint="#dfdfdf"
+              tintOpacity={0.2}
+              iconColor="#ffffff"
+              plate="tilt"
+              tilt={30}
+              spread={0.5}
+              hover="press"
+              parallax={1}
+              labels="always"
+              intro
+              theme="dark"
+            />
+          )}
+        </div>
+
+        <p className={styles.hint}>Click a tile to see how well I know it</p>
       </div>
+
+      <SkillModal selected={selected} onClose={closeModal} />
     </section>
   )
 }
