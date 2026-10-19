@@ -39,15 +39,7 @@ export default function Hero() {
 
       <div className={styles.inner}>
         <div className={styles.center}>
-          <motion.div
-            className={styles.tab}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2, duration: 0.6 }}
-          >
-            <span className={styles.tabDot} />
-            hello_world.js
-          </motion.div>
+         
 
           <motion.div
             className={styles.name}
