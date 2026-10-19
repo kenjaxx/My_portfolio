@@ -3,6 +3,7 @@ import { useState, useRef, useEffect, useCallback, memo } from 'react'
 import { createPortal } from 'react-dom'
 import { useInView } from '../hooks/useInView'
 import CircularCarousel from './CircularCarousel'
+import SplitFlapText from './SplitFlapText'
 import { PROJECTS, CONTACT } from '../data'
 import styles from './Projects.module.css'
 
@@ -24,6 +25,14 @@ const ITEMS = Array.from({ length: REPEATS }, () => SHOWN)
     title: p.title,
     subtitle: `Project ${p.id}`,
   }))
+
+/* Sizes the title board so it always fits inside the popup.
+   Each tile + gap is about 0.9em wide, so the font size is
+   (available width) / (characters * 0.9), capped at 30px.
+   The available width is the popup's inner width: up to 540px on desktop,
+   and (screen width - 120px) on phones. */
+const titleFontSize = (length) =>
+  `min(30px, calc(min(540px, 100vw - 120px) / ${(Math.max(length, 1) * 0.9).toFixed(2)}))`
 
 function GitHubIcon() {
   return (
@@ -57,6 +66,14 @@ function CloseIcon() {
 function ProjectModal({ selected, onClose }) {
   const closeRef = useRef(null)
   const detailRef = useRef(null)
+
+  // The split-flap text only starts once the popup has finished growing in,
+  // so the two animations never compete with each other.
+  const [ready, setReady] = useState(false)
+
+  useEffect(() => {
+    setReady(false)
+  }, [selected])
 
   useEffect(() => {
     if (!selected) return
@@ -92,6 +109,8 @@ function ProjectModal({ selected, onClose }) {
   }, [selected, onClose])
 
   const project = selected?.project
+  const titleText = project ? project.title.toUpperCase() : ''
+  const numText = project ? `PROJECT ${project.id}` : ''
 
   return createPortal(
     <AnimatePresence>
@@ -123,6 +142,9 @@ function ProjectModal({ selected, onClose }) {
               mass: 0.8,
               opacity: { duration: 0.15 },
             }}
+            onAnimationComplete={() => {
+              if (selected) setReady(true)
+            }}
             onClick={(e) => e.stopPropagation()}
           >
             <button
@@ -135,15 +157,71 @@ function ProjectModal({ selected, onClose }) {
               <CloseIcon />
             </button>
 
-            <span className={styles.num}>
-              Project {project.id}
+            {/* "PROJECT 003" + Featured badge */}
+            <div className={styles.numRow}>
+              <div className={styles.numSlot}>
+                {ready && (
+                  <SplitFlapText
+                    text={numText}
+                    padTo={numText.length}
+                    tileStyle="minimal"
+                    textColor="currentColor"
+                    fontSize={13}
+                    gap="0.12em"
+                    flipDuration={0.1}
+                    stagger={0.035}
+                    flipsPerChar={5}
+                    order="left"
+                    charset="alphanumeric"
+                    depth={0.3}
+                    intro
+                  />
+                )}
+              </div>
               {project.featured && <span className={styles.featuredBadge}>Featured</span>}
-            </span>
+            </div>
 
-            <h3 className={styles.projectTitle}>{project.title}</h3>
-            <p className={styles.projectDesc}>{project.description}</p>
+            {/* Project title on a split-flap board */}
+            <div
+              className={styles.titleSlot}
+              role="heading"
+              aria-level={3}
+              aria-label={project.title}
+              style={{ fontSize: titleFontSize(titleText.length) }}
+            >
+              {ready && (
+                <SplitFlapText
+                  text={titleText}
+                  padTo={titleText.length}
+                  tileStyle="board"
+                  tileColor="#171726"
+                  textColor="#ffffff"
+                  fontSize={titleFontSize(titleText.length)}
+                  gap="0.1em"
+                  tileRadius="0.12em"
+                  flipDuration={0.1}
+                  stagger={0.04}
+                  flipsPerChar={6}
+                  order="left"
+                  charset="alphanumeric"
+                  glare={0}
+                  depth={0.5}
+                  intro
+                />
+              )}
+            </div>
 
-            <div className={styles.tags}>
+            <p
+              className={`${styles.projectDesc} ${styles.fade} ${ready ? styles.fadeOn : ''}`}
+              style={{ transitionDelay: '0.15s' }}
+            >
+              {project.description}
+            </p>
+
+            <div
+              className={`${styles.tags} ${styles.fade} ${ready ? styles.fadeOn : ''}`}
+              style={{ transitionDelay: '0.3s' }}
+            >
               {project.tags.map((tag) => (
                 <span key={tag} className={styles.tag}>
                   {tag}
@@ -151,7 +229,10 @@ function ProjectModal({ selected, onClose }) {
               ))}
             </div>
 
-            <div className={styles.actions}>
+            <div
+              className={`${styles.actions} ${styles.fade} ${ready ? styles.fadeOn : ''}`}
+              style={{ transitionDelay: '0.45s' }}
+            >
               {project.live ? (
                 <a
                   href={project.live}
