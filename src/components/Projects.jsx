@@ -1,16 +1,20 @@
 import { motion, AnimatePresence } from 'framer-motion'
-import { useState } from 'react'
+import { useState, useRef, useEffect, useCallback, memo } from 'react'
+import { createPortal } from 'react-dom'
 import { useInView } from '../hooks/useInView'
 import CircularCarousel from './CircularCarousel'
 import { PROJECTS, CONTACT } from '../data'
 import styles from './Projects.module.css'
 
+// Memoised so opening/closing the modal doesn't re-render the whole 3D ring.
+const Carousel = memo(CircularCarousel)
+
 // Only projects that have a cover image go on the ring.
 const SHOWN = PROJECTS.filter((p) => p.image)
 
-// With only a few projects the ring looks sparse, so each one is repeated.
-// 4 projects x 2 = 8 cards. Raise to 3 if you want it fuller.
-const REPEATS = 2
+// 1 = each project appears once on the ring (cards look biggest).
+// Raise to 2 for a fuller ring, but cards will appear smaller.
+const REPEATS = 1
 
 const ITEMS = Array.from({ length: REPEATS }, () => SHOWN)
   .flat()
@@ -39,11 +43,203 @@ function ExternalIcon() {
   )
 }
 
+function CloseIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
+      <line x1="5" y1="5" x2="19" y2="19" />
+      <line x1="19" y1="5" x2="5" y2="19" />
+    </svg>
+  )
+}
+
+/* ---------- The expanded project card (popup) ---------- */
+
+function ProjectModal({ selected, onClose }) {
+  const closeRef = useRef(null)
+  const detailRef = useRef(null)
+
+  useEffect(() => {
+    if (!selected) return
+
+    const onKeyDown = (e) => {
+      if (e.key === 'Escape') onClose()
+    }
+
+    // Lock page scrolling WITHOUT touching body overflow. Hiding the body
+    // scrollbar changes the page width, which forces the whole page (and the
+    // 3D carousel) to re-layout, and that was a big source of the lag.
+    // Scrolling inside the popup itself is still allowed when it overflows.
+    const blockScroll = (e) => {
+      const detail = detailRef.current
+      if (detail && detail.contains(e.target) && detail.scrollHeight > detail.clientHeight) {
+        return
+      }
+      e.preventDefault()
+    }
+
+    window.addEventListener('keydown', onKeyDown)
+    window.addEventListener('wheel', blockScroll, { passive: false })
+    window.addEventListener('touchmove', blockScroll, { passive: false })
+
+    // preventScroll stops the browser from jumping the page to the button.
+    closeRef.current?.focus({ preventScroll: true })
+
+    return () => {
+      window.removeEventListener('keydown', onKeyDown)
+      window.removeEventListener('wheel', blockScroll)
+      window.removeEventListener('touchmove', blockScroll)
+    }
+  }, [selected, onClose])
+
+  const project = selected?.project
+
+  return createPortal(
+    <AnimatePresence>
+      {selected && (
+        <motion.div
+          className={styles.overlay}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.2 }}
+          onClick={onClose}
+        >
+          <motion.div
+            ref={detailRef}
+            className={styles.detail}
+            style={{ '--project-color': project.color || 'var(--purple)' }}
+            role="dialog"
+            aria-modal="true"
+            aria-label={`${project.title} project details`}
+            // Grows out of the spot that was clicked, then settles in the centre.
+            // Only transform + opacity are animated, so it stays on the GPU.
+            initial={{ opacity: 0, scale: 0.4, x: selected.dx, y: selected.dy }}
+            animate={{ opacity: 1, scale: 1, x: 0, y: 0 }}
+            exit={{ opacity: 0, scale: 0.7, x: selected.dx * 0.4, y: selected.dy * 0.4 }}
+            transition={{
+              type: 'spring',
+              stiffness: 320,
+              damping: 30,
+              mass: 0.8,
+              opacity: { duration: 0.15 },
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              ref={closeRef}
+              type="button"
+              className={styles.closeBtn}
+              onClick={onClose}
+              aria-label="Close project details"
+            >
+              <CloseIcon />
+            </button>
+
+            <span className={styles.num}>
+              Project {project.id}
+              {project.featured && <span className={styles.featuredBadge}>Featured</span>}
+            </span>
+
+            <h3 className={styles.projectTitle}>{project.title}</h3>
+            <p className={styles.projectDesc}>{project.description}</p>
+
+            <div className={styles.tags}>
+              {project.tags.map((tag) => (
+                <span key={tag} className={styles.tag}>
+                  {tag}
+                </span>
+              ))}
+            </div>
+
+            <div className={styles.actions}>
+              {project.live ? (
+                <a
+                  href={project.live}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={styles.liveBtn}
+                  aria-label={`View ${project.title} live`}
+                >
+                  View Live
+                  <ExternalIcon />
+                </a>
+              ) : (
+                <span className={styles.liveBtnDisabled}>Live demo coming soon</span>
+              )}
+
+              {project.github && (
+                <a
+                  href={project.github}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={styles.codeBtn}
+                  aria-label={`${project.title} source code on GitHub`}
+                >
+                  <GitHubIcon />
+                  Code
+                </a>
+              )}
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>,
+    document.body
+  )
+}
+
+/* ---------- Section ---------- */
+
 export default function Projects() {
   const [ref, inView] = useInView()
-  const [active, setActive] = useState(0)
 
-  const project = SHOWN[active] ?? SHOWN[0]
+  // { project, dx, dy } while a project is open, otherwise null.
+  // dx/dy = where the click happened, relative to the screen centre,
+  // so the popup can grow out of that spot.
+  const [selected, setSelected] = useState(null)
+
+  // True only while a mouse is directly over a card (not the empty space
+  // around the ring). This is what pauses the spinning.
+  const [overCard, setOverCard] = useState(false)
+
+  // Remember the last pointer position inside the carousel.
+  const lastPointer = useRef({ x: 0, y: 0 })
+
+  const handleStageClickCapture = (e) => {
+    lastPointer.current = { x: e.clientX, y: e.clientY }
+  }
+
+  // Runs on every mouse move over the stage. It only pauses when the thing
+  // under the cursor is actually a card. React bails out of the state update
+  // when the value doesn't change, so this is cheap.
+  const handleStagePointerMove = (e) => {
+    if (e.pointerType !== 'mouse') return
+    const onCard = !!(e.target.closest && e.target.closest('[data-cc-index]'))
+    setOverCard(onCard)
+  }
+
+  const handleStagePointerLeave = () => setOverCard(false)
+
+  const handleItemClick = useCallback((item, index) => {
+    const project = SHOWN[index % SHOWN.length]
+    if (!project) return
+
+    const { x, y } = lastPointer.current
+    // Keyboard activation has no pointer position, so just grow from the centre.
+    const hasPointer = x !== 0 || y !== 0
+    const dx = hasPointer ? x - window.innerWidth / 2 : 0
+    const dy = hasPointer ? y - window.innerHeight / 2 : 0
+
+    setSelected({ project, dx, dy })
+  }, [])
+
+  const closeModal = useCallback(() => {
+    setSelected(null)
+    setOverCard(false)
+  }, [])
+
+  // Spin all the time, except while the mouse is on a card or the popup is open.
+  const paused = overCard || !!selected
 
   return (
     <section id="projects" className={styles.section} ref={ref}>
@@ -72,91 +268,41 @@ export default function Projects() {
         initial={{ opacity: 0 }}
         animate={inView ? { opacity: 1 } : {}}
         transition={{ delay: 0.3, duration: 0.6 }}
+        onClickCapture={handleStageClickCapture}
+        onPointerMove={handleStagePointerMove}
+        onPointerLeave={handleStagePointerLeave}
       >
         {/* Mounted only once the section is visible, so the intro
             plays when the visitor actually scrolls here. */}
         {inView && (
-          <CircularCarousel
+          <Carousel
+            className={styles.carousel}
             items={ITEMS}
             preset="cylinder"
             intro="rise"
-            cardWidth={320}
+            cardWidth={680}
             aspectRatio={1.6}
             gap={24}
-            cornerRadius={14}
-            autoplay="step"
-            interval={5}
+            cornerRadius={18}
+            // The carousel's own pauseOnHover treats the whole box as "hover",
+            // including the empty black areas, so it is turned off here and
+            // replaced by the card-only check above.
+            autoplay={paused ? 'off' : 'drift'}
+            speed={12}
             direction="left"
+            pauseOnHover={false}
+            captions
             depthFade={0.6}
             fadeColor="#0a0a0f"
-            onChange={(i) => setActive(i % SHOWN.length)}
+            focusOnClick={false}
+            onItemClick={handleItemClick}
           />
         )}
       </motion.div>
 
-      <p className={styles.hint}>Drag, swipe or click a card to browse</p>
+      <p className={styles.hint}>Hover a card to pause · drag or swipe to browse · click a card to open it</p>
 
       <div className={styles.inner}>
-        <div className={styles.detailWrap} aria-live="polite">
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={project.id}
-              className={styles.detail}
-              style={{ '--project-color': project.color || 'var(--purple)' }}
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -12 }}
-              transition={{ duration: 0.25 }}
-            >
-              <span className={styles.num}>
-                Project {project.id}
-                {project.featured && <span className={styles.featuredBadge}>Featured</span>}
-              </span>
-
-              <h3 className={styles.projectTitle}>{project.title}</h3>
-              <p className={styles.projectDesc}>{project.description}</p>
-
-              <div className={styles.tags}>
-                {project.tags.map((tag) => (
-                  <span key={tag} className={styles.tag}>
-                    {tag}
-                  </span>
-                ))}
-              </div>
-
-              <div className={styles.actions}>
-                {project.live ? (
-                  <a
-                    href={project.live}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className={styles.liveBtn}
-                    aria-label={`View ${project.title} live`}
-                  >
-                    View Live
-                    <ExternalIcon />
-                  </a>
-                ) : (
-                  <span className={styles.liveBtnDisabled}>Live demo coming soon</span>
-                )}
-
-                {project.github && (
-                  <a
-                    href={project.github}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className={styles.codeBtn}
-                    aria-label={`${project.title} source code on GitHub`}
-                  >
-                    <GitHubIcon />
-                    Code
-                  </a>
-                )}
-              </div>
-            </motion.div>
-          </AnimatePresence>
-        </div>
-
         <motion.div
           className={styles.moreWrap}
           initial={{ opacity: 0 }}
@@ -174,6 +320,8 @@ export default function Projects() {
           </a>
         </motion.div>
       </div>
+
+      <ProjectModal selected={selected} onClose={closeModal} />
     </section>
   )
 }
