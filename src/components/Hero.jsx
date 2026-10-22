@@ -1,6 +1,5 @@
 import { motion } from 'framer-motion'
-import ParticlesBackground from './ParticlesBackground'
-import Meteors from './Meteors'
+import RetroGrid from './RetroGrid'
 import TechTimeline from './TechTimeline'
 import ParticleText from './ParticleText'
 import RotatingText from './RotatingText'
@@ -32,15 +31,17 @@ export default function Hero() {
 
   return (
     <section className={styles.hero}>
-      <ParticlesBackground />
-      <Meteors number={18} />
+      <RetroGrid
+        angle={65}
+        cellSize={60}
+        opacity={0.4}
+        lineColor="rgba(0, 212, 255, 0.55)"
+      />
       <div className={styles.glowOrb1}></div>
       <div className={styles.glowOrb2}></div>
 
       <div className={styles.inner}>
         <div className={styles.center}>
-         
-
           <motion.div
             className={styles.name}
             role="heading"

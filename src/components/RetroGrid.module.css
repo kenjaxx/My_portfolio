@@ -1,0 +1,69 @@
+.wrap {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* --- CSS-only fallback (only visible when WebGL is unavailable) --- */
+
+.projection,
+.rotation {
+  position: absolute;
+  inset: 0;
+}
+
+.fallbackGrid {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  margin-left: -200%;
+  width: 600vw;
+  height: 300vh;
+  transform-origin: 100% 0;
+  transform: translateY(-50%);
+  background-repeat: repeat;
+  animation: retroGridScroll 15s linear infinite;
+}
+
+@keyframes retroGridScroll {
+  from {
+    transform: translateY(-50%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+/* --- WebGL canvas --- */
+
+.canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+}
+
+.canvasOn {
+  opacity: 1;
+}
+
+/* --- Fade into the page background --- */
+
+.fade {
+  position: absolute;
+  inset: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fallbackGrid {
+    animation: none;
+    transform: translateY(-50%);
+  }
+}
