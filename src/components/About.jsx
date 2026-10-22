@@ -1,7 +1,9 @@
-import { motion } from 'framer-motion'
-import { useMemo, useState, lazy, Suspense } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { useEffect, useMemo, useRef, useState, lazy, Suspense } from 'react'
+import { createPortal } from 'react-dom'
 import { useInView } from '../hooks/useInView'
 import { PROFILE, ABOUT, SKILL_GROUPS } from '../data'
+import { LEVELS, STATUS, getSkillInfo, getProjectsFor } from '../skillInfo'
 import { getDeviceTier } from '../utils/deviceTier'
 import styles from './About.module.css'
 
@@ -30,7 +32,8 @@ const slideIn = {
 
 // Every skill (name + brand color) comes from SKILL_GROUPS in data.js, so the
 // About section and the Skills section can never drift apart. ABOUT.lanes only
-// says which lane each skill belongs to.
+// says which lane each skill belongs to. The details in the hover card (level,
+// status, blurb) come from skillInfo.js, the same file the Skills popup reads.
 const ALL_SKILLS = SKILL_GROUPS.flatMap((group) => group.skills)
 const SKILL_BY_NAME = new Map(ALL_SKILLS.map((skill) => [skill.name, skill]))
 
@@ -52,29 +55,278 @@ function buildLanes() {
 const LANES = buildLanes()
 
 // A lane scrolls by half of its track, so one half has to be wider than the
-// lane itself. About nine chips is roughly 880px, wider than the 620px lane.
-const MIN_CHIPS_PER_HALF = 9
-const SECONDS_PER_CHIP = 2.4
+// lane itself. The chips are bigger now, so eight of them are already wider
+// than the 660px lane.
+const MIN_CHIPS_PER_HALF = 8
+// Seconds each chip takes to scroll past. Was 2.4; higher = slower.
+const SECONDS_PER_CHIP = 5.5
+
+/* Center magnify: the chip in the middle of each lane grows, and the chips
+   around it shrink back to normal and fade a little. Tweak these to taste. */
+const MAGNIFY_MAX = 0.32 // 0.32 = the center chip is 32% bigger
+const MAGNIFY_RANGE = 130 // px from the lane's center where the growing happens
+const FADE_MIN = 0.5 // opacity of chips far from the center (1 = no fade)
+
+const clamp = (value, min, max) => Math.min(max, Math.max(min, value))
+
+/* ---------- Hover detail card ----------
+
+   The lanes clip their content (overflow: hidden), so the card can't live
+   inside them. It is rendered once, in a portal on <body>, at a fixed position
+   computed from the hovered chip. The chips talk to it through this tiny
+   module-level setter, so hovering never re-renders the whole About section
+   (which would also nudge the 3D lanyard). */
+
+const CARD_WIDTH = 250
+const EDGE = 12
+
+let setTip = () => {}
+
+const showTip = (skill, event) => {
+  // Hover cards are for mouse and pen. On touch there is no hover.
+  if (event.pointerType === 'touch') return
+  const rect = event.currentTarget.getBoundingClientRect()
+  setTip({ skill, cx: rect.left + rect.width / 2, top: rect.top, bottom: rect.bottom })
+}
+
+const hideTip = () => setTip(null)
+
+const PIPS = [1, 2, 3, 4, 5]
+
+function SkillTip() {
+  const [tip, set] = useState(null)
+
+  useEffect(() => {
+    setTip = set
+    return () => {
+      setTip = () => {}
+    }
+  }, [])
+
+  // A fixed card would drift away from its chip while scrolling, so hide it.
+  useEffect(() => {
+    if (!tip) return undefined
+    const hide = () => set(null)
+    window.addEventListener('scroll', hide, { passive: true })
+    return () => window.removeEventListener('scroll', hide)
+  }, [tip])
+
+  const info = tip ? getSkillInfo(tip.skill.name) : null
+  const status = info ? STATUS[info.status] || STATUS.familiar : null
+  const projects = tip ? getProjectsFor(tip.skill.name) : []
+
+  // Above the chip by default, below it when there's no room at the top.
+  const below = tip ? tip.top < 220 : false
+  const half = CARD_WIDTH / 2 + EDGE
+  const left = tip ? clamp(tip.cx, half, window.innerWidth - half) : 0
+
+  return createPortal(
+    <AnimatePresence>
+      {tip && (
+        <div
+          key="tip-position"
+          className={styles.tipPosition}
+          style={{
+            left,
+            top: below ? tip.bottom + 10 : tip.top - 10,
+            transform: below ? 'translateX(-50%)' : 'translate(-50%, -100%)',
+          }}
+        >
+          <motion.div
+            key={tip.skill.name}
+            className={styles.tip}
+            style={{ '--c': tip.skill.color, '--badge': status.color }}
+            role="presentation"
+            initial={{ opacity: 0, y: below ? -6 : 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: below ? -4 : 4 }}
+            transition={{ duration: 0.16, ease: 'easeOut' }}
+          >
+            <div className={styles.tipHead}>
+              <span className={styles.tipName}>{tip.skill.name}</span>
+              <span className={styles.tipBadge}>
+                <span className={styles.tipBadgeDot} />
+                {status.label}
+              </span>
+            </div>
+
+            <div className={styles.tipLevel}>
+              <span className={styles.tipLevelName}>{LEVELS[info.level]}</span>
+              <span className={styles.tipLevelNum}>{info.level} / 5</span>
+            </div>
+            <div className={styles.tipPips}>
+              {PIPS.map((n) => (
+                <i key={n} className={`${styles.tipPip} ${n <= info.level ? styles.tipPipOn : ''}`} />
+              ))}
+            </div>
+
+            {info.blurb && <p className={styles.tipBlurb}>{info.blurb}</p>}
+
+            {projects.length > 0 && (
+              <p className={styles.tipUsed}>
+                Used in {projects.map((project) => project.title).join(', ')}
+              </p>
+            )}
+          </motion.div>
+        </div>
+      )}
+    </AnimatePresence>,
+    document.body
+  )
+}
 
 function Chip({ skill }) {
   return (
-    <span className={styles.chip} style={{ '--c': skill.color }}>
+    <span
+      className={styles.chip}
+      data-chip=""
+      style={{ '--c': skill.color }}
+      onPointerEnter={(event) => showTip(skill, event)}
+      onPointerLeave={hideTip}
+    >
       <span className={styles.chipDot} aria-hidden="true" />
       {skill.name}
     </span>
   )
 }
 
-function Lane({ lane, index }) {
+/* ---------- One lane ----------
+
+   The scrolling itself is a plain CSS animation (cheap, and it keeps the
+   hover / Pause button behaviour). On top of that, while the lane is on screen
+   and moving, a small requestAnimationFrame loop measures where each chip is
+   relative to the lane's center and sets its scale and opacity directly on the
+   element. No React state is involved, so nothing re-renders per frame. */
+
+function Lane({ lane, index, magnify }) {
+  const viewportRef = useRef(null)
   const repeats = Math.max(1, Math.ceil(MIN_CHIPS_PER_HALF / lane.skills.length))
   const duration = lane.skills.length * repeats * SECONDS_PER_CHIP
+
+  useEffect(() => {
+    if (!magnify) return undefined
+    if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return undefined
+
+    const viewport = viewportRef.current
+    const track = viewport?.firstElementChild
+    if (!viewport || !track) return undefined
+
+    const chips = Array.from(viewport.querySelectorAll('[data-chip]'))
+    let offsets = [] // each chip's center, measured from the track's left edge
+    let widths = []
+    let raf = 0
+    let visible = true
+    let lastLeft = null
+    let lastWidth = -1
+
+    // Layout positions ignore transforms, so scaling a chip never changes
+    // where it is measured. Measured again whenever the lane is resized.
+    const measure = () => {
+      offsets = chips.map((chip) => chip.offsetLeft + chip.offsetWidth / 2)
+      widths = chips.map((chip) => chip.offsetWidth)
+      lastLeft = null
+    }
+
+    const update = (trackLeft, view) => {
+      const mid = view.left + view.width / 2
+      const fadeReach = view.width * 0.55
+
+      // First pass: how big each chip should be, and which one is closest.
+      const scales = new Array(chips.length)
+      const dists = new Array(chips.length)
+      let best = 0
+      let bestDist = Infinity
+      for (let i = 0; i < chips.length; i++) {
+        const dist = trackLeft + offsets[i] - mid
+        const abs = Math.abs(dist)
+        const k = clamp(1 - abs / MAGNIFY_RANGE, 0, 1)
+        scales[i] = 1 + MAGNIFY_MAX * k * k * (3 - 2 * k)
+        dists[i] = dist
+        if (abs < bestDist) {
+          bestDist = abs
+          best = i
+        }
+      }
+
+      // The growing chip would overlap its neighbours, so everything on each
+      // side slides outward by half of how much it grew.
+      const growth = ((scales[best] - 1) * widths[best]) / 2
+      const spread = widths[best] * 0.6
+
+      // Second pass: write the styles.
+      for (let i = 0; i < chips.length; i++) {
+        const shift = clamp(dists[i] / spread, -1, 1) * growth
+        const fade = FADE_MIN + (1 - FADE_MIN) * clamp(1 - Math.abs(dists[i]) / fadeReach, 0, 1)
+        const chip = chips[i]
+        chip.style.transform = `translateX(${shift.toFixed(2)}px) scale(${scales[i].toFixed(3)})`
+        chip.style.opacity = fade.toFixed(3)
+        chip.style.zIndex = Math.round((scales[i] - 1) * 100)
+      }
+    }
+
+    const tick = () => {
+      raf = 0
+      if (!visible) return
+      const trackLeft = track.getBoundingClientRect().left
+      const view = viewport.getBoundingClientRect()
+      // While the lane is paused (hover or the Pause button) nothing moves,
+      // so there is nothing to recompute.
+      if (trackLeft !== lastLeft || view.width !== lastWidth) {
+        lastLeft = trackLeft
+        lastWidth = view.width
+        update(trackLeft, view)
+      }
+      raf = requestAnimationFrame(tick)
+    }
+
+    const start = () => {
+      if (!raf && visible) raf = requestAnimationFrame(tick)
+    }
+
+    measure()
+    start()
+
+    const resizeObserver = new ResizeObserver(() => {
+      measure()
+      start()
+    })
+    resizeObserver.observe(viewport)
+    resizeObserver.observe(track)
+
+    // Fonts load late and change chip widths, so measure again once they're in.
+    document.fonts?.ready.then(() => {
+      measure()
+      start()
+    })
+
+    const intersectionObserver = new IntersectionObserver(([entry]) => {
+      visible = entry.isIntersecting
+      if (visible) start()
+    })
+    intersectionObserver.observe(viewport)
+
+    return () => {
+      cancelAnimationFrame(raf)
+      resizeObserver.disconnect()
+      intersectionObserver.disconnect()
+      chips.forEach((chip) => {
+        chip.style.transform = ''
+        chip.style.opacity = ''
+        chip.style.zIndex = ''
+      })
+    }
+  }, [magnify])
 
   return (
     <li className={styles.lane}>
       <span className={styles.laneLabel}>{lane.label}</span>
       {/* The moving copy is hidden from assistive tech; this is the real list. */}
-      <span className={styles.srOnly}>{lane.skills.map((skill) => skill.name).join(', ')}</span>
-      <div className={styles.viewport} aria-hidden="true">
+      <span className={styles.srOnly}>
+        {lane.skills
+          .map((skill) => `${skill.name} (${LEVELS[getSkillInfo(skill.name).level]})`)
+          .join(', ')}
+      </span>
+      <div ref={viewportRef} className={styles.viewport} aria-hidden="true">
         <div
           className={`${styles.track} ${index % 2 === 1 ? styles.reverse : ''}`}
           style={{ '--dur': `${duration}s` }}
@@ -260,6 +512,10 @@ export default function About() {
     .filter(Boolean)
     .join(' ')
 
+  // The magnify effect needs moving lanes, so it's off on weak devices
+  // (they get the still layout) and until the section is on screen.
+  const magnify = inView && !lowPower
+
   return (
     <section id="about" className={styles.section} ref={ref}>
       <div className={styles.inner}>
@@ -316,7 +572,7 @@ export default function About() {
             <motion.div className={lanesClass} {...reveal(4)}>
               <ul className={styles.laneList} aria-label="Tech stack">
                 {LANES.map((lane, i) => (
-                  <Lane key={lane.label} lane={lane} index={i} />
+                  <Lane key={lane.label} lane={lane} index={i} magnify={magnify} />
                 ))}
               </ul>
 
@@ -359,6 +615,8 @@ export default function About() {
           </div>
         </div>
       </div>
+
+      <SkillTip />
     </section>
   )
 }
