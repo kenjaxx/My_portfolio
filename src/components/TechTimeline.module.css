@@ -3,8 +3,9 @@
   left: 50%;
   transform: translateX(-50%);
   width: 100vw;
-  margin-top: 3.5rem;
-  padding-top: 1.5rem;
+  margin-top: 0;
+  margin-bottom: 2.5rem;
+  padding-top: 0.5rem;
   overflow: hidden;
 }
 

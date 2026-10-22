@@ -40,6 +40,15 @@ export default function Hero() {
       <div className={styles.glowOrb1}></div>
       <div className={styles.glowOrb2}></div>
 
+      {/* Tech timeline now sits at the top, above the name */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.2, duration: 0.6 }}
+      >
+        <TechTimeline />
+      </motion.div>
+
       <div className={styles.inner}>
         <div className={styles.center}>
           <motion.div
@@ -135,14 +144,6 @@ export default function Hero() {
           </motion.div>
         </div>
       </div>
-
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 1.3, duration: 0.6 }}
-      >
-        <TechTimeline />
-      </motion.div>
     </section>
   )
 }
