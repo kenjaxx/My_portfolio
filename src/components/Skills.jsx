@@ -1,75 +1,14 @@
 import { useState, useMemo, useRef, useEffect, useCallback, memo, lazy, Suspense } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
-import { createPortal } from 'react-dom'
-import {
-  FaJava,
-  FaPython,
-  FaHtml5,
-  FaCss3Alt,
-  FaJs,
-  FaDatabase,
-  FaReact,
-  FaPlug,
-  FaGitAlt,
-  FaGithub,
-  FaWordpressSimple,
-  FaNodeJs,
-  FaAws,
-  FaAndroid,
-  FaTerminal,
-  FaServer,
-  FaRobot,
-  FaGoogle,
-  FaTrain,
-  FaCogs,
-  FaCode,
-  FaWind,
-} from 'react-icons/fa'
+import { motion } from 'framer-motion'
 import { useInView } from '../hooks/useInView'
 import { SKILL_GROUPS } from '../data'
+import { SKILL_ICONS } from '../skillIcons'
 import { LEVELS, STATUS, getSkillInfo, getProjectsFor } from '../skillInfo'
+import Modal from './Modal'
 import styles from './Skills.module.css'
 
 // Lazy chunk, memoised so opening/closing the popup doesn't re-render the grid.
 const Glass = memo(lazy(() => import('./GlassIcons')))
-
-// Maps a skill's display name to its icon. Every icon comes from
-// react-icons/fa only, so no extra install is needed.
-const ICONS = {
-  JavaScript: FaJs,
-  TypeScript: FaCode,
-  Python: FaPython,
-  Java: FaJava,
-  HTML: FaHtml5,
-  CSS: FaCss3Alt,
-  SQL: FaDatabase,
-  React: FaReact,
-  'Next.js': FaCode,
-  'Tailwind CSS': FaWind,
-  Django: FaServer,
-  'Node.js': FaNodeJs,
-  'REST API': FaPlug,
-  Supabase: FaDatabase,
-  Firebase: FaServer,
-  MySQL: FaDatabase,
-  PostgreSQL: FaDatabase,
-  Prisma: FaDatabase,
-  XAMPP: FaServer,
-  WordPress: FaWordpressSimple,
-  Git: FaGitAlt,
-  GitHub: FaGithub,
-  'VS Code': FaCode,
-  'Claude Code': FaRobot,
-  Gemini: FaGoogle,
-  Postman: FaPlug,
-  Bash: FaTerminal,
-  PowerShell: FaTerminal,
-  AWS: FaAws,
-  Android: FaAndroid,
-  Vercel: FaServer,
-  Railway: FaTrain,
-  ServiceNow: FaCogs,
-}
 
 /* ---------- Color helpers: skill color -> glass plate gradient ---------- */
 
@@ -122,7 +61,7 @@ function plateGradient(hex) {
 /* Accent color for the meter and bars in the popup. */
 const accentOf = (hex) => (hex && luminance(hexToRgb(hex)) < 0.12 ? '#6ee7b7' : hex || '#00d4ff')
 
-/* ---------- Small hooks / icons ---------- */
+/* ---------- Small hooks ---------- */
 
 function useIsMobile() {
   const [mobile, setMobile] = useState(
@@ -138,50 +77,14 @@ function useIsMobile() {
   return mobile
 }
 
-function CloseIcon() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
-      <line x1="5" y1="5" x2="19" y2="19" />
-      <line x1="19" y1="5" x2="5" y2="19" />
-    </svg>
-  )
-}
-
 /* ---------- The skill popup ---------- */
 
 function SkillModal({ selected, onClose }) {
-  const closeRef = useRef(null)
-  const detailRef = useRef(null)
-
-  useEffect(() => {
-    if (!selected) return
-
-    const onKeyDown = (e) => {
-      if (e.key === 'Escape') onClose()
-    }
-
-    // Lock page scrolling without touching body overflow (hiding the
-    // scrollbar changes the page width and forces a re-layout, which was
-    // a source of lag before).
-    const blockScroll = (e) => {
-      const detail = detailRef.current
-      if (detail && detail.contains(e.target) && detail.scrollHeight > detail.clientHeight) {
-        return
-      }
-      e.preventDefault()
-    }
-
-    window.addEventListener('keydown', onKeyDown)
-    window.addEventListener('wheel', blockScroll, { passive: false })
-    window.addEventListener('touchmove', blockScroll, { passive: false })
-    closeRef.current?.focus({ preventScroll: true })
-
-    return () => {
-      window.removeEventListener('keydown', onKeyDown)
-      window.removeEventListener('wheel', blockScroll)
-      window.removeEventListener('touchmove', blockScroll)
-    }
-  }, [selected, onClose])
+  const skill = selected?.skill
+  const Icon = selected?.Icon
+  const info = skill ? getSkillInfo(skill.name) : null
+  const status = info ? STATUS[info.status] || STATUS.familiar : null
+  const projects = skill ? getProjectsFor(skill.name) : []
 
   const goToProjects = () => {
     onClose()
@@ -190,137 +93,96 @@ function SkillModal({ selected, onClose }) {
     }, 60)
   }
 
-  return createPortal(
-    <AnimatePresence>
-      {selected && (() => {
-        const { skill, Icon, dx, dy } = selected
-        const info = getSkillInfo(skill.name)
-        const status = STATUS[info.status] || STATUS.familiar
-        const projects = getProjectsFor(skill.name)
-        const accent = accentOf(skill.color)
+  return (
+    <Modal
+      open={Boolean(selected)}
+      onClose={onClose}
+      label={skill ? `${skill.name} skill details` : 'Skill details'}
+      origin={selected ? { dx: selected.dx, dy: selected.dy } : undefined}
+      overlayClassName={styles.overlay}
+      panelClassName={styles.detail}
+      closeClassName={styles.closeBtn}
+      closeLabel="Close skill details"
+      panelStyle={{ '--skill-color': accentOf(skill?.color) }}
+    >
+      {skill && (
+        <>
+          <div className={styles.head}>
+            <span className={styles.iconTile} style={{ background: plateGradient(skill.color) }}>
+              {Icon && <Icon aria-hidden="true" />}
+            </span>
+            <div className={styles.headText}>
+              <h3 className={styles.skillName}>{skill.name}</h3>
+              <span className={styles.badge} style={{ '--badge': status.color }}>
+                <span className={styles.badgeDot} />
+                {status.label}
+              </span>
+            </div>
+          </div>
 
-        return (
-          <motion.div
-            className={styles.overlay}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            onClick={onClose}
+          <div className={styles.levelRow}>
+            <span className={styles.levelName}>{LEVELS[info.level]}</span>
+            <span className={styles.levelNum}>{info.level} / 5</span>
+          </div>
+          <div
+            className={styles.meter}
+            role="img"
+            aria-label={`${LEVELS[info.level]}, level ${info.level} of 5`}
           >
-            <motion.div
-              ref={detailRef}
-              className={styles.detail}
-              style={{ '--skill-color': accent }}
-              role="dialog"
-              aria-modal="true"
-              aria-label={`${skill.name} skill details`}
-              // Grows out of the tile that was clicked. Only transform and
-              // opacity are animated, so it stays on the GPU.
-              initial={{ opacity: 0, scale: 0.4, x: dx, y: dy }}
-              animate={{ opacity: 1, scale: 1, x: 0, y: 0 }}
-              exit={{ opacity: 0, scale: 0.7, x: dx * 0.4, y: dy * 0.4 }}
-              transition={{
-                type: 'spring',
-                stiffness: 320,
-                damping: 30,
-                mass: 0.8,
-                opacity: { duration: 0.15 },
-              }}
-              onClick={(e) => e.stopPropagation()}
-            >
-              <button
-                ref={closeRef}
-                type="button"
-                className={styles.closeBtn}
-                onClick={onClose}
-                aria-label="Close skill details"
-              >
-                <CloseIcon />
-              </button>
+            {[1, 2, 3, 4, 5].map((n) => (
+              <span
+                key={n}
+                className={`${styles.seg} ${n <= info.level ? styles.segOn : ''}`}
+                style={{ animationDelay: `${0.25 + n * 0.07}s` }}
+              />
+            ))}
+          </div>
 
-              <div className={styles.head}>
-                <span className={styles.iconTile} style={{ background: plateGradient(skill.color) }}>
-                  {Icon && <Icon />}
-                </span>
-                <div className={styles.headText}>
-                  <h3 className={styles.skillName}>{skill.name}</h3>
-                  <span
-                    className={styles.badge}
-                    style={{ '--badge': status.color }}
-                  >
-                    <span className={styles.badgeDot} />
-                    {status.label}
-                  </span>
-                </div>
-              </div>
+          {info.blurb && <p className={styles.blurb}>{info.blurb}</p>}
 
-              <div className={styles.levelRow}>
-                <span className={styles.levelName}>{LEVELS[info.level]}</span>
-                <span className={styles.levelNum}>{info.level} / 5</span>
-              </div>
-              <div
-                className={styles.meter}
-                role="img"
-                aria-label={`${LEVELS[info.level]}, level ${info.level} of 5`}
-              >
-                {[1, 2, 3, 4, 5].map((n) => (
-                  <span
-                    key={n}
-                    className={`${styles.seg} ${n <= info.level ? styles.segOn : ''}`}
-                    style={{ animationDelay: `${0.25 + n * 0.07}s` }}
-                  />
+          {info.subs && info.subs.length > 0 && (
+            <div className={styles.block}>
+              <p className={styles.blockTitle}>Breakdown</p>
+              <div className={styles.subs}>
+                {info.subs.map((s, i) => (
+                  <div key={s.name} className={styles.sub}>
+                    <div className={styles.subTop}>
+                      <span>{s.name}</span>
+                      <span className={styles.subNum}>{s.value}/5</span>
+                    </div>
+                    <div className={styles.track}>
+                      <span
+                        className={styles.fill}
+                        style={{ '--v': s.value, animationDelay: `${0.35 + i * 0.08}s` }}
+                      />
+                    </div>
+                  </div>
                 ))}
               </div>
+            </div>
+          )}
 
-              {info.blurb && <p className={styles.blurb}>{info.blurb}</p>}
-
-              {info.subs && info.subs.length > 0 && (
-                <div className={styles.block}>
-                  <p className={styles.blockTitle}>Breakdown</p>
-                  <div className={styles.subs}>
-                    {info.subs.map((s, i) => (
-                      <div key={s.name} className={styles.sub}>
-                        <div className={styles.subTop}>
-                          <span>{s.name}</span>
-                          <span className={styles.subNum}>{s.value}/5</span>
-                        </div>
-                        <div className={styles.track}>
-                          <span
-                            className={styles.fill}
-                            style={{ '--v': s.value, animationDelay: `${0.35 + i * 0.08}s` }}
-                          />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {projects.length > 0 && (
-                <div className={styles.block}>
-                  <p className={styles.blockTitle}>Used in</p>
-                  <div className={styles.chips}>
-                    {projects.map((p) => (
-                      <button
-                        key={p.id}
-                        type="button"
-                        className={styles.projChip}
-                        onClick={goToProjects}
-                        title="Jump to the Projects section"
-                      >
-                        {p.title}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </motion.div>
-          </motion.div>
-        )
-      })()}
-    </AnimatePresence>,
-    document.body
+          {projects.length > 0 && (
+            <div className={styles.block}>
+              <p className={styles.blockTitle}>Used in</p>
+              <div className={styles.chips}>
+                {projects.map((p) => (
+                  <button
+                    key={p.id}
+                    type="button"
+                    className={styles.projChip}
+                    onClick={goToProjects}
+                    title="Jump to the Projects section"
+                  >
+                    {p.title}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </>
+      )}
+    </Modal>
   )
 }
 
@@ -331,11 +193,12 @@ export default function Skills() {
   const [activeKey, setActiveKey] = useState(SKILL_GROUPS[0]?.key)
   const [selected, setSelected] = useState(null)
   const isMobile = useIsMobile()
+  const tabRefs = useRef({})
 
   const activeGroup = SKILL_GROUPS.find((g) => g.key === activeKey) ?? SKILL_GROUPS[0]
 
   const handlePick = useCallback((skill, event) => {
-    const Icon = ICONS[skill.name]
+    const Icon = SKILL_ICONS[skill.name]
     // Keyboard activation has no pointer position, so grow from the centre.
     const hasPointer = event && (event.clientX || event.clientY)
     const dx = hasPointer ? event.clientX - window.innerWidth / 2 : 0
@@ -345,12 +208,28 @@ export default function Skills() {
 
   const closeModal = useCallback(() => setSelected(null), [])
 
+  // Arrow keys / Home / End move between tabs (roving tabindex pattern).
+  const handleTabKeyDown = (event, index) => {
+    const last = SKILL_GROUPS.length - 1
+    let next
+    if (event.key === 'ArrowRight') next = index === last ? 0 : index + 1
+    else if (event.key === 'ArrowLeft') next = index === 0 ? last : index - 1
+    else if (event.key === 'Home') next = 0
+    else if (event.key === 'End') next = last
+    else return
+
+    event.preventDefault()
+    const group = SKILL_GROUPS[next]
+    setActiveKey(group.key)
+    tabRefs.current[group.key]?.focus()
+  }
+
   // Rebuilt only when the tab changes, so the glass grid stays still while
   // the popup opens and closes.
   const items = useMemo(
     () =>
       activeGroup.skills.map((skill) => {
-        const Icon = ICONS[skill.name]
+        const Icon = SKILL_ICONS[skill.name]
         return {
           id: skill.name,
           label: skill.name,
@@ -390,22 +269,38 @@ export default function Skills() {
           animate={inView ? { opacity: 1, y: 0 } : {}}
           transition={{ delay: 0.15, duration: 0.5 }}
         >
-          {SKILL_GROUPS.map((group) => (
-            <button
-              key={group.key}
-              role="tab"
-              type="button"
-              aria-selected={activeKey === group.key}
-              className={`${styles.tab} ${activeKey === group.key ? styles.tabActive : ''}`}
-              onClick={() => setActiveKey(group.key)}
-            >
-              {group.label}
-              <span className={styles.tabCount}>{group.skills.length}</span>
-            </button>
-          ))}
+          {SKILL_GROUPS.map((group, index) => {
+            const selectedTab = activeKey === group.key
+            return (
+              <button
+                key={group.key}
+                ref={(el) => {
+                  tabRefs.current[group.key] = el
+                }}
+                id={`skills-tab-${group.key}`}
+                role="tab"
+                type="button"
+                aria-selected={selectedTab}
+                aria-controls="skills-panel"
+                tabIndex={selectedTab ? 0 : -1}
+                className={`${styles.tab} ${selectedTab ? styles.tabActive : ''}`}
+                onClick={() => setActiveKey(group.key)}
+                onKeyDown={(e) => handleTabKeyDown(e, index)}
+              >
+                {group.label}
+                <span className={styles.tabCount}>{group.skills.length}</span>
+              </button>
+            )
+          })}
         </motion.div>
 
-        <div className={styles.glassWrap}>
+        <div
+          id="skills-panel"
+          role="tabpanel"
+          aria-labelledby={`skills-tab-${activeGroup.key}`}
+          tabIndex={0}
+          className={styles.glassWrap}
+        >
           {/* Mounted once the section is visible, so the WebGL glass (and its
               chunk) isn't created while the visitor is still at the top. */}
           {inView && (

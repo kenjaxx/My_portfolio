@@ -73,13 +73,45 @@
   flex-shrink: 0;
 }
 
-/* --- name (3D DepthText) --- */
+/* --- name: real <h1> underneath, particle canvas on top --- */
 
 .name {
+  position: relative;
   width: 100%;
   max-width: 900px;
   height: clamp(200px, 26vw, 260px);
   margin: 0 0 0.4rem;
+}
+
+/* Visible, selectable text that holds the space until the particles are ready. */
+.nameText {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(3.5rem, 11vw, 8rem);
+  font-weight: 700;
+  line-height: 1;
+  color: #ffffff;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+/* ParticleText sets the canvas width attribute once it has sampled the text and
+   is about to draw. From then on the canvas shows the name, so the plain text
+   fades out. Opacity only (never visibility / display), so the heading stays
+   in the accessibility tree. */
+.name:has(canvas[width]) .nameText {
+  opacity: 0;
+}
+
+.particles {
+  position: relative;
+  width: 100%;
+  height: 100%;
 }
 
 /* --- role, written as a terminal command --- */
@@ -119,8 +151,13 @@
 }
 
 @keyframes blink {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0; }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
 }
 
 .bio {
@@ -154,7 +191,9 @@
   font-size: 0.95rem;
   font-weight: 700;
   cursor: pointer;
-  transition: opacity 0.2s, transform 0.2s;
+  transition:
+    opacity 0.2s,
+    transform 0.2s;
   letter-spacing: 0.02em;
 }
 
@@ -180,7 +219,9 @@
   color: var(--text-muted);
   text-decoration: none;
   border-bottom: 1px solid transparent;
-  transition: color 0.2s, border-color 0.2s;
+  transition:
+    color 0.2s,
+    border-color 0.2s;
 }
 
 .textLink:hover {
@@ -202,4 +243,3 @@
   overflow: hidden;
   padding-bottom: 0.15em;
 }
-

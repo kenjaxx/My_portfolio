@@ -1,34 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
-import {
-  FaReact,
-  FaPython,
-  FaJava,
-  FaHtml5,
-  FaCss3Alt,
-  FaNodeJs,
-  FaGitAlt,
-  FaAws,
-  FaDatabase,
-  FaCode,
-  FaJs,
-} from 'react-icons/fa'
 import { TIMELINE_SKILLS } from '../data'
+import { SKILL_ICONS } from '../skillIcons'
 import styles from './TechTimeline.module.css'
-
-const ICONS = {
-  JavaScript: FaJs,
-  TypeScript: FaCode,
-  Python: FaPython,
-  Java: FaJava,
-  HTML: FaHtml5,
-  CSS: FaCss3Alt,
-  SQL: FaDatabase,
-  React: FaReact,
-  'Node.js': FaNodeJs,
-  Supabase: FaDatabase,
-  Git: FaGitAlt,
-  AWS: FaAws,
-}
 
 const OFFSETS = [6, 34, 14, 46, 4, 28, 42, 10, 22, 48, 8, 36]
 
@@ -41,7 +14,7 @@ const BOOST_DECAY = 2.5 // higher = the boost fades faster
 const HIT_RADIUS = 12 // how close (px) the rocket must be to "touch" a badge
 
 function Node({ skill, index, lit, setRef }) {
-  const Icon = ICONS[skill.name]
+  const Icon = SKILL_ICONS[skill.name]
   const offset = OFFSETS[index % OFFSETS.length]
 
   return (

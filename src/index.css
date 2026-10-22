@@ -1,4 +1,6 @@
-*, *::before, *::after {
+*,
+*::before,
+*::after {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
@@ -15,7 +17,11 @@
   --green: #00ff88;
   --text: #e2e8f0;
   --text-muted: #94a3b8;
-  --text-dim: #475569;
+  /* Secondary text. About 6:1 on --bg, so it passes WCAG AA (4.5:1) for body text. */
+  --text-dim: #8392a7;
+  /* Only for decorative marks (dividers, dots, hairlines). About 2.6:1 on --bg,
+     so it must never be used for text. */
+  --decor: #475569;
   --border: rgba(0, 212, 255, 0.12);
   --border-purple: rgba(124, 58, 237, 0.2);
   --font-display: 'Rajdhani', sans-serif;
@@ -110,7 +116,9 @@ button:focus-visible,
    Framer Motion's own animations are handled separately via
    <MotionConfig reducedMotion="user"> in App.jsx. */
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
+  *,
+  *::before,
+  *::after {
     animation-duration: 0.001ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.001ms !important;

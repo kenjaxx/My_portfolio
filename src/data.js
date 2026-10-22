@@ -5,11 +5,7 @@ export const NAV_LINKS = [
   { label: 'contact', href: '#contact' },
 ]
 
-export const ROLES = [
-  'React Developer',
-  'Python Enthusiast',
-  'Problem Solver',
-]
+export const ROLES = ['React Developer', 'Python Enthusiast', 'Problem Solver']
 
 export const SKILL_GROUPS = [
   {
@@ -58,7 +54,6 @@ export const SKILL_GROUPS = [
     ],
   },
 ]
-
 
 export const PROJECTS = [
   {
@@ -111,6 +106,8 @@ export const PROJECTS = [
   },
 ]
 
+// The single source of truth for contact details. Contact, Footer, Hero and
+// Projects all read from here, so a change only has to be made once.
 export const CONTACT = {
   github: 'https://github.com/kenjaxx',
   linkedin: 'https://www.linkedin.com/in/kenji-ermita-1375b1392/',
@@ -119,15 +116,11 @@ export const CONTACT = {
 }
 
 export const PROFILE = {
-  heroPhoto: '/images/profile-hero.webp',
   aboutPhoto: '/images/profile-about.webp',
   schoolLogo: '/images/citu-logo.webp',
   experienceLogo: '/images/knowles-logo.webp',
 }
 
-// Content for the redesigned About section (big photo + editorial layout).
-// Fill in the TODOs with your real info.
-// Content for the About section.
 // Content for the About section.
 export const ABOUT = {
   badge: 'About',
@@ -152,7 +145,6 @@ export const ABOUT = {
 
   location: 'Cebu, Philippines',
   phone: '',
-  photoCaption: 'Cebu, Philippines',
   education: {
     school: 'Cebu Institute of Technology - University (CIT-U)',
     degree: 'BS Information Technology',
@@ -180,5 +172,3 @@ export const TIMELINE_SKILLS = [
   { name: 'AWS', color: '#ff9900' },
   { name: 'SQL', color: '#4479a1' },
 ]
-
-
