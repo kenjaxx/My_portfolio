@@ -1,0 +1,245 @@
+.panel {
+  --tl-cyan: #00d4ff;
+  --tl-green: #00ff88;
+  --tl-text: #f8fafc;
+  --tl-muted: #8b98ad;
+  --tl-node: 38px;
+  --tl-gap: 1rem;
+  --tl-step: 0.7s; /* time between one entry and the next, bottom to top */
+
+  background: #08080c;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  padding: 2.25rem 2.5rem;
+}
+
+.title {
+  margin: 0;
+  font-size: 1.35rem;
+  font-weight: 600;
+  color: var(--tl-text);
+}
+
+.subtitle {
+  margin: 0.5rem 0 2rem;
+  color: var(--tl-muted);
+  font-size: 1rem;
+}
+
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--tl-gap);
+}
+
+.item {
+  position: relative;
+  display: grid;
+  grid-template-columns: var(--tl-node) minmax(0, 1fr);
+  gap: 1.1rem;
+  align-items: center;
+}
+
+/* Line colors for each entry: --up is the top end, --down the bottom end */
+.item:nth-child(1) {
+  --self: #00ff88;
+  --down: #3f9fc0;
+}
+
+.item:nth-child(2) {
+  --up: #3f9fc0;
+  --self: #7c3aed;
+  --down: #6469f6;
+}
+
+.item:nth-child(3) {
+  --up: #6469f6;
+  --self: #4f9bff;
+  --down: #38b6ff;
+}
+
+.item:nth-child(4) {
+  --up: #38b6ff;
+  --self: #00d4ff;
+}
+
+/*
+  Each entry draws its own half-lines above and below its node, so the
+  line always runs exactly from node to node, whatever the card heights.
+*/
+.item::before,
+.item::after {
+  content: "";
+  position: absolute;
+  left: calc(var(--tl-node) / 2 - 1px);
+  width: 2px;
+  border-radius: 2px;
+  height: calc(50% - var(--tl-node) / 2 + var(--tl-gap) / 2);
+  transform: scaleY(0);
+  transform-origin: bottom;
+}
+
+.item::before {
+  top: calc(var(--tl-gap) / -2);
+  background: linear-gradient(to bottom, var(--up), var(--self));
+}
+
+.item::after {
+  top: calc(50% + var(--tl-node) / 2);
+  background: linear-gradient(to bottom, var(--self), var(--down));
+}
+
+.item:first-child::before,
+.item:last-child::after {
+  display: none;
+}
+
+.node {
+  width: var(--tl-node);
+  height: var(--tl-node);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--tl-cyan);
+  background: #0b1a24;
+  border: 1px solid var(--tl-cyan);
+  opacity: 0;
+  transform: scale(0.5);
+}
+
+.card {
+  min-width: 0;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 0.85rem 1.1rem;
+  opacity: 0;
+  transform: translateX(18px);
+}
+
+.label {
+  display: block;
+  font-family: var(--font-mono, "JetBrains Mono", ui-monospace, monospace);
+  font-size: 0.8rem;
+  letter-spacing: 0.06em;
+  color: var(--tl-cyan);
+}
+
+.cardTitle {
+  margin: 0.2rem 0 0.25rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--tl-text);
+}
+
+.cardText {
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.55;
+  color: var(--tl-muted);
+}
+
+/* The "Now" entry */
+.current .node {
+  color: #052e1a;
+  background: var(--tl-green);
+  border-color: var(--tl-green);
+}
+
+.current .card {
+  background: rgba(0, 255, 136, 0.06);
+  border-color: rgba(0, 255, 136, 0.4);
+}
+
+.current .label,
+.current .cardTitle {
+  color: var(--tl-green);
+}
+
+/*
+  Reveal sequence, bottom to top. --j is 0 for the bottom entry.
+  For each step: node and card appear, the line grows up to the next node,
+  then the next node and card appear.
+  Transitions only exist in the visible state, so leaving the section
+  resets everything instantly and the sequence can play again.
+*/
+.panel[data-visible="true"] .node {
+  opacity: 1;
+  transform: none;
+  transition: opacity 0.35s ease,
+    transform 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition-delay: calc(var(--j) * var(--tl-step));
+}
+
+.panel[data-visible="true"] .card {
+  opacity: 1;
+  transform: none;
+  transition: opacity 0.5s ease, transform 0.5s ease;
+  transition-delay: calc(var(--j) * var(--tl-step) + 0.1s);
+}
+
+.panel[data-visible="true"] .item::before,
+.panel[data-visible="true"] .item::after {
+  transform: scaleY(1);
+  transition: transform 0.25s linear;
+}
+
+.panel[data-visible="true"] .item::before {
+  transition-delay: calc(var(--j) * var(--tl-step) + 0.15s);
+}
+
+.panel[data-visible="true"] .item::after {
+  transition-delay: calc((var(--j) - 1) * var(--tl-step) + 0.4s);
+}
+
+.panel[data-visible="true"] .current .node {
+  animation: pulse 2.2s ease-out 2.7s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(0, 255, 136, 0.5);
+  }
+  70%,
+  100% {
+    box-shadow: 0 0 0 10px rgba(0, 255, 136, 0);
+  }
+}
+
+@media (max-width: 560px) {
+  .panel {
+    padding: 1.5rem 1.25rem;
+  }
+
+  .item {
+    gap: 0.85rem;
+  }
+}
+
+/* Keep this block last so it overrides the rules above */
+@media (prefers-reduced-motion: reduce) {
+  .panel .node,
+  .panel .card,
+  .panel[data-visible] .node,
+  .panel[data-visible] .card {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+
+  .panel .item::before,
+  .panel .item::after,
+  .panel[data-visible] .item::before,
+  .panel[data-visible] .item::after {
+    transform: none;
+    transition: none;
+  }
+
+  .panel[data-visible="true"] .current .node {
+    animation: none;
+  }
+}
