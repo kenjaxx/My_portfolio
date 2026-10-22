@@ -53,7 +53,7 @@ const ENTRIES = [
     Icon: SparklesIcon,
     label: "Now",
     title: "Open to job opportunities",
-    text: "Open to work as a Frontend Developer, Backend Developer, or Full Stack Developer.",
+    
     current: true,
   },
   {

@@ -1,9 +1,36 @@
+import { useEffect, useRef, useState } from "react";
 import CareerTimeline from "./CareerTimeline";
 import styles from "./Contact.module.css";
 
 const EMAIL = "kenjiermita2020@gmail.com";
-const LINKEDIN_URL = "https://www.linkedin.com/in/your-handle"; // replace with your real URL
-const GITHUB_URL = "https://github.com/your-handle"; // replace with your real URL
+
+const SOCIALS = [
+  {
+    id: "linkedin",
+    name: "LinkedIn",
+    handle: "/in/kenji-ermita-1375b1392",
+    href: "https://www.linkedin.com/in/kenji-ermita-1375b1392/",
+  },
+  {
+    id: "github",
+    name: "GitHub",
+    handle: "/kenjaxx",
+    href: "https://github.com/kenjaxx",
+  },
+];
+
+// The headline reads "Reach out, let's {word}". The first word is repeated
+// at the end of the list so the loop restarts without a visible jump.
+// If you add or remove words, update the keyframes named "rotate"
+// in Contact.module.css to match.
+const ROTATING_WORDS = ["talk", "build", "collab"];
+
+// Share of the label + heading block that must be visible before the
+// "Let's connect" line draws itself.
+const REVEAL_RATIO = 0.6;
+
+// How long the button says "Copied" before it goes back to "Copy email".
+const COPIED_MS = 2000;
 
 const svgProps = {
   width: 20,
@@ -24,6 +51,27 @@ const MailIcon = () => (
   </svg>
 );
 
+const CopyIcon = () => (
+  <svg {...svgProps} width={17} height={17}>
+    <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
+    <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
+  </svg>
+);
+
+const CheckIcon = () => (
+  <svg {...svgProps} width={17} height={17}>
+    <path d="M20 6 9 17l-5-5" />
+  </svg>
+);
+
+const ExternalLinkIcon = () => (
+  <svg {...svgProps} width={17} height={17}>
+    <path d="M15 3h6v6" />
+    <path d="M10 14 21 3" />
+    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+  </svg>
+);
+
 const LinkedinIcon = () => (
   <svg {...svgProps}>
     <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z" />
@@ -39,46 +87,210 @@ const GithubIcon = () => (
   </svg>
 );
 
+const ArrowUpRightIcon = () => (
+  <svg {...svgProps} width={18} height={18}>
+    <path d="M7 7h10v10" />
+    <path d="M7 17 17 7" />
+  </svg>
+);
+
+const SOCIAL_ICONS = {
+  linkedin: LinkedinIcon,
+  github: GithubIcon,
+};
+
+// Fallback for browsers or contexts where the Clipboard API is unavailable
+// (for example pages served over plain http).
+function legacyCopy(text) {
+  const field = document.createElement("textarea");
+  field.value = text;
+  field.setAttribute("readonly", "");
+  field.style.position = "fixed";
+  field.style.top = "-1000px";
+  document.body.appendChild(field);
+  field.select();
+
+  let ok = false;
+  try {
+    ok = document.execCommand("copy");
+  } catch {
+    ok = false;
+  }
+
+  document.body.removeChild(field);
+  return ok;
+}
+
 export default function Contact() {
+  const headerRef = useRef(null);
+  const emailRef = useRef(null);
+  const copyTimer = useRef(null);
+  const [visible, setVisible] = useState(false);
+  const [copyStatus, setCopyStatus] = useState("idle"); // idle | copied | failed
+
+  useEffect(() => {
+    const el = headerRef.current;
+    if (!el) return undefined;
+
+    if (typeof IntersectionObserver === "undefined") {
+      setVisible(true);
+      return undefined;
+    }
+
+    // Plays when the label scrolls into view and resets when it leaves,
+    // so the line draws again on every visit to the section.
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.intersectionRatio >= REVEAL_RATIO) {
+          setVisible(true);
+        } else if (!entry.isIntersecting) {
+          setVisible(false);
+        }
+      },
+      { threshold: [0, REVEAL_RATIO] }
+    );
+
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => () => clearTimeout(copyTimer.current), []);
+
+  const selectEmailText = () => {
+    const node = emailRef.current;
+    if (!node) return;
+    const range = document.createRange();
+    range.selectNodeContents(node);
+    const selection = window.getSelection();
+    selection.removeAllRanges();
+    selection.addRange(range);
+  };
+
+  const handleCopy = async () => {
+    let ok = false;
+
+    try {
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(EMAIL);
+        ok = true;
+      }
+    } catch {
+      ok = false;
+    }
+
+    if (!ok) ok = legacyCopy(EMAIL);
+
+    clearTimeout(copyTimer.current);
+
+    if (ok) {
+      setCopyStatus("copied");
+    } else {
+      // Copying was blocked: select the text so the visitor can press Ctrl+C.
+      selectEmailText();
+      setCopyStatus("failed");
+    }
+
+    copyTimer.current = setTimeout(() => setCopyStatus("idle"), COPIED_MS);
+  };
+
+  const copied = copyStatus === "copied";
+
   return (
     <section id="contact" className={styles.section}>
       <div className={styles.card}>
-        <p className={styles.eyebrow}>&gt; get_in_touch</p>
-        <h2 className={styles.heading}>Contact me</h2>
+        <div className={styles.header} ref={headerRef} data-visible={visible}>
+          <div className={styles.eyebrow}>
+            <span className={styles.eyebrowText}>Let's connect</span>
+            <span className={styles.eyebrowLine} aria-hidden="true">
+              <span className={styles.eyebrowFill} />
+              <span className={styles.eyebrowHead} />
+            </span>
+          </div>
+          <h2 className={styles.heading}>Contact me</h2>
+        </div>
 
         <div className={styles.grid}>
           <div className={styles.info}>
-            <h3 className={styles.subheading}>
-              Reach out, <span className={styles.gradientText}>let's talk</span>
+            <h3
+              className={styles.subheading}
+              aria-label={`Reach out, let's ${ROTATING_WORDS[0]}`}
+            >
+              <span aria-hidden="true">Reach out, let's </span>
+              <span className={styles.rotator} aria-hidden="true">
+                <span className={styles.rotatorList}>
+                  {[...ROTATING_WORDS, ROTATING_WORDS[0]].map((word, i) => (
+                    <span key={`${word}-${i}`} className={styles.word}>
+                      {word}
+                    </span>
+                  ))}
+                </span>
+              </span>
             </h3>
-            <p className={styles.desc}>I'm open to job opportunities.</p>
+
+            <p className={styles.desc}>
+              <span className={styles.neon} aria-hidden="true">
+                OPEN
+              </span>
+              <span>I'm open to job opportunities.</span>
+            </p>
 
             <p className={styles.microLabel}>Email me at</p>
-            <a className={styles.email} href={`mailto:${EMAIL}`}>
+            <div className={styles.emailRow}>
               <MailIcon />
-              {EMAIL}
-            </a>
+              <span ref={emailRef} className={styles.emailText}>
+                {EMAIL}
+              </span>
+            </div>
+
+            <div className={styles.actions}>
+              <button
+                type="button"
+                className={`${styles.copyBtn} ${copied ? styles.copied : ""}`}
+                onClick={handleCopy}
+              >
+                <span className={styles.labelIdle}>
+                  <CopyIcon />
+                  {copyStatus === "failed" ? "Press Ctrl+C" : "Copy email"}
+                </span>
+                <span className={styles.labelDone} aria-hidden="true">
+                  <CheckIcon />
+                  Copied
+                </span>
+              </button>
+              <a className={styles.mailBtn} href={`mailto:${EMAIL}`}>
+                <ExternalLinkIcon />
+                Open mail app
+              </a>
+            </div>
+            <span className={styles.srOnly} role="status" aria-live="polite">
+              {copied ? "Email copied to clipboard" : ""}
+            </span>
 
             <p className={styles.microLabel}>Or find me online</p>
-            <div className={styles.socials}>
-              <a
-                className={styles.social}
-                href={LINKEDIN_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <LinkedinIcon />
-                LinkedIn
-              </a>
-              <a
-                className={styles.social}
-                href={GITHUB_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <GithubIcon />
-                GitHub
-              </a>
+            <div className={styles.tiles}>
+              {SOCIALS.map(({ id, name, handle, href }) => {
+                const Icon = SOCIAL_ICONS[id];
+                return (
+                  <a
+                    key={id}
+                    className={styles.tile}
+                    href={href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <span className={styles.tileIcon}>
+                      <Icon />
+                    </span>
+                    <span className={styles.tileText}>
+                      <span className={styles.tileName}>{name}</span>
+                      <span className={styles.tileHandle}>{handle}</span>
+                    </span>
+                    <span className={styles.tileArrow}>
+                      <ArrowUpRightIcon />
+                    </span>
+                  </a>
+                );
+              })}
             </div>
           </div>
 
