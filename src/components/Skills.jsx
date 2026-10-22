@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef, useEffect, useCallback, memo } from 'react'
+import { useState, useMemo, useRef, useEffect, useCallback, memo, lazy, Suspense } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { createPortal } from 'react-dom'
 import {
@@ -28,11 +28,10 @@ import {
 import { useInView } from '../hooks/useInView'
 import { SKILL_GROUPS } from '../data'
 import { LEVELS, STATUS, getSkillInfo, getProjectsFor } from '../skillInfo'
-import GlassIcons from './GlassIcons'
 import styles from './Skills.module.css'
 
-// Memoised so opening/closing the popup doesn't re-render the glass grid.
-const Glass = memo(GlassIcons)
+// Lazy chunk, memoised so opening/closing the popup doesn't re-render the grid.
+const Glass = memo(lazy(() => import('./GlassIcons')))
 
 // Maps a skill's display name to its icon. Every icon comes from
 // react-icons/fa only, so no extra install is needed.
@@ -407,32 +406,34 @@ export default function Skills() {
         </motion.div>
 
         <div className={styles.glassWrap}>
-          {/* Mounted once the section is visible, so the WebGL glass isn't
-              created while the visitor is still at the top of the page. */}
+          {/* Mounted once the section is visible, so the WebGL glass (and its
+              chunk) isn't created while the visitor is still at the top. */}
           {inView && (
-            <Glass
-              items={items}
-              size={isMobile ? 56 : 64}
-              gap={isMobile ? 30 : 44}
-              columns={7}
-              roundness={0.6}
-              refraction={0.8}
-              bevel={0.6}
-              dispersion={0}
-              frost={0.2}
-              shine={0.85}
-              tint="#dfdfdf"
-              tintOpacity={0.2}
-              iconColor="#ffffff"
-              plate="tilt"
-              tilt={30}
-              spread={0.5}
-              hover="press"
-              parallax={1}
-              labels="always"
-              intro
-              theme="dark"
-            />
+            <Suspense fallback={null}>
+              <Glass
+                items={items}
+                size={isMobile ? 56 : 64}
+                gap={isMobile ? 30 : 44}
+                columns={7}
+                roundness={0.6}
+                refraction={0.8}
+                bevel={0.6}
+                dispersion={0}
+                frost={0.2}
+                shine={0.85}
+                tint="#dfdfdf"
+                tintOpacity={0.2}
+                iconColor="#ffffff"
+                plate="tilt"
+                tilt={30}
+                spread={0.5}
+                hover="press"
+                parallax={1}
+                labels="always"
+                intro
+                theme="dark"
+              />
+            </Suspense>
           )}
         </div>
 

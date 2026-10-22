@@ -28,14 +28,34 @@
    The outer element draws the light as a 1.5px ring using ::before + a mask,
    so the glass inside stays see-through. */
 .pill {
-  --x: 50%;
-  --y: 0%;
   --ring: rgba(0, 212, 255, 0.18);
   pointer-events: auto;
   position: relative;
   border-radius: 999px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
   transition: box-shadow 0.3s ease;
+  /* Idle sweep. 4.4s each way matches the old sin(t / 1400) period. */
+  animation: spotlightSweep 4.4s ease-in-out infinite alternate;
+}
+
+/* While a mouse is over the pill, JS drives --x/--y and the sweep stops. */
+.pill[data-hover='true'] {
+  animation: none;
+}
+
+@keyframes spotlightSweep {
+  from {
+    --x: 2%;
+  }
+  to {
+    --x: 98%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pill {
+    animation: none;
+  }
 }
 
 .pill::before {

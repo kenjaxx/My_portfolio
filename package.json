@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "optimize:images": "node scripts/optimize-images.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.45.0",
@@ -18,5 +19,8 @@
     "react-icons": "^5.7.0",
     "three": "^0.186.1",
     "vite": "^5.4.0"
+  },
+  "devDependencies": {
+    "sharp": "^0.35.5"
   }
 }

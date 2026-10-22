@@ -10,7 +10,7 @@ export default function Navbar() {
   const [activeHref, setActiveHref] = useState('')
   const wrapRef = useRef(null)
   const pillRef = useRef(null)
-  const hoveringRef = useRef(false)
+  
 
   // Scrolled style + the two edge cases the observer can't catch:
   // back at the top (nothing active) and at the very bottom (last link active).
@@ -52,46 +52,26 @@ export default function Navbar() {
     return () => observer.disconnect()
   }, [])
 
-  // Spotlight idle sweep: when the cursor isn't on the pill (and on touch
-  // devices), the light drifts back and forth along the top edge.
-  // Writing straight to CSS variables means no React re-renders per frame.
-  // Visitors with "reduce motion" get a static light instead.
-  useEffect(() => {
-    const pill = pillRef.current
-    if (!pill) return
 
-    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    if (reduced) {
-      pill.style.setProperty('--x', '50%')
-      pill.style.setProperty('--y', '0%')
-      return
-    }
 
-    let raf
-    const tick = (t) => {
-      if (!hoveringRef.current) {
-        pill.style.setProperty('--x', `${50 + 48 * Math.sin(t / 1400)}%`)
-        pill.style.setProperty('--y', '0%')
-      }
-      raf = requestAnimationFrame(tick)
-    }
-    raf = requestAnimationFrame(tick)
-    return () => cancelAnimationFrame(raf)
-  }, [])
+const handlePointerMove = (e) => {
+  if (e.pointerType !== 'mouse') return
+  const pill = pillRef.current
+  if (!pill) return
+  pill.dataset.hover = 'true'
+  const rect = pill.getBoundingClientRect()
+  pill.style.setProperty('--x', `${e.clientX - rect.left}px`)
+  pill.style.setProperty('--y', `${e.clientY - rect.top}px`)
+}
 
-  const handlePointerMove = (e) => {
-    if (e.pointerType !== 'mouse') return
-    const pill = pillRef.current
-    if (!pill) return
-    hoveringRef.current = true
-    const rect = pill.getBoundingClientRect()
-    pill.style.setProperty('--x', `${e.clientX - rect.left}px`)
-    pill.style.setProperty('--y', `${e.clientY - rect.top}px`)
-  }
-
-  const handlePointerLeave = () => {
-    hoveringRef.current = false
-  }
+const handlePointerLeave = () => {
+  const pill = pillRef.current
+  if (!pill) return
+  delete pill.dataset.hover
+  // Hand control back to the CSS sweep.
+  pill.style.removeProperty('--x')
+  pill.style.removeProperty('--y')
+}
 
   // Close the mobile menu with Escape.
   useEffect(() => {

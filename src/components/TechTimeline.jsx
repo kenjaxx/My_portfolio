@@ -34,9 +34,9 @@ const OFFSETS = [6, 34, 14, 46, 4, 28, 42, 10, 22, 48, 8, 36]
 
 /* ---- Tuning knobs (all in pixels per second unless noted) ---- */
 const COPIES = 3 // repeats of the skill list so the rail never runs out
-const RAIL_SPEED = 24 // how fast the badges drift left (was 36)
-const BASE_SPEED = 60 // the rocket's normal speed, moving right (was 90)
-const BOOST = 200 // extra speed the rocket gets on a hit (was 320)
+const RAIL_SPEED = 24 // how fast the badges drift left
+const BASE_SPEED = 60 // the rocket's normal speed, moving right
+const BOOST = 200 // extra speed the rocket gets on a hit
 const BOOST_DECAY = 2.5 // higher = the boost fades faster
 const HIT_RADIUS = 12 // how close (px) the rocket must be to "touch" a badge
 
@@ -120,15 +120,32 @@ export default function TechTimeline() {
       period: 0, // distance the rail travels before it repeats exactly
       width: 0,
       centers: [], // each badge's center x inside the rail
+      badgeTops: [], // each badge's top edge, relative to the wrapper
+      counterBottom: 0,
       hitKey: -1,
       raf: 0,
       last: 0,
+      visible: true,
+      pathOn: false,
     }
 
+    // Everything the loop needs from the DOM is measured here, only when
+    // the layout changes. offsetLeft/offsetTop ignore CSS transforms, so the
+    // values stay correct even while a badge is scaled up.
     const measure = () => {
       s.width = wrap.clientWidth
       s.period = nodes[n].offsetLeft - nodes[0].offsetLeft
       s.centers = nodes.map((el) => el.offsetLeft + el.offsetWidth / 2)
+
+      const railTop = rail.offsetParent.offsetTop + rail.offsetTop
+      s.badgeTops = nodes.map((el) => railTop + el.offsetTop + el.firstElementChild.offsetTop - 2)
+      s.counterBottom = counter.offsetTop + counter.offsetHeight + 4
+    }
+
+    const setPathVisible = (on) => {
+      if (s.pathOn === on) return
+      s.pathOn = on
+      path.style.opacity = on ? '1' : '0'
     }
 
     const tick = (now) => {
@@ -169,25 +186,37 @@ export default function TechTimeline() {
         }
       }
 
-      // --- dashed connector from the counter text down to the lit badge ---
+      // --- dashed connector: pure arithmetic, no layout reads ---
       const k = activeRef.current
-      const badge = k !== null ? nodes[k]?.firstElementChild : null
-      if (badge) {
-        const w = wrap.getBoundingClientRect()
-        const c = counter.getBoundingClientRect()
-        const b = badge.getBoundingClientRect()
-        const x1 = c.left + c.width / 2 - w.left
-        const y1 = c.bottom - w.top + 4
-        const x2 = b.left + b.width / 2 - w.left
-        const y2 = b.top - w.top - 2
-        const mid = (y1 + y2) / 2
-        path.setAttribute('d', `M${x1} ${y1} V${mid} H${x2} V${y2}`)
-        path.style.opacity = x2 > 0 && x2 < w.width ? '1' : '0'
+      if (k !== null && s.badgeTops[k] !== undefined) {
+        const x2 = s.centers[k] + s.railX
+        if (x2 > 0 && x2 < s.width) {
+          const x1 = s.width / 2 // the counter is centered in the wrapper
+          const y1 = s.counterBottom
+          const y2 = s.badgeTops[k]
+          const mid = (y1 + y2) / 2
+          path.setAttribute('d', `M${x1} ${y1} V${mid} H${x2.toFixed(1)} V${y2}`)
+          setPathVisible(true)
+        } else {
+          setPathVisible(false)
+        }
       } else {
-        path.style.opacity = '0'
+        setPathVisible(false)
       }
 
+      // Keep looping only while the strip is on screen and the tab is visible.
+      s.raf = s.visible && !document.hidden ? requestAnimationFrame(tick) : 0
+    }
+
+    const start = () => {
+      if (s.raf || !s.visible || document.hidden) return
+      s.last = performance.now()
       s.raf = requestAnimationFrame(tick)
+    }
+
+    const stop = () => {
+      cancelAnimationFrame(s.raf)
+      s.raf = 0
     }
 
     measure()
@@ -195,12 +224,25 @@ export default function TechTimeline() {
     ro.observe(rail)
     ro.observe(wrap)
 
-    s.last = performance.now()
-    s.raf = requestAnimationFrame(tick)
+    // Pause when scrolled out of view.
+    const io = new IntersectionObserver(([entry]) => {
+      s.visible = entry.isIntersecting
+      if (s.visible) start()
+      else stop()
+    })
+    io.observe(wrap)
+
+    // Pause when the browser tab is hidden.
+    const onVisibility = () => (document.hidden ? stop() : start())
+    document.addEventListener('visibilitychange', onVisibility)
+
+    start()
 
     return () => {
-      cancelAnimationFrame(s.raf)
+      stop()
       ro.disconnect()
+      io.disconnect()
+      document.removeEventListener('visibilitychange', onVisibility)
     }
   }, [n])
 

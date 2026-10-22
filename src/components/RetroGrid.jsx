@@ -347,11 +347,12 @@ function resolveLineColor(color, element) {
 }
 
 export default function RetroGrid({
-  angle = 65, // tilt of the floor in degrees (lower = flatter, higher = steeper)
-  cellSize = 60, // size of each grid square in px
-  opacity = 0.5, // overall strength, 0 to 1
-  lineColor = 'rgba(0, 212, 255, 0.55)', // any CSS color
-  fadeColor = 'var(--bg)', // the bottom of the grid fades into this color
+  angle = 65,
+  cellSize = 60,
+  opacity = 0.5,
+  lineColor = 'rgba(0, 212, 255, 0.55)',
+  fadeColor = 'var(--bg)',
+  maxPixelRatio = MAX_DEVICE_PIXEL_RATIO, // cap this at 1 on weak devices
   className = '',
   style,
 }) {
@@ -362,6 +363,7 @@ export default function RetroGrid({
   const cellSizeRef = useRef(cellSize)
   const lineColorRef = useRef(lineColor)
   const syncSceneRef = useRef(null)
+  const maxPixelRatioRef = useRef(maxPixelRatio)
 
   // Keep the render loop in sync with prop changes without rebuilding WebGL.
   useEffect(() => {
@@ -461,7 +463,7 @@ export default function RetroGrid({
 
       if (currentWidth === 0 || currentHeight === 0 || !gl) return
 
-      currentDevicePixelRatio = Math.min(window.devicePixelRatio || 1, MAX_DEVICE_PIXEL_RATIO)
+      currentDevicePixelRatio = Math.min(window.devicePixelRatio || 1, maxPixelRatioRef.current)
 
       canvas.width = Math.floor(currentWidth * currentDevicePixelRatio)
       canvas.height = Math.floor(currentHeight * currentDevicePixelRatio)

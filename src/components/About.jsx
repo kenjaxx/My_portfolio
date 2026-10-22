@@ -1,9 +1,13 @@
 import { motion } from 'framer-motion'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState, lazy, Suspense } from 'react'
 import { useInView } from '../hooks/useInView'
 import { PROFILE, ABOUT, CONTACT } from '../data'
+import { getDeviceTier } from '../utils/deviceTier'
 import styles from './About.module.css'
-import Lanyard from './Lanyard'
+
+// Three.js lives in its own chunk and only downloads when it's needed.
+const Lanyard = lazy(() => import('./Lanyard'))
+
 const fadeUp = {
   hidden: { opacity: 0, y: 40 },
   visible: (i = 0) => ({
@@ -84,16 +88,6 @@ function CountUp({ to, suffix = '', run, delay = 0 }) {
 
 /* ---------- Icons ---------- */
 
-function DownloadIcon() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-      <polyline points="7 10 12 15 17 10" />
-      <line x1="12" y1="15" x2="12" y2="3" />
-    </svg>
-  )
-}
-
 function BriefcaseIcon() {
   return (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -103,16 +97,23 @@ function BriefcaseIcon() {
   )
 }
 
+let webglSupport // undefined = not checked yet
 
-
-
+// Runs once. Previously this created a new WebGL context on every render,
+// and browsers cap how many contexts can exist at the same time.
 function supportsWebGL() {
+  if (webglSupport !== undefined) return webglSupport
   try {
-    const c = document.createElement('canvas')
-    return !!(c.getContext('webgl2') || c.getContext('webgl'))
+    const canvas = document.createElement('canvas')
+    const gl = canvas.getContext('webgl2') || canvas.getContext('webgl')
+    webglSupport = Boolean(gl)
+    // Free the probe context right away so it doesn't count against the
+    // limit (RetroGrid, GlassIcons and Lanyard need theirs).
+    gl?.getExtension('WEBGL_lose_context')?.loseContext()
   } catch {
-    return false
+    webglSupport = false
   }
+  return webglSupport
 }
 
 /* ---------- Photo: arch, morphing glow, orbiting dots ---------- */
@@ -139,6 +140,9 @@ function Photo() {
             src={PROFILE.aboutPhoto}
             alt="Kenji Ermita"
             className={styles.photo}
+            width={800}
+            height={800}
+            decoding="async"
             onError={() => setErrored(true)}
           />
         )}
@@ -161,6 +165,10 @@ function SchoolBadge() {
       src={PROFILE.schoolLogo}
       alt={ABOUT.education.school}
       className={styles.eduBadgeImg}
+      width={42}
+      height={42}
+      loading="lazy"
+      decoding="async"
       onError={() => setErrored(true)}
     />
   )
@@ -182,6 +190,10 @@ function ExperienceBadge() {
       src={PROFILE.experienceLogo}
       alt={ABOUT.experience.company}
       className={styles.eduBadgeImg}
+      width={42}
+      height={42}
+      loading="lazy"
+      decoding="async"
       onError={() => setErrored(true)}
     />
   )
@@ -191,6 +203,10 @@ function ExperienceBadge() {
 
 export default function About() {
   const [ref, inView] = useInView()
+
+  // Computed once. Weak devices get the static photo instead of the 3D lanyard.
+  // To keep the lanyard on every device, use: useMemo(() => supportsWebGL(), [])
+  const useLanyard = useMemo(() => supportsWebGL() && !getDeviceTier().lowPower, [])
 
   // Read top to bottom: school first, then the current role (pulsing green dot).
   const timeline = [
@@ -215,43 +231,45 @@ export default function About() {
       <div className={styles.inner}>
         <div className={styles.grid}>
           <motion.div
-  className={styles.photoCol}
-  variants={fadeUp}
-  initial="hidden"
-  animate={inView ? 'visible' : 'hidden'}
-  custom={0}
->
-  {supportsWebGL() ? (
-    <div className={styles.lanyardWrap}>
-      {/* Mounted only once the section is in view, so the drop-in intro
-          plays when the visitor actually scrolls here. */}
-      {inView && (
-        <Lanyard
-          frontImage={PROFILE.aboutPhoto}
-          imageFit="cover"
-          cardColor="#0f0f1a"
-          orientation="portrait"
-          finish="glossy"
-          cornerRadius={0.35}
-          size={0.55}
-          anchor="center"
-          strapLength={0.45}
-          strapColor="#00d4ff"
-          strapWidth={0.65}
-          metal="silver"
-          gravity={1}
-          damping={0.5}
-          elasticity={0.5}
-          breeze={0.3}
-          interactive
-          intro
-        />
-      )}
-    </div>
-  ) : (
-    <Photo />
-  )}
-</motion.div>
+            className={styles.photoCol}
+            variants={fadeUp}
+            initial="hidden"
+            animate={inView ? 'visible' : 'hidden'}
+            custom={0}
+          >
+            {useLanyard ? (
+              <div className={styles.lanyardWrap}>
+                {/* Mounted only once the section is in view, so the chunk loads
+                    (usually already prefetched) and the drop-in plays on scroll. */}
+                {inView && (
+                  <Suspense fallback={null}>
+                    <Lanyard
+                      frontImage={PROFILE.aboutPhoto}
+                      imageFit="cover"
+                      cardColor="#0f0f1a"
+                      orientation="portrait"
+                      finish="glossy"
+                      cornerRadius={0.35}
+                      size={0.55}
+                      anchor="center"
+                      strapLength={0.45}
+                      strapColor="#00d4ff"
+                      strapWidth={0.65}
+                      metal="silver"
+                      gravity={1}
+                      damping={0.5}
+                      elasticity={0.5}
+                      breeze={0.3}
+                      interactive
+                      intro
+                    />
+                  </Suspense>
+                )}
+              </div>
+            ) : (
+              <Photo />
+            )}
+          </motion.div>
 
           <div className={styles.textCol}>
             <motion.span
@@ -327,8 +345,6 @@ export default function About() {
                 {ABOUT.phone && <span>{ABOUT.phone}</span>}
                 {ABOUT.location && <span>{ABOUT.location}</span>}
               </div>
-
-            
             </motion.div>
 
             <ol className={styles.timeline}>

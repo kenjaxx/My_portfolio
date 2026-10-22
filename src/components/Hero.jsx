@@ -4,6 +4,7 @@ import TechTimeline from './TechTimeline'
 import ParticleText from './ParticleText'
 import RotatingText from './RotatingText'
 import { ROLES, CONTACT } from '../data'
+import { getDeviceTier } from '../utils/deviceTier'
 import styles from './Hero.module.css'
 
 function DownloadIcon() {
@@ -24,6 +25,9 @@ function GitHubIcon() {
   )
 }
 
+// Read once at module load.
+const tier = getDeviceTier()
+
 export default function Hero() {
   const scrollToProjects = () => {
     document.querySelector('#projects')?.scrollIntoView({ behavior: 'smooth' })
@@ -36,11 +40,11 @@ export default function Hero() {
         cellSize={60}
         opacity={0.4}
         lineColor="rgba(0, 212, 255, 0.55)"
+        maxPixelRatio={tier.lowPower ? 1 : 2}
       />
       <div className={styles.glowOrb1}></div>
       <div className={styles.glowOrb2}></div>
 
-      {/* Tech timeline now sits at the top, above the name */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -73,14 +77,15 @@ export default function Hero() {
               gatherDuration={1600}
               stagger={420}
               particleSize={2}
-              density={4}
+              density={tier.lowPower ? 6 : 4}
+              maxParticles={tier.lowPower ? 1100 : 5200}
               clickBurst
               burstStrength={1}
-              pointerRepel={40}
+              pointerRepel={tier.coarse ? 0 : 40}
               repelRadius={120}
-              idleDrift={0.7}
+              idleDrift={tier.lowPower ? 0 : 0.7}
               trigger="mount"
-              glow
+              glow={!tier.lowPower}
             />
           </motion.div>
 

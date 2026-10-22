@@ -1,14 +1,12 @@
 import { motion, AnimatePresence } from 'framer-motion'
-import { useState, useRef, useEffect, useCallback, memo } from 'react'
+import { useState, useRef, useEffect, useCallback, memo, lazy, Suspense } from 'react'
 import { createPortal } from 'react-dom'
 import { useInView } from '../hooks/useInView'
-import CircularCarousel from './CircularCarousel'
-import SplitFlapText from './SplitFlapText'
 import { PROJECTS, CONTACT } from '../data'
 import styles from './Projects.module.css'
 
-// Memoised so opening/closing the modal doesn't re-render the whole 3D ring.
-const Carousel = memo(CircularCarousel)
+const Carousel = memo(lazy(() => import('./CircularCarousel')))
+const SplitFlapText = lazy(() => import('./SplitFlapText'))
 
 // Only projects that have a cover image go on the ring.
 const SHOWN = PROJECTS.filter((p) => p.image)
@@ -160,24 +158,29 @@ function ProjectModal({ selected, onClose }) {
             {/* "PROJECT 003" + Featured badge */}
             <div className={styles.numRow}>
               <div className={styles.numSlot}>
-                {ready && (
-                  <SplitFlapText
-                    text={numText}
-                    padTo={numText.length}
-                    tileStyle="minimal"
-                    textColor="currentColor"
-                    fontSize={13}
-                    gap="0.12em"
-                    flipDuration={0.1}
-                    stagger={0.035}
-                    flipsPerChar={5}
-                    order="left"
-                    charset="alphanumeric"
-                    depth={0.3}
-                    intro
-                  />
-                )}
-              </div>
+  {ready && (
+  <Suspense fallback={null}>
+    <SplitFlapText
+      text={titleText}
+      padTo={titleText.length}
+      tileStyle="board"
+      tileColor="#171726"
+      textColor="#ffffff"
+      fontSize={titleFontSize(titleText.length)}
+      gap="0.1em"
+      tileRadius="0.12em"
+      flipDuration={0.1}
+      stagger={0.04}
+      flipsPerChar={6}
+      order="left"
+      charset="alphanumeric"
+      glare={0}
+      depth={0.5}
+      intro
+    />
+  </Suspense>
+)}
+</div>
               {project.featured && <span className={styles.featuredBadge}>Featured</span>}
             </div>
 
@@ -356,29 +359,28 @@ export default function Projects() {
         {/* Mounted only once the section is visible, so the intro
             plays when the visitor actually scrolls here. */}
         {inView && (
-          <Carousel
-            className={styles.carousel}
-            items={ITEMS}
-            preset="cylinder"
-            intro="rise"
-            cardWidth={680}
-            aspectRatio={1.6}
-            gap={24}
-            cornerRadius={18}
-            // The carousel's own pauseOnHover treats the whole box as "hover",
-            // including the empty black areas, so it is turned off here and
-            // replaced by the card-only check above.
-            autoplay={paused ? 'off' : 'drift'}
-            speed={12}
-            direction="left"
-            pauseOnHover={false}
-            captions
-            depthFade={0.6}
-            fadeColor="#0a0a0f"
-            focusOnClick={false}
-            onItemClick={handleItemClick}
-          />
-        )}
+  <Suspense fallback={null}>
+    <Carousel
+      className={styles.carousel}
+      items={ITEMS}
+      preset="cylinder"
+      intro="rise"
+      cardWidth={680}
+      aspectRatio={1.6}
+      gap={24}
+      cornerRadius={18}
+      autoplay={paused ? 'off' : 'drift'}
+      speed={12}
+      direction="left"
+      pauseOnHover={false}
+      captions
+      depthFade={0.6}
+      fadeColor="#0a0a0f"
+      focusOnClick={false}
+      onItemClick={handleItemClick}
+    />
+  </Suspense>
+)}
       </motion.div>
 
       <p className={styles.hint}>Hover a card to pause · drag or swipe to browse · click a card to open it</p>

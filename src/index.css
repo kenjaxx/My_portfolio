@@ -22,6 +22,19 @@
   --font-mono: 'JetBrains Mono', monospace;
 }
 
+/* Registered so the navbar spotlight position can be animated in CSS. */
+@property --x {
+  syntax: '<length-percentage>';
+  inherits: true;
+  initial-value: 50%;
+}
+
+@property --y {
+  syntax: '<length-percentage>';
+  inherits: true;
+  initial-value: 0%;
+}
+
 html {
   scroll-behavior: smooth;
 }

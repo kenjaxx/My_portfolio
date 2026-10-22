@@ -69,7 +69,7 @@ export const PROJECTS = [
     tags: ['React', 'Supabase'],
     github: null,
     live: 'https://billify-02f8.onrender.com/bills',
-    image: '/images/billify-cover.png',
+    image: '/images/billify-cover.webp',
     featured: true,
     color: '#00d4ff',
   },
@@ -81,7 +81,7 @@ export const PROJECTS = [
     tags: ['React', 'Vite', 'Tailwind CSS', 'Firebase', 'Cloudinary', 'Gemini API', 'PWA'],
     github: null,
     live: 'https://closet-ai-ebc44.web.app',
-    image: '/images/closet-ai-cover.png',
+    image: '/images/closet-ai-cover.webp',
     featured: false,
     color: '#00ff88',
   },
@@ -93,7 +93,7 @@ export const PROJECTS = [
     tags: ['React', 'Firebase', 'Gemini API', 'Vercel', 'JavaScript'],
     github: 'https://github.com/kenjaxx/ai-interview-simulator',
     live: 'https://ai-interview-simulator-ochre.vercel.app/',
-    image: '/images/ai-interview-simulator.jpg',
+    image: '/images/ai-interview-simulator.webp',
     featured: false,
     color: '#7c3aed',
   },
@@ -105,7 +105,7 @@ export const PROJECTS = [
     tags: ['HTML', 'CSS', 'JavaScript'],
     github: 'https://github.com/kenjaxx/house-selling-site',
     live: 'https://kenjaxx.github.io/house-selling-site/',
-    image: '/images/house-selling-cover.png',
+    image: '/images/house-selling-cover.webp',
     featured: false,
     color: '#7c3aed',
   },
@@ -118,13 +118,11 @@ export const CONTACT = {
   resume: '/Kenji_Ermita_Resume_.pdf',
 }
 
-// Add your own photos to /public/images/ with these filenames (or update
-// the paths here to match whatever you name them).
 export const PROFILE = {
-  heroPhoto: '/images/profile-hero.jpg',
-  aboutPhoto: '/images/profile-about.jpg', // your graduation photo
-  schoolLogo: '/images/citu-logo.png', // CIT-U seal
-  experienceLogo: '/images/knowles-logo.png',
+  heroPhoto: '/images/profile-hero.webp',
+  aboutPhoto: '/images/profile-about.webp',
+  schoolLogo: '/images/citu-logo.webp',
+  experienceLogo: '/images/knowles-logo.webp',
 }
 
 // Content for the redesigned About section (big photo + editorial layout).
@@ -182,3 +180,5 @@ export const TIMELINE_SKILLS = [
   { name: 'AWS', color: '#ff9900' },
   { name: 'SQL', color: '#4479a1' },
 ]
+
+

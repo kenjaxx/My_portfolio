@@ -53,6 +53,7 @@ const ParticleText = ({
   text = 'React Bits',
   particleSize = 2,
   density = 4,
+  maxParticles = null,
   color = 'currentColor',
   highlightColor = '#ff5a36',
   highlightMode = 'motion',
@@ -84,6 +85,7 @@ const ParticleText = ({
       text,
       particleSize,
       density,
+      maxParticles,
       color,
       highlightColor,
       highlightMode,
@@ -603,8 +605,9 @@ const ParticleText = ({
         }
       }
 
-      const maxParticles = Math.max(900, Math.min(5200, Math.floor((nextWidth * nextHeight) / 90)));
-      const stride = Math.max(1, Math.ceil(targets.length / maxParticles));
+      const autoCap = Math.max(900, Math.min(5200, Math.floor((nextWidth * nextHeight) / 90)));
+      const cap = s.maxParticles ? Math.min(autoCap, s.maxParticles) : autoCap;
+      const stride = Math.max(1, Math.ceil(targets.length / cap));
       const selected = targets.filter((_, index) => index % stride === 0);
       const intro = introPending && !reducedMotion;
       introPending = false;
