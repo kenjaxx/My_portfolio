@@ -126,17 +126,54 @@ export const ABOUT = {
   badge: 'About',
   headingGradient: 'Full Stack',
   headingRest: 'Developer.',
-  bio: "BSIT graduate who loves turning ideas into real, working products — from pixel-perfect React UIs to well-structured Python & Java backends, with Supabase powering real-time data underneath. Whether it's a web app, a CMS, or a REST API, I build it end-to-end.",
+  bio: 'I care about the details: fast, accessible, responsive interfaces backed by clean data, from the first component to the final deploy.',
 
-  // Words in the bio that get their brand color.
-  keywords: {
-    React: '#61dafb',
-    Python: '#ffd43b',
-    Java: '#f89820',
-    Supabase: '#3ecf8e',
-  },
+  // The lanes in the About section. Each lane lists skill names from
+  // SKILL_GROUPS above (name and brand color come from there). A skill that is
+  // in SKILL_GROUPS but not listed here is added to the last lane automatically.
+  lanes: [
+    {
+      label: 'Frontend',
+      names: ['JavaScript', 'TypeScript', 'HTML', 'CSS', 'React', 'Next.js', 'Tailwind CSS'],
+    },
+    { label: 'Backend', names: ['Python', 'Java', 'Node.js', 'Django', 'REST API'] },
+    {
+      label: 'Data & cloud',
+      names: [
+        'SQL',
+        'Supabase',
+        'Firebase',
+        'MySQL',
+        'PostgreSQL',
+        'Prisma',
+        'AWS',
+        'Vercel',
+        'Railway',
+      ],
+    },
+    {
+      label: 'Tools',
+      names: [
+        'Git',
+        'GitHub',
+        'VS Code',
+        'Claude Code',
+        'Gemini',
+        'Postman',
+        'Bash',
+        'PowerShell',
+        'XAMPP',
+        'WordPress',
+        'Android',
+        'ServiceNow',
+      ],
+    },
+  ],
 
-  // `num` + `suffix` count up. `text` is shown as-is (no counting).
+  // `education` and `experience` below feed the two cards under the lanes.
+  // `stats`, `location` and `phone` are not shown in the About section any more;
+  // they are kept in case another component reads them.
+  // For stats, `num` + `suffix` count up. `text` is shown as-is (no counting).
   stats: [
     { num: 30, suffix: '+', label: 'Technologies' },
     { num: 4, suffix: '', label: 'Live apps' },

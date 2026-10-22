@@ -1,7 +1,7 @@
 import { motion } from 'framer-motion'
-import { useEffect, useMemo, useState, lazy, Suspense } from 'react'
+import { useMemo, useState, lazy, Suspense } from 'react'
 import { useInView } from '../hooks/useInView'
-import { PROFILE, ABOUT, CONTACT } from '../data'
+import { PROFILE, ABOUT, SKILL_GROUPS } from '../data'
 import { getDeviceTier } from '../utils/deviceTier'
 import styles from './About.module.css'
 
@@ -26,74 +26,134 @@ const slideIn = {
   }),
 }
 
-/* ---------- Bio with colored keywords ---------- */
+/* ---------- Skill lanes, built from the Skills & Tools data ---------- */
 
-const KEYWORDS = ABOUT.keywords ?? {}
-const KEYWORD_RE = Object.keys(KEYWORDS).length
-  ? new RegExp(`\\b(${Object.keys(KEYWORDS).join('|')})\\b`)
-  : null
+// Every skill (name + brand color) comes from SKILL_GROUPS in data.js, so the
+// About section and the Skills section can never drift apart. ABOUT.lanes only
+// says which lane each skill belongs to.
+const ALL_SKILLS = SKILL_GROUPS.flatMap((group) => group.skills)
+const SKILL_BY_NAME = new Map(ALL_SKILLS.map((skill) => [skill.name, skill]))
 
-function Bio({ text }) {
-  if (!KEYWORD_RE) return text
-  // split() with a capture group puts every match at an odd index.
-  return text.split(KEYWORD_RE).map((part, i) =>
-    i % 2 === 1 ? (
-      <span key={i} className={styles.kw} style={{ '--kw': KEYWORDS[part] }}>
-        {part}
-      </span>
-    ) : (
-      part
-    )
+function buildLanes() {
+  const lanes = ABOUT.lanes.map((lane) => ({
+    label: lane.label,
+    skills: lane.names.map((name) => SKILL_BY_NAME.get(name)).filter(Boolean),
+  }))
+
+  // A skill added to the Skills section but not assigned to a lane yet lands
+  // in the last lane, so it still shows up here.
+  const placed = new Set(lanes.flatMap((lane) => lane.skills.map((skill) => skill.name)))
+  const rest = ALL_SKILLS.filter((skill) => !placed.has(skill.name))
+  if (rest.length > 0 && lanes.length > 0) lanes[lanes.length - 1].skills.push(...rest)
+
+  return lanes.filter((lane) => lane.skills.length > 0)
+}
+
+const LANES = buildLanes()
+
+// A lane scrolls by half of its track, so one half has to be wider than the
+// lane itself. About nine chips is roughly 880px, wider than the 620px lane.
+const MIN_CHIPS_PER_HALF = 9
+const SECONDS_PER_CHIP = 2.4
+
+function Chip({ skill }) {
+  return (
+    <span className={styles.chip} style={{ '--c': skill.color }}>
+      <span className={styles.chipDot} aria-hidden="true" />
+      {skill.name}
+    </span>
   )
 }
 
-/* ---------- Count-up number ---------- */
-
-function CountUp({ to, suffix = '', run, delay = 0 }) {
-  const [val, setVal] = useState(0)
-
-  useEffect(() => {
-    if (!run) return
-
-    // Visitors who prefer reduced motion get the final number right away.
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      setVal(to)
-      return
-    }
-
-    let raf
-    const timer = setTimeout(() => {
-      const start = performance.now()
-      const tick = (now) => {
-        const p = Math.min((now - start) / 1400, 1)
-        setVal(Math.round(to * (1 - Math.pow(1 - p, 3)))) // ease-out
-        if (p < 1) raf = requestAnimationFrame(tick)
-      }
-      raf = requestAnimationFrame(tick)
-    }, delay)
-
-    return () => {
-      clearTimeout(timer)
-      cancelAnimationFrame(raf)
-    }
-  }, [run, to, delay])
+function Lane({ lane, index }) {
+  const repeats = Math.max(1, Math.ceil(MIN_CHIPS_PER_HALF / lane.skills.length))
+  const duration = lane.skills.length * repeats * SECONDS_PER_CHIP
 
   return (
-    <>
-      {val}
-      {suffix}
-    </>
+    <li className={styles.lane}>
+      <span className={styles.laneLabel}>{lane.label}</span>
+      {/* The moving copy is hidden from assistive tech; this is the real list. */}
+      <span className={styles.srOnly}>{lane.skills.map((skill) => skill.name).join(', ')}</span>
+      <div className={styles.viewport} aria-hidden="true">
+        <div
+          className={`${styles.track} ${index % 2 === 1 ? styles.reverse : ''}`}
+          style={{ '--dur': `${duration}s` }}
+        >
+          {Array.from({ length: repeats * 2 }, (_, copy) => (
+            <div key={copy} className={`${styles.set} ${copy > 0 ? styles.dup : ''}`}>
+              {lane.skills.map((skill) => (
+                <Chip key={skill.name} skill={skill} />
+              ))}
+            </div>
+          ))}
+        </div>
+      </div>
+    </li>
   )
 }
 
-/* ---------- Icons ---------- */
+/* ---------- Timeline badges ---------- */
 
 function BriefcaseIcon() {
   return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <svg
+      width="18"
+      height="18"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      aria-hidden="true"
+    >
       <rect x="2" y="7" width="20" height="14" rx="2" />
       <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
     </svg>
+  )
+}
+
+function SchoolBadge() {
+  const [errored, setErrored] = useState(false)
+
+  if (errored || !PROFILE.schoolLogo) {
+    return <div className={styles.eduBadge}>KE</div>
+  }
+
+  return (
+    <img
+      src={PROFILE.schoolLogo}
+      alt={ABOUT.education.school}
+      className={styles.eduBadgeImg}
+      width={42}
+      height={42}
+      loading="lazy"
+      decoding="async"
+      onError={() => setErrored(true)}
+    />
+  )
+}
+
+function ExperienceBadge() {
+  const [errored, setErrored] = useState(false)
+
+  if (errored || !PROFILE.experienceLogo) {
+    return (
+      <div className={styles.expBadge}>
+        <BriefcaseIcon />
+      </div>
+    )
+  }
+
+  return (
+    <img
+      src={PROFILE.experienceLogo}
+      alt={ABOUT.experience.company}
+      className={styles.eduBadgeImg}
+      width={42}
+      height={42}
+      loading="lazy"
+      decoding="async"
+      onError={() => setErrored(true)}
+    />
   )
 }
 
@@ -151,62 +211,24 @@ function Photo() {
   )
 }
 
-/* ---------- Timeline badges ---------- */
-
-function SchoolBadge() {
-  const [errored, setErrored] = useState(false)
-
-  if (errored || !PROFILE.schoolLogo) {
-    return <div className={styles.eduBadge}>KE</div>
-  }
-
-  return (
-    <img
-      src={PROFILE.schoolLogo}
-      alt={ABOUT.education.school}
-      className={styles.eduBadgeImg}
-      width={42}
-      height={42}
-      loading="lazy"
-      decoding="async"
-      onError={() => setErrored(true)}
-    />
-  )
-}
-
-function ExperienceBadge() {
-  const [errored, setErrored] = useState(false)
-
-  if (errored || !PROFILE.experienceLogo) {
-    return (
-      <div className={styles.expBadge}>
-        <BriefcaseIcon />
-      </div>
-    )
-  }
-
-  return (
-    <img
-      src={PROFILE.experienceLogo}
-      alt={ABOUT.experience.company}
-      className={styles.eduBadgeImg}
-      width={42}
-      height={42}
-      loading="lazy"
-      decoding="async"
-      onError={() => setErrored(true)}
-    />
-  )
-}
-
 /* ---------- Section ---------- */
 
 export default function About() {
   const [ref, inView] = useInView()
+  const [paused, setPaused] = useState(false)
 
   // Computed once. Weak devices get the static photo instead of the 3D lanyard.
   // To keep the lanyard on every device, use: useMemo(() => supportsWebGL(), [])
-  const useLanyard = useMemo(() => supportsWebGL() && !getDeviceTier().lowPower, [])
+  const lowPower = useMemo(() => getDeviceTier().lowPower, [])
+  const useLanyard = useMemo(() => supportsWebGL() && !lowPower, [lowPower])
+
+  // Shared entrance animation. `i` staggers the elements top to bottom.
+  const reveal = (i) => ({
+    variants: fadeUp,
+    initial: 'hidden',
+    animate: inView ? 'visible' : 'hidden',
+    custom: i,
+  })
 
   // Read top to bottom: school first, then the current role (pulsing green dot).
   const timeline = [
@@ -226,17 +248,23 @@ export default function About() {
     },
   ].filter(Boolean)
 
+  // Lanes only move once the section is on screen, and weak devices get
+  // still, wrapped chips instead (visitors who prefer reduced motion get the
+  // same thing from the CSS).
+  const lanesClass = [
+    styles.lanes,
+    inView ? styles.on : '',
+    paused ? styles.userPaused : '',
+    lowPower ? styles.still : '',
+  ]
+    .filter(Boolean)
+    .join(' ')
+
   return (
     <section id="about" className={styles.section} ref={ref}>
       <div className={styles.inner}>
         <div className={styles.grid}>
-          <motion.div
-            className={styles.photoCol}
-            variants={fadeUp}
-            initial="hidden"
-            animate={inView ? 'visible' : 'hidden'}
-            custom={0}
-          >
+          <motion.div className={styles.photoCol} {...reveal(0)}>
             {useLanyard ? (
               <div className={styles.lanyardWrap}>
                 {/* Mounted only once the section is in view, so the chunk loads
@@ -272,79 +300,36 @@ export default function About() {
           </motion.div>
 
           <div className={styles.textCol}>
-            <motion.span
-              className={styles.badge}
-              variants={fadeUp}
-              initial="hidden"
-              animate={inView ? 'visible' : 'hidden'}
-              custom={1}
-            >
+            <motion.span className={styles.badge} {...reveal(1)}>
               {ABOUT.badge}
             </motion.span>
 
-            <motion.h2
-              className={styles.heading}
-              variants={fadeUp}
-              initial="hidden"
-              animate={inView ? 'visible' : 'hidden'}
-              custom={2}
-            >
+            <motion.h2 className={styles.heading} {...reveal(2)}>
               <span className={styles.headingGradient}>{ABOUT.headingGradient}</span>{' '}
               {ABOUT.headingRest}
             </motion.h2>
 
-            <motion.p
-              className={styles.bio}
-              variants={fadeUp}
-              initial="hidden"
-              animate={inView ? 'visible' : 'hidden'}
-              custom={3}
-            >
-              <Bio text={ABOUT.bio} />
+            <motion.p className={styles.bio} {...reveal(3)}>
+              {ABOUT.bio}
             </motion.p>
 
-            <motion.div
-              className={styles.stats}
-              variants={fadeUp}
-              initial="hidden"
-              animate={inView ? 'visible' : 'hidden'}
-              custom={4}
-            >
-              {ABOUT.stats.map((s, i) => (
-                <div key={s.label} className={styles.stat}>
-                  <span className={styles.statNum}>
-                    {s.text ?? (
-                      <CountUp to={s.num} suffix={s.suffix} run={inView} delay={500 + i * 150} />
-                    )}
-                  </span>
-                  <span className={styles.statLabel}>{s.label}</span>
-                  <span className={styles.bar} aria-hidden="true">
-                    <span
-                      className={`${styles.barFill} ${inView ? styles.barOn : ''}`}
-                      style={{ transitionDelay: `${0.5 + i * 0.15}s` }}
-                    />
-                  </span>
-                </div>
-              ))}
-            </motion.div>
+            <motion.div className={lanesClass} {...reveal(4)}>
+              <ul className={styles.laneList} aria-label="Tech stack">
+                {LANES.map((lane, i) => (
+                  <Lane key={lane.label} lane={lane} index={i} />
+                ))}
+              </ul>
 
-            <motion.div
-              className={styles.metaBlock}
-              variants={fadeUp}
-              initial="hidden"
-              animate={inView ? 'visible' : 'hidden'}
-              custom={5}
-            >
-              <div className={styles.statusRow}>
-                <span className={styles.statusDot} />
-                Available for projects
-              </div>
-
-              <div className={styles.contactRow}>
-                {CONTACT.email && <span>{CONTACT.email}</span>}
-                {ABOUT.phone && <span>{ABOUT.phone}</span>}
-                {ABOUT.location && <span>{ABOUT.location}</span>}
-              </div>
+              {!lowPower && (
+                <button
+                  type="button"
+                  className={styles.pause}
+                  aria-pressed={paused}
+                  onClick={() => setPaused((value) => !value)}
+                >
+                  {paused ? 'Play motion' : 'Pause motion'}
+                </button>
+              )}
             </motion.div>
 
             <ol className={styles.timeline}>
