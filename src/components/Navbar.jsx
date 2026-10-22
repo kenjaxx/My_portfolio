@@ -6,22 +6,33 @@ import styles from './Navbar.module.css'
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
-  const [activeHref, setActiveHref] = useState(NAV_LINKS[0]?.href ?? '')
-  const navRef = useRef(null)
+  // Empty string = hero / top of page, so no link is highlighted there.
+  const [activeHref, setActiveHref] = useState('')
+  const wrapRef = useRef(null)
+  const pillRef = useRef(null)
+  const hoveringRef = useRef(false)
 
+  // Scrolled style + the two edge cases the observer can't catch:
+  // back at the top (nothing active) and at the very bottom (last link active).
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 40)
-    window.addEventListener('scroll', onScroll)
+    const onScroll = () => {
+      const y = window.scrollY
+      setScrolled(y > 40)
+
+      if (y < 100) {
+        setActiveHref('')
+      } else if (window.innerHeight + y >= document.documentElement.scrollHeight - 4) {
+        setActiveHref(NAV_LINKS[NAV_LINKS.length - 1].href)
+      }
+    }
+    onScroll()
+    window.addEventListener('scroll', onScroll, { passive: true })
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
-  // Scroll-spy: highlight whichever section is currently most visible
-  // in the viewport, so the nav reflects where the visitor actually is,
-  // not just the last link they clicked.
+  // Scroll-spy: highlight the section currently in the middle of the viewport.
   useEffect(() => {
-    const sections = NAV_LINKS.map((link) => document.querySelector(link.href)).filter(
-      Boolean
-    )
+    const sections = NAV_LINKS.map((link) => document.querySelector(link.href)).filter(Boolean)
     if (sections.length === 0) return
 
     const observer = new IntersectionObserver(
@@ -34,16 +45,55 @@ export default function Navbar() {
           setActiveHref(`#${visible[0].target.id}`)
         }
       },
-      {
-        rootMargin: '-30% 0px -60% 0px',
-        threshold: 0,
-      }
+      { rootMargin: '-30% 0px -60% 0px', threshold: 0 }
     )
 
     sections.forEach((section) => observer.observe(section))
     return () => observer.disconnect()
   }, [])
 
+  // Spotlight idle sweep: when the cursor isn't on the pill (and on touch
+  // devices), the light drifts back and forth along the top edge.
+  // Writing straight to CSS variables means no React re-renders per frame.
+  // Visitors with "reduce motion" get a static light instead.
+  useEffect(() => {
+    const pill = pillRef.current
+    if (!pill) return
+
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    if (reduced) {
+      pill.style.setProperty('--x', '50%')
+      pill.style.setProperty('--y', '0%')
+      return
+    }
+
+    let raf
+    const tick = (t) => {
+      if (!hoveringRef.current) {
+        pill.style.setProperty('--x', `${50 + 48 * Math.sin(t / 1400)}%`)
+        pill.style.setProperty('--y', '0%')
+      }
+      raf = requestAnimationFrame(tick)
+    }
+    raf = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(raf)
+  }, [])
+
+  const handlePointerMove = (e) => {
+    if (e.pointerType !== 'mouse') return
+    const pill = pillRef.current
+    if (!pill) return
+    hoveringRef.current = true
+    const rect = pill.getBoundingClientRect()
+    pill.style.setProperty('--x', `${e.clientX - rect.left}px`)
+    pill.style.setProperty('--y', `${e.clientY - rect.top}px`)
+  }
+
+  const handlePointerLeave = () => {
+    hoveringRef.current = false
+  }
+
+  // Close the mobile menu with Escape.
   useEffect(() => {
     if (!menuOpen) return
     const onKeyDown = (e) => {
@@ -53,10 +103,11 @@ export default function Navbar() {
     return () => window.removeEventListener('keydown', onKeyDown)
   }, [menuOpen])
 
+  // Close the mobile menu when clicking outside the nav.
   useEffect(() => {
     if (!menuOpen) return
     const onClick = (e) => {
-      if (navRef.current && !navRef.current.contains(e.target)) {
+      if (wrapRef.current && !wrapRef.current.contains(e.target)) {
         setMenuOpen(false)
       }
     }
@@ -70,92 +121,120 @@ export default function Navbar() {
     if (el) el.scrollIntoView({ behavior: 'smooth' })
   }
 
+  const scrollTop = () => {
+    setMenuOpen(false)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
   return (
-    <motion.nav
-      ref={navRef}
-      className={`${styles.nav} ${scrolled ? styles.scrolled : ''}`}
+    <motion.header
+      className={`${styles.header} ${scrolled ? styles.headerScrolled : ''}`}
       initial={{ y: -80, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.6, ease: 'easeOut' }}
     >
-      <div
-        className={styles.logo}
-        onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-        role="button"
-        tabIndex={0}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter' || e.key === ' ') window.scrollTo({ top: 0, behavior: 'smooth' })
-        }}
-      >
-        <span className={styles.logoBracket}>&lt;</span>
-        KE
-        <span className={styles.logoBracket}> /&gt;</span>
-      </div>
-
-      <ul className={styles.links}>
-        {NAV_LINKS.map((link, i) => (
-          <motion.li
-            key={link.label}
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 * i + 0.3 }}
-          >
+      <div className={styles.wrap} ref={wrapRef}>
+        {/* ---------- The floating glass pill with spotlight border ---------- */}
+        <nav
+          ref={pillRef}
+          className={`${styles.pill} ${scrolled ? styles.pillScrolled : ''}`}
+          aria-label="Primary"
+          onPointerMove={handlePointerMove}
+          onPointerLeave={handlePointerLeave}
+        >
+          <div className={styles.pillInner}>
             <button
-              onClick={() => handleNav(link.href)}
-              className={`${styles.link} ${activeHref === link.href ? styles.linkActive : ''}`}
-              aria-current={activeHref === link.href ? 'true' : undefined}
+              type="button"
+              className={styles.logo}
+              onClick={scrollTop}
+              aria-label="Back to top"
             >
-              <span className={styles.linkNum}>0{i + 1}.</span>
-              {link.label}
+              <span className={styles.logoBracket}>&lt;</span>
+              KE
+              <span className={styles.logoBracket}> /&gt;</span>
             </button>
-          </motion.li>
-        ))}
-      </ul>
 
-      {CONTACT.resume && (
-        <a href={CONTACT.resume} download className={styles.ctaBtn}>
-          Resume
-        </a>
-      )}
+            <ul className={styles.links}>
+              {NAV_LINKS.map((link) => {
+                const active = activeHref === link.href
+                return (
+                  <li key={link.label}>
+                    <button
+                      type="button"
+                      onClick={() => handleNav(link.href)}
+                      className={`${styles.link} ${active ? styles.linkActive : ''}`}
+                      aria-current={active ? 'true' : undefined}
+                    >
+                      {/* Shared-layout highlight: slides between links as you scroll */}
+                      {active && (
+                        <motion.span
+                          layoutId="nav-active-pill"
+                          className={styles.activePill}
+                          transition={{ type: 'spring', stiffness: 380, damping: 32 }}
+                        />
+                      )}
+                      <span className={styles.linkLabel}>{link.label}</span>
+                    </button>
+                  </li>
+                )
+              })}
+            </ul>
 
-      <button
-        className={styles.hamburger}
-        onClick={() => setMenuOpen(!menuOpen)}
-        aria-label="Toggle menu"
-        aria-expanded={menuOpen}
-      >
-        <span className={menuOpen ? styles.barOpen : styles.bar} />
-        <span className={menuOpen ? styles.barOpenMid : styles.bar} />
-        <span className={menuOpen ? styles.barOpenBot : styles.bar} />
-      </button>
-
-      <AnimatePresence>
-        {menuOpen && (
-          <motion.div
-            className={styles.mobileMenu}
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.2 }}
-          >
-            {NAV_LINKS.map((link, i) => (
-              <button
-                key={link.label}
-                onClick={() => handleNav(link.href)}
-                className={`${styles.mobileLink} ${activeHref === link.href ? styles.mobileLinkActive : ''}`}
-                aria-current={activeHref === link.href ? 'true' : undefined}
-              >
-                <span className={styles.linkNum}>0{i + 1}.</span> {link.label}
-              </button>
-            ))}
             {CONTACT.resume && (
-              <a href={CONTACT.resume} download className={styles.mobileCta}>
+              <a href={CONTACT.resume} download className={styles.ctaBtn}>
                 Resume
               </a>
             )}
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </motion.nav>
+
+            <button
+              type="button"
+              className={styles.hamburger}
+              onClick={() => setMenuOpen((o) => !o)}
+              aria-label="Toggle menu"
+              aria-expanded={menuOpen}
+              aria-controls="mobile-menu"
+            >
+              <span className={menuOpen ? styles.barOpen : styles.bar} />
+              <span className={menuOpen ? styles.barOpenMid : styles.bar} />
+              <span className={menuOpen ? styles.barOpenBot : styles.bar} />
+            </button>
+          </div>
+        </nav>
+
+        {/* ---------- Mobile dropdown (sibling of the pill so its blur works) ---------- */}
+        <AnimatePresence>
+          {menuOpen && (
+            <motion.div
+              id="mobile-menu"
+              className={styles.mobileMenu}
+              initial={{ opacity: 0, y: -12, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -12, scale: 0.98 }}
+              transition={{ duration: 0.2 }}
+            >
+              {NAV_LINKS.map((link) => {
+                const active = activeHref === link.href
+                return (
+                  <button
+                    key={link.label}
+                    type="button"
+                    onClick={() => handleNav(link.href)}
+                    className={`${styles.mobileLink} ${active ? styles.mobileLinkActive : ''}`}
+                    aria-current={active ? 'true' : undefined}
+                  >
+                    {link.label}
+                  </button>
+                )
+              })}
+              {CONTACT.resume && (
+                <a href={CONTACT.resume} download className={styles.mobileCta}>
+                  Resume
+                </a>
+              )}
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    </motion.header>
   )
-} 
+}
