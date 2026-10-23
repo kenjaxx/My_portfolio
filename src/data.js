@@ -147,49 +147,43 @@ export const ABOUT = {
   headingRest: 'Developer.',
   bio: 'I care about the details: fast, accessible, responsive interfaces backed by clean data, from the first component to the final deploy.',
 
-  // The lanes in the About section. Each lane lists skill names from
-  // SKILL_GROUPS above (name and brand color come from there). A skill that is
-  // in SKILL_GROUPS but not listed here is added to the last lane automatically.
-  lanes: [
+  // The flip cards under the bio. Click or tap a card to turn it over.
+  //   num    the big faint number on the front
+  //   title  the short line on the front
+  //   text   the longer line on the back (keep it under about 140 characters)
+  //   color  tints the card's accent bar, watermark number and back border
+  cards: [
     {
-      label: 'Frontend',
-      names: ['JavaScript', 'TypeScript', 'HTML', 'CSS', 'React', 'Next.js', 'Tailwind CSS'],
-    },
-    { label: 'Backend', names: ['Python', 'Java', 'Node.js', 'Django', 'REST API'] },
-    {
-      label: 'Data & cloud',
-      names: [
-        'SQL',
-        'Supabase',
-        'Firebase',
-        'MySQL',
-        'PostgreSQL',
-        'Prisma',
-        'AWS',
-        'Vercel',
-        'Railway',
-      ],
+      id: 'fullstack',
+      num: '01',
+      title: 'Full-stack range',
+      text: 'I work across the whole stack, from interface to API to database, so I can pick up whatever the next task needs.',
+      color: '#00d4ff',
     },
     {
-      label: 'Tools',
-      names: [
-        'Git',
-        'GitHub',
-        'VS Code',
-        'Claude Code',
-        'Gemini',
-        'Postman',
-        'Bash',
-        'PowerShell',
-        'XAMPP',
-        'WordPress',
-        'Android',
-        'ServiceNow',
-      ],
+      id: 'ownership',
+      num: '02',
+      title: 'I own my work',
+      text: "Give me a task and I'll see it through: build it, test it, fix what breaks and keep you updated.",
+      color: '#00ff88',
+    },
+    {
+      id: 'learn',
+      num: '03',
+      title: 'I learn fast',
+      text: 'New language, framework or tool? The fundamentals carry over, so I pick things up fast and get productive early.',
+      color: '#a78bfa',
+    },
+    {
+      id: 'ready',
+      num: '04',
+      title: 'Ready to contribute',
+      text: 'I can start on real tasks quickly: clean, readable code, team conventions followed, and help asked for early instead of getting stuck.',
+      color: '#ffca28',
     },
   ],
 
-  // `education` and `experience` below feed the two cards under the lanes.
+  // `education` and `experience` below feed the two cards under the flip cards.
   // `stats`, `location` and `phone` are not shown in the About section any more;
   // they are kept in case another component reads them.
   // For stats, `num` + `suffix` count up. `text` is shown as-is (no counting).

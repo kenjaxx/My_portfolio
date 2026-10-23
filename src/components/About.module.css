@@ -156,7 +156,7 @@
   display: flex;
   flex-direction: column;
   gap: 1.4rem;
-  /* lets the lanes shrink inside the grid instead of widening the page */
+  /* lets the cards shrink inside the grid instead of widening the page */
   min-width: 0;
 }
 
@@ -215,315 +215,166 @@
   max-width: 560px;
 }
 
-/* --- Skill lanes --- */
+/* --- Flip cards ---
 
-.lanes {
+   --c (set inline from ABOUT.cards in data.js) is the card's accent color.
+   The turn is a 3D rotation of .inner. Both faces sit on top of each other
+   and hide their backs (backface-visibility), so only one shows at a time. */
+
+.cardsWrap {
   width: 100%;
   max-width: 660px;
-  display: flex;
-  flex-direction: column;
-  gap: 0.6rem;
   padding-top: 1.4rem;
   border-top: 1px solid rgba(255, 255, 255, 0.06);
   text-align: left;
 }
 
-/* The lanes have extra vertical padding for the magnified chip, so the gap
-   between lanes is smaller than it looks. */
-.laneList {
-  list-style: none;
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-}
-
-.lane {
-  display: flex;
-  flex-direction: column;
-  gap: 0.1rem;
-}
-
-.laneLabel {
-  font-size: 0.85rem;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--text-dim);
-}
-
-/* Text for screen readers only (the moving chips are aria-hidden) */
-.srOnly {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  margin: -1px;
-  padding: 0;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border: 0;
-}
-
-/* Chips fade out at both edges of the lane. The vertical padding leaves room
-   for the center chip to grow without being clipped by overflow: hidden. */
-.viewport {
-  overflow: hidden;
-  padding: 0.85rem 0;
-  -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
-  mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
-}
-
-/* position: relative makes the track the offsetParent of the chips, which is
-   what the magnify code measures from. */
-.track {
-  position: relative;
-  display: flex;
-  width: max-content;
-  animation: marquee var(--dur, 60s) linear infinite;
-  /* Stays still until the section is on screen */
-  animation-play-state: paused;
-}
-
-.reverse {
-  animation-direction: reverse;
-}
-
-/* One set of chips. The track holds several identical sets, and the animation
-   moves it by exactly half, so the loop has no visible jump. The gap is a bit
-   wider than before so the growing chip has room. */
-.set {
-  display: flex;
-  gap: 0.9rem;
-  padding-right: 0.9rem;
-}
-
-@keyframes marquee {
-  to {
-    transform: translateX(-50%);
-  }
-}
-
-.on .track {
-  animation-play-state: running;
-}
-
-/* Hover or keyboard focus pauses a lane so the chips are easy to read.
-   The hover card also relies on this: a still chip keeps the card in place. */
-.on .lane:hover .track,
-.on .lane:focus-within .track {
-  animation-play-state: paused;
-}
-
-/* The Pause button wins over everything above */
-.userPaused .track {
-  animation-play-state: paused;
-}
-
-/* --- Chip: tinted with the skill's brand color ---
-
-   --c   the brand color (set inline from data.js)
-   --cl  the same color lightened, so dark brands (Django, Prisma) still show
-         on the dark page. Used for the tint, border and dot.
-
-   transform and opacity are set from JavaScript every frame (the center
-   magnify), so they must NOT have a CSS transition, and :hover must not set a
-   transform of its own. */
-
-.chip {
-  --cl: var(--c);
-
-  display: inline-flex;
-  align-items: center;
-  gap: 0.6rem;
+.cardsLabel {
   font-family: var(--font-mono);
-  font-size: 0.95rem;
-  line-height: 1.5;
-  white-space: nowrap;
-  color: var(--text);
-  cursor: default;
-  /* fallback for browsers without color-mix */
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  border-radius: 10px;
-  padding: 0.65rem 1.15rem;
-  will-change: transform, opacity;
-  transition:
-    border-color 0.25s ease,
-    background 0.25s ease;
-}
-
-@supports (color: color-mix(in srgb, red, blue)) {
-  .chip {
-    --cl: color-mix(in srgb, var(--c) 65%, #ffffff);
-
-    background: color-mix(in srgb, var(--cl) 13%, transparent);
-    border-color: color-mix(in srgb, var(--cl) 45%, transparent);
-  }
-
-  .chip:hover {
-    background: color-mix(in srgb, var(--cl) 22%, transparent);
-    border-color: var(--cl);
-  }
-}
-
-.chipDot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  flex-shrink: 0;
-  background: var(--cl);
-}
-
-/* --- Hover detail card ---
-
-   Rendered in a portal on <body> (see SkillTip in About.jsx), so it is never
-   clipped by the lanes. .tipPosition only places it; .tip is the card. */
-
-.tipPosition {
-  position: fixed;
-  z-index: 1500;
-  width: 250px;
-  pointer-events: none;
-}
-
-.tip {
-  --cl: var(--c);
-
-  width: 100%;
-  padding: 0.85rem 1rem 0.9rem;
-  background: #101018;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-top: 3px solid var(--cl);
-  border-radius: 12px;
-  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.55);
-  text-align: left;
-}
-
-@supports (color: color-mix(in srgb, red, blue)) {
-  .tip {
-    --cl: color-mix(in srgb, var(--c) 65%, #ffffff);
-
-    box-shadow:
-      0 0 28px color-mix(in srgb, var(--cl) 18%, transparent),
-      0 18px 40px rgba(0, 0, 0, 0.55);
-  }
-}
-
-.tipHead {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.6rem;
-  margin-bottom: 0.7rem;
-}
-
-.tipName {
-  font-size: 1.15rem;
-  font-weight: 700;
-  line-height: 1.1;
-  color: #ffffff;
-  letter-spacing: -0.01em;
-}
-
-.tipBadge {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  flex-shrink: 0;
-  font-family: var(--font-mono);
-  font-size: 0.62rem;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  color: var(--badge);
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  padding: 0.18rem 0.5rem;
-  border-radius: 999px;
-}
-
-@supports (color: color-mix(in srgb, red, blue)) {
-  .tipBadge {
-    background: color-mix(in srgb, var(--badge) 10%, transparent);
-    border-color: color-mix(in srgb, var(--badge) 35%, transparent);
-  }
-}
-
-.tipBadgeDot {
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background: var(--badge);
-}
-
-.tipLevel {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  margin-bottom: 0.4rem;
-}
-
-.tipLevelName {
-  font-size: 0.95rem;
-  font-weight: 700;
-  color: var(--cl);
-}
-
-.tipLevelNum {
-  font-family: var(--font-mono);
-  font-size: 0.72rem;
-  color: var(--text-muted);
-}
-
-.tipPips {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 4px;
-  margin-bottom: 0.7rem;
-}
-
-.tipPip {
-  height: 5px;
-  border-radius: 3px;
-  background: rgba(255, 255, 255, 0.1);
-}
-
-.tipPipOn {
-  background: var(--cl);
-}
-
-.tipBlurb {
-  font-size: 0.85rem;
-  line-height: 1.55;
-  color: #b7c0d1;
-}
-
-.tipUsed {
-  margin-top: 0.65rem;
-  padding-top: 0.6rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.07);
-  font-family: var(--font-mono);
-  font-size: 0.7rem;
-  line-height: 1.5;
-  color: var(--text-dim);
-}
-
-.pause {
-  align-self: flex-end;
-  font-family: var(--font-mono);
-  font-size: 0.72rem;
-  color: var(--text-dim);
-  background: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 6px;
-  padding: 0.2rem 0.7rem;
-  cursor: pointer;
-  transition:
-    color 0.2s,
-    border-color 0.2s;
-}
-
-.pause:hover {
+  font-size: 0.8rem;
+  letter-spacing: 0.12em;
   color: var(--cyan);
-  border-color: rgba(0, 212, 255, 0.4);
+  margin-bottom: 0.9rem;
+}
+
+.cards {
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.cardItem {
+  perspective: 900px;
+}
+
+.card {
+  display: block;
+  position: relative;
+  width: 100%;
+  height: 160px;
+  padding: 0;
+  border: 0;
+  border-radius: 12px;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.card:focus-visible {
+  outline: 2px solid var(--c, var(--cyan));
+  outline-offset: 3px;
+  border-radius: 12px;
+}
+
+.inner {
+  display: block;
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  transition: transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.flipped .inner {
+  transform: rotateY(180deg);
+}
+
+.face {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 1.1rem 1.2rem;
+  border-radius: 12px;
+  background: #111118;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  overflow: hidden;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  transition: border-color 0.25s ease;
+}
+
+.front {
+  justify-content: flex-end;
+}
+
+@media (hover: hover) {
+  .card:hover .front {
+    border-color: color-mix(in srgb, var(--c) 60%, transparent);
+  }
+}
+
+.back {
+  justify-content: center;
+  background: #0f0f18;
+  border-color: var(--c);
+  transform: rotateY(180deg);
+}
+
+/* The big faint number in the corner of the front */
+.wm {
+  position: absolute;
+  right: 0.9rem;
+  bottom: -0.9rem;
+  font-family: var(--font-mono);
+  font-size: 4.8rem;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--c);
+  opacity: 0.12;
+  pointer-events: none;
+  user-select: none;
+}
+
+.accent {
+  width: 28px;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--c);
+  margin-bottom: 0.75rem;
+}
+
+.cardTitle {
+  position: relative;
+  font-size: 1.2rem;
+  font-weight: 700;
+  line-height: 1.2;
+  color: #f1f5f9;
+}
+
+.hint {
+  position: relative;
+  margin-top: 0.4rem;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  color: var(--text-dim);
+}
+
+/* Phones and tablets say "Tap", mice say "Click". */
+.hintMouse {
+  display: none;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .hintTouch {
+    display: none;
+  }
+
+  .hintMouse {
+    display: inline;
+  }
+}
+
+.cardText {
+  font-size: 1rem;
+  line-height: 1.6;
+  color: #c5cddc;
 }
 
 /* --- Timeline (education + experience) --- */
@@ -661,31 +512,8 @@
   margin-top: 0.15rem;
 }
 
-/* --- Still mode: weak devices and reduced motion ---
-   No scrolling. Chips wrap onto as many lines as they need. */
-
-.still .viewport {
-  padding: 0.3rem 0;
-  -webkit-mask-image: none;
-  mask-image: none;
-}
-
-.still .track {
-  width: auto;
-  animation: none;
-}
-
-.still .set {
-  flex-wrap: wrap;
-  padding-right: 0;
-}
-
-.still .dup {
-  display: none;
-}
-
 /* --- Reduced motion: keep the layout, stop the moving parts ---
-   (The magnify loop also skips itself when this is on.) */
+   The cards still turn over, they just do it instantly. */
 
 @media (prefers-reduced-motion: reduce) {
   .orbit,
@@ -699,25 +527,9 @@
     background-position: 0 0;
   }
 
-  .viewport {
-    padding: 0.3rem 0;
-    -webkit-mask-image: none;
-    mask-image: none;
-  }
-
-  .track {
-    width: auto;
-    animation: none;
-  }
-
-  .set {
-    flex-wrap: wrap;
-    padding-right: 0;
-  }
-
-  .dup,
-  .pause {
-    display: none;
+  .inner,
+  .face {
+    transition: none;
   }
 }
 
@@ -752,10 +564,19 @@
   }
 }
 
-/* Smaller chips on phones so a few still fit side by side */
-@media (max-width: 480px) {
-  .chip {
-    font-size: 0.85rem;
-    padding: 0.55rem 0.9rem;
+/* Phones: the cards stack one per row so the text keeps a comfortable width */
+@media (max-width: 560px) {
+  .cards {
+    grid-template-columns: 1fr;
+  }
+
+  .card {
+    height: 150px;
+  }
+}
+
+@media (max-width: 360px) {
+  .card {
+    height: 175px;
   }
 }
