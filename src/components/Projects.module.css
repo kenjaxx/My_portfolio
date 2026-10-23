@@ -76,6 +76,48 @@
   opacity: 0.8;
 }
 
+/* --- Prev / next buttons beside the carousel --- */
+
+/* Sits slightly above the true centre, because the caption takes up room
+   at the bottom of the carousel. */
+.arrow {
+  position: absolute;
+  top: calc(50% - 38px);
+  z-index: 5;
+  width: 52px;
+  height: 52px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  color: #ffffff;
+  background: rgba(16, 16, 24, 0.85);
+  border: 1px solid rgba(0, 212, 255, 0.35);
+  box-shadow: 0 0 18px rgba(0, 212, 255, 0.18), 0 8px 24px rgba(0, 0, 0, 0.5);
+  cursor: pointer;
+  transform: translateY(-50%);
+  transition: color 0.2s, border-color 0.2s, background 0.2s, box-shadow 0.2s, scale 0.2s;
+}
+
+.arrow:hover {
+  color: var(--cyan);
+  border-color: var(--cyan);
+  background: rgba(0, 212, 255, 0.1);
+  box-shadow: 0 0 24px rgba(0, 212, 255, 0.35), 0 8px 24px rgba(0, 0, 0, 0.5);
+  scale: 1.08;
+}
+
+.arrow:active {
+  scale: 0.95;
+}
+
+.arrowLeft {
+  left: 1.5rem;
+}
+
+.arrowRight {
+  right: 1.5rem;
+}
+
 .hint {
   text-align: center;
   font-family: var(--font-mono);
@@ -208,11 +250,41 @@
   transform: translateY(0);
 }
 
-.projectDesc {
-  font-size: 0.95rem;
+/* --- Problem / solution / result --- */
+
+/* Left-aligned rows inside the centred popup: a label column on the left,
+   one short line of text on the right, and a hairline between rows. */
+.story {
+  width: 100%;
+  margin: 0 0 1.4rem;
+  text-align: left;
+}
+
+.storyRow {
+  display: grid;
+  grid-template-columns: 5.5rem 1fr;
+  gap: 1rem;
+  padding: 0.75rem 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.storyRow:first-child {
+  padding-top: 0;
+  border-top: 0;
+}
+
+.storyLabel {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.06em;
+  color: var(--cyan);
+  padding-top: 0.2rem;
+}
+
+.storyText {
+  font-size: 1rem;
+  line-height: 1.6;
   color: #b7c0d1;
-  line-height: 1.8;
-  margin-bottom: 1.3rem;
 }
 
 .tags {
@@ -340,5 +412,28 @@
 
   .detail {
     padding: 2.4rem 1.2rem 1.6rem;
+  }
+
+  .arrow {
+    width: 40px;
+    height: 40px;
+  }
+
+  .arrowLeft {
+    left: 0.5rem;
+  }
+
+  .arrowRight {
+    right: 0.5rem;
+  }
+
+  /* Label sits above its line on phones, so the text gets the full width. */
+  .storyRow {
+    grid-template-columns: 1fr;
+    gap: 0.15rem;
+  }
+
+  .storyLabel {
+    padding-top: 0;
   }
 }

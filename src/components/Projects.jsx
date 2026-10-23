@@ -16,6 +16,10 @@ const SHOWN = PROJECTS.filter((p) => p.image)
 // Raise to 2 for a fuller ring, but cards will appear smaller.
 const REPEATS = 1
 
+// How long the ring stays still after a prev / next click, in milliseconds.
+// Then it starts spinning again by itself.
+const RESUME_DELAY = 2000
+
 const ITEMS = Array.from({ length: REPEATS }, () => SHOWN)
   .flat()
   .map((p) => ({
@@ -24,6 +28,14 @@ const ITEMS = Array.from({ length: REPEATS }, () => SHOWN)
     title: p.title,
     subtitle: `Project ${p.id}`,
   }))
+
+// The three short lines shown in every project popup.
+// `key` is the field name in data.js, `label` is what the visitor sees.
+const STORY = [
+  { key: 'problem', label: 'Problem' },
+  { key: 'solution', label: 'Solution' },
+  { key: 'result', label: 'Result' },
+]
 
 // Look shared by both split-flap boards in the popup.
 const FLAP_PROPS = {
@@ -64,6 +76,28 @@ function ExternalIcon() {
       <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
       <polyline points="15 3 21 3 21 9" />
       <line x1="10" y1="14" x2="21" y2="3" />
+    </svg>
+  )
+}
+
+function ChevronIcon({ direction }) {
+  return (
+    <svg
+      width="22"
+      height="22"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.4"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      {direction === 'left' ? (
+        <polyline points="15 5 8 12 15 19" />
+      ) : (
+        <polyline points="9 5 16 12 9 19" />
+      )}
     </svg>
   )
 }
@@ -136,12 +170,18 @@ function ProjectModal({ selected, onClose }) {
             )}
           </div>
 
-          <p
-            className={`${styles.projectDesc} ${styles.fade} ${ready ? styles.fadeOn : ''}`}
+          {/* Problem / solution / result: three short lines */}
+          <dl
+            className={`${styles.story} ${styles.fade} ${ready ? styles.fadeOn : ''}`}
             style={{ transitionDelay: '0.15s' }}
           >
-            {project.description}
-          </p>
+            {STORY.map(({ key, label }) => (
+              <div key={key} className={styles.storyRow}>
+                <dt className={styles.storyLabel}>{label}</dt>
+                <dd className={styles.storyText}>{project[key]}</dd>
+              </div>
+            ))}
+          </dl>
 
           <div
             className={`${styles.tags} ${styles.fade} ${ready ? styles.fadeOn : ''}`}
@@ -206,6 +246,10 @@ export default function Projects() {
   // around the ring). This is what pauses the spinning.
   const [overCard, setOverCard] = useState(false)
 
+  // The carousel fills this with { next, prev }. After either one runs, the
+  // carousel holds still for RESUME_DELAY ms and then drifts again.
+  const controlsRef = useRef(null)
+
   // Remember the last pointer position inside the carousel.
   const lastPointer = useRef({ x: 0, y: 0 })
 
@@ -241,6 +285,9 @@ export default function Projects() {
     setSelected(null)
     setOverCard(false)
   }, [])
+
+  const goNext = useCallback(() => controlsRef.current?.next(), [])
+  const goPrev = useCallback(() => controlsRef.current?.prev(), [])
 
   // Spin all the time, except while the mouse is on a card or the popup is open.
   const paused = overCard || !!selected
@@ -298,13 +345,38 @@ export default function Projects() {
               fadeColor="#0a0a0f"
               focusOnClick={false}
               onItemClick={handleItemClick}
+              controlsRef={controlsRef}
+              resumeDelay={RESUME_DELAY}
             />
           </Suspense>
+        )}
+
+        {/* Prev / next buttons beside the ring. They are siblings of the
+            carousel (not inside it), so they never interfere with dragging. */}
+        {inView && (
+          <>
+            <button
+              type="button"
+              className={`${styles.arrow} ${styles.arrowLeft}`}
+              onClick={goPrev}
+              aria-label="Previous project"
+            >
+              <ChevronIcon direction="left" />
+            </button>
+            <button
+              type="button"
+              className={`${styles.arrow} ${styles.arrowRight}`}
+              onClick={goNext}
+              aria-label="Next project"
+            >
+              <ChevronIcon direction="right" />
+            </button>
+          </>
         )}
       </motion.div>
 
       <p className={styles.hint}>
-        Hover a card to pause · drag or swipe to browse · click a card to open it
+        Use the arrows or drag to browse · hover a card to pause · click a card to open it
       </p>
 
       <div className={styles.inner}>

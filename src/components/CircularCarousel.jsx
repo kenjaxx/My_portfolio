@@ -140,6 +140,8 @@ const CircularCarousel = ({
   captions = false,
   onChange,
   onItemClick,
+  controlsRef,
+  resumeDelay = 2000,
   className = '',
   style
 }) => {
@@ -631,14 +633,27 @@ const CircularCarousel = ({
     wakeRef.current();
   }, []);
 
-  const stepBy = useCallback(delta => {
+  const stepBy = useCallback((delta, hold = 2800) => {
     const state = stateRef.current;
     const s = settingsRef.current;
     const base = state.target ?? Math.round(state.angle / s.step) * s.step;
     state.target = base - delta * s.step * (s.layout.inward ? -1 : 1);
-    state.holdUntil = performance.now() + 2800;
+    state.holdUntil = performance.now() + hold;
     wakeRef.current();
   }, []);
+
+   // Lets a parent render its own prev / next buttons. After a click the ring
+  // stays still for `resumeDelay` ms, then drifts again on its own.
+  useEffect(() => {
+    if (!controlsRef) return undefined;
+    controlsRef.current = {
+      next: () => stepBy(1, resumeDelay),
+      prev: () => stepBy(-1, resumeDelay)
+    };
+    return () => {
+      controlsRef.current = null;
+    };
+  }, [controlsRef, stepBy, resumeDelay]);
 
   const updatePointer = event => {
     const rect = rootRef.current.getBoundingClientRect();

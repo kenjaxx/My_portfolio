@@ -55,14 +55,25 @@ export const SKILL_GROUPS = [
   },
 ]
 
+/*
+  Each project popup shows three short lines instead of one long paragraph:
+
+  problem   what was wrong or missing (one short sentence)
+  solution  what you built (one short sentence)
+  result    what the visitor gets (one short sentence)
+
+  Keep each line under about 12 words so the popup stays quick to read.
+  These are first drafts written from your old descriptions. Edit freely.
+*/
 export const PROJECTS = [
   {
     id: '001',
     title: 'Billify',
-    description:
-      'A personal bill-management and budgeting dashboard built with React and Supabase. Users can track bills by status (Paid, Unpaid, Overdue), organize spending by category, monitor budgets in real time, and export records to CSV or PDF for reporting.',
+    problem: 'Bills get missed and spending is hard to track.',
+    solution: 'A dashboard that sorts bills by status and category, with live budgets.',
+    result: 'Paid, unpaid and overdue bills at a glance, exportable to CSV or PDF.',
     tags: ['React', 'Supabase'],
-    github: null,
+    github: 'https://github.com/kenjaxx/billify',
     live: 'https://billify-02f8.onrender.com/bills',
     image: '/images/billify-cover.webp',
     featured: true,
@@ -71,10 +82,11 @@ export const PROJECTS = [
   {
     id: '002',
     title: 'Closet — AI Outfit Matcher',
-    description:
-      "A mobile-first PWA that lets you snap a photo of a clothing item, has Gemini AI tag it (category, color, pattern, style, formality, season) and file it into a digital closet, then suggests outfit pairings from your existing wardrobe for any occasion or the day's weather. Extra touches include duplicate-item detection, a \"neglected pieces\" nudge, wardrobe gap analysis, and a save-to-lookbook feature — all running on free-tier Firebase, Cloudinary, and Gemini.",
+    problem: 'A full closet, but nothing to wear.',
+    solution: 'Gemini tags each clothing photo, then pairs pieces from your wardrobe.',
+    result: 'Outfit ideas for any occasion or weather, on free-tier services.',
     tags: ['React', 'Vite', 'Tailwind CSS', 'Firebase', 'Cloudinary', 'Gemini API', 'PWA'],
-    github: null,
+    github: 'https://github.com/kenjaxx/closet-ai',
     live: 'https://closet-ai-ebc44.web.app',
     image: '/images/closet-ai-cover.webp',
     featured: false,
@@ -83,8 +95,9 @@ export const PROJECTS = [
   {
     id: '003',
     title: 'Rehearse',
-    description:
-      'A voice-driven mock interview app that scores answers on content, clarity and confidence. Practice out loud or type, with speech-to-text, filler-word and pace tracking, STAR checks, AI follow-up questions and sample answers. Features a secure serverless backend with Firebase Auth, App Check and per-user rate limiting, plus saved session history with progress charts and PDF export.',
+    problem: 'Interview practice rarely comes with real feedback.',
+    solution: 'Answer out loud or type, and AI scores content, clarity and confidence.',
+    result: 'Filler-word and pace tracking, saved history, and PDF export.',
     tags: ['React', 'Firebase', 'Gemini API', 'Vercel', 'JavaScript'],
     github: 'https://github.com/kenjaxx/ai-interview-simulator',
     live: 'https://ai-interview-simulator-ochre.vercel.app/',
@@ -95,8 +108,9 @@ export const PROJECTS = [
   {
     id: '004',
     title: 'House Selling Site',
-    description:
-      'A static real estate listing site built with vanilla HTML, CSS, and JavaScript. Showcases a property with pricing, room details, an image gallery, and clear calls-to-action to schedule a tour or contact the agent directly.',
+    problem: 'Property details are scattered and hard to act on.',
+    solution: 'A static page with pricing, room details and an image gallery.',
+    result: 'Visitors can schedule a tour or contact the agent in one click.',
     tags: ['HTML', 'CSS', 'JavaScript'],
     github: 'https://github.com/kenjaxx/house-selling-site',
     live: 'https://kenjaxx.github.io/house-selling-site/',
