@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion'
 import { useState, useRef, useEffect, useCallback, memo, lazy, Suspense } from 'react'
-import { FaGithub } from 'react-icons/fa'
+import { FaGithub, FaExclamationTriangle, FaLightbulb, FaCheckCircle } from 'react-icons/fa'
 import { useInView } from '../hooks/useInView'
 import { PROJECTS, CONTACT } from '../data'
 import Modal from './Modal'
@@ -29,12 +29,13 @@ const ITEMS = Array.from({ length: REPEATS }, () => SHOWN)
     subtitle: `Project ${p.id}`,
   }))
 
-// The three short lines shown in every project popup.
-// `key` is the field name in data.js, `label` is what the visitor sees.
+// The three cards shown in every project popup.
+// `key` is the field name in data.js, `label` is what the visitor sees,
+// and `color` tints the card's top edge, icon and label.
 const STORY = [
-  { key: 'problem', label: 'Problem' },
-  { key: 'solution', label: 'Solution' },
-  { key: 'result', label: 'Result' },
+  { key: 'problem', label: 'Problem', Icon: FaExclamationTriangle, color: '#ffca28' },
+  { key: 'solution', label: 'Solution', Icon: FaLightbulb, color: '#00d4ff' },
+  { key: 'result', label: 'Result', Icon: FaCheckCircle, color: '#00ff88' },
 ]
 
 // Look shared by both split-flap boards in the popup.
@@ -170,15 +171,16 @@ function ProjectModal({ selected, onClose }) {
             )}
           </div>
 
-          {/* Problem / solution / result: three short lines */}
+          {/* Problem / solution / result: three color-coded cards */}
           <dl
             className={`${styles.story} ${styles.fade} ${ready ? styles.fadeOn : ''}`}
             style={{ transitionDelay: '0.15s' }}
           >
-            {STORY.map(({ key, label }) => (
-              <div key={key} className={styles.storyRow}>
-                <dt className={styles.storyLabel}>{label}</dt>
-                <dd className={styles.storyText}>{project[key]}</dd>
+            {STORY.map(({ key, label, Icon, color }) => (
+              <div key={key} className={styles.card} style={{ '--card-color': color }}>
+                <Icon className={styles.cardIcon} aria-hidden="true" />
+                <dt className={styles.cardLabel}>{label}</dt>
+                <dd className={styles.cardText}>{project[key]}</dd>
               </div>
             ))}
           </dl>

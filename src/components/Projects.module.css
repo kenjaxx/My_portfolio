@@ -144,10 +144,11 @@
   overscroll-behavior: contain;
 }
 
+/* 720px (was 640px) gives the three cards room side by side. */
 .detail {
   position: relative;
   width: 100%;
-  max-width: 640px;
+  max-width: 720px;
   max-height: calc(100vh - 3rem);
   overflow-y: auto;
   overscroll-behavior: contain;
@@ -234,7 +235,7 @@
   justify-content: center;
   max-width: 100%;
   min-height: 1.08em;
-  margin-bottom: 1.4rem;
+  margin-bottom: 1.6rem;
 }
 
 /* --- Fade-in for the text below the title --- */
@@ -250,42 +251,48 @@
   transform: translateY(0);
 }
 
-/* --- Problem / solution / result --- */
+/* --- Problem / solution / result: three color-coded cards --- */
 
-/* Left-aligned rows inside the centred popup: a label column on the left,
-   one short line of text on the right, and a hairline between rows. */
+/* --card-color is set inline from STORY in Projects.jsx (amber, cyan, green). */
 .story {
   width: 100%;
-  margin: 0 0 1.4rem;
+  margin: 0 0 1.5rem;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
   text-align: left;
 }
 
-.storyRow {
-  display: grid;
-  grid-template-columns: 5.5rem 1fr;
-  gap: 1rem;
-  padding: 0.75rem 0;
-  border-top: 1px solid rgba(255, 255, 255, 0.07);
+.card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-top: 2px solid var(--card-color);
+  border-radius: 10px;
+  padding: 0.95rem 0.95rem 1.05rem;
 }
 
-.storyRow:first-child {
-  padding-top: 0;
-  border-top: 0;
+.cardIcon {
+  display: block;
+  font-size: 1.05rem;
+  color: var(--card-color);
+  margin-bottom: 0.5rem;
 }
 
-.storyLabel {
+.cardLabel {
   font-family: var(--font-mono);
   font-size: 0.75rem;
   letter-spacing: 0.06em;
-  color: var(--cyan);
-  padding-top: 0.2rem;
+  color: var(--card-color);
+  margin-bottom: 0.4rem;
 }
 
-.storyText {
-  font-size: 1rem;
-  line-height: 1.6;
+.cardText {
+  font-size: 0.95rem;
+  line-height: 1.55;
   color: #b7c0d1;
 }
+
+/* --- Tags: outlined, so the buttons below stand out more --- */
 
 .tags {
   display: flex;
@@ -298,11 +305,12 @@
 .tag {
   font-family: var(--font-mono);
   font-size: 0.7rem;
-  font-weight: 700;
+  font-weight: 500;
   padding: 0.28rem 0.7rem;
   border-radius: 4px;
-  background: var(--cyan);
-  color: #06222b;
+  background: transparent;
+  border: 1px solid rgba(0, 212, 255, 0.35);
+  color: var(--cyan);
   letter-spacing: 0.02em;
 }
 
@@ -427,13 +435,9 @@
     right: 0.5rem;
   }
 
-  /* Label sits above its line on phones, so the text gets the full width. */
-  .storyRow {
+  /* Cards stack on phones, one per row. */
+  .story {
     grid-template-columns: 1fr;
-    gap: 0.15rem;
-  }
-
-  .storyLabel {
-    padding-top: 0;
+    gap: 0.6rem;
   }
 }

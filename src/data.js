@@ -56,13 +56,13 @@ export const SKILL_GROUPS = [
 ]
 
 /*
-  Each project popup shows three short lines instead of one long paragraph:
+  Each project popup shows three short cards instead of one long paragraph:
 
-  problem   what was wrong or missing (one short sentence)
-  solution  what you built (one short sentence)
-  result    what the visitor gets (one short sentence)
+  problem   what was wrong or missing (amber card)
+  solution  what you built (cyan card)
+  result    what the visitor gets (green card)
 
-  Keep each line under about 12 words so the popup stays quick to read.
+  The cards are narrow, so keep each line under about 10 words.
   These are first drafts written from your old descriptions. Edit freely.
 */
 export const PROJECTS = [
@@ -70,9 +70,9 @@ export const PROJECTS = [
     id: '001',
     title: 'Billify',
     problem: 'Bills get missed and spending is hard to track.',
-    solution: 'A dashboard that sorts bills by status and category, with live budgets.',
-    result: 'Paid, unpaid and overdue bills at a glance, exportable to CSV or PDF.',
-    tags: ['React', 'Supabase'],
+    solution: 'Sorts bills by status and category, with live budgets.',
+    result: 'Paid, unpaid and overdue at a glance. Export to CSV or PDF.',
+    tags: ['React', 'TypeScript', 'Tailwind CSS', 'Prisma', 'Supabase', 'Resend'],
     github: 'https://github.com/kenjaxx/billify',
     live: 'https://billify-02f8.onrender.com/bills',
     image: '/images/billify-cover.webp',
@@ -83,8 +83,8 @@ export const PROJECTS = [
     id: '002',
     title: 'Closet — AI Outfit Matcher',
     problem: 'A full closet, but nothing to wear.',
-    solution: 'Gemini tags each clothing photo, then pairs pieces from your wardrobe.',
-    result: 'Outfit ideas for any occasion or weather, on free-tier services.',
+    solution: 'Gemini tags each photo, then pairs pieces from your wardrobe.',
+    result: 'Outfit ideas for any occasion or weather.',
     tags: ['React', 'Vite', 'Tailwind CSS', 'Firebase', 'Cloudinary', 'Gemini API', 'PWA'],
     github: 'https://github.com/kenjaxx/closet-ai',
     live: 'https://closet-ai-ebc44.web.app',
@@ -96,8 +96,8 @@ export const PROJECTS = [
     id: '003',
     title: 'Rehearse',
     problem: 'Interview practice rarely comes with real feedback.',
-    solution: 'Answer out loud or type, and AI scores content, clarity and confidence.',
-    result: 'Filler-word and pace tracking, saved history, and PDF export.',
+    solution: 'AI scores your spoken or typed answers.',
+    result: 'Tracks filler words and pace, with saved history and PDF export.',
     tags: ['React', 'Firebase', 'Gemini API', 'Vercel', 'JavaScript'],
     github: 'https://github.com/kenjaxx/ai-interview-simulator',
     live: 'https://ai-interview-simulator-ochre.vercel.app/',
@@ -109,8 +109,8 @@ export const PROJECTS = [
     id: '004',
     title: 'House Selling Site',
     problem: 'Property details are scattered and hard to act on.',
-    solution: 'A static page with pricing, room details and an image gallery.',
-    result: 'Visitors can schedule a tour or contact the agent in one click.',
+    solution: 'A static page with pricing, room details and a gallery.',
+    result: 'Visitors schedule a tour or contact the agent in one click.',
     tags: ['HTML', 'CSS', 'JavaScript'],
     github: 'https://github.com/kenjaxx/house-selling-site',
     live: 'https://kenjaxx.github.io/house-selling-site/',
