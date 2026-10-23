@@ -246,22 +246,25 @@ export default function Contact() {
               </span>
             </div>
 
-            <div className={styles.actions}>
+            <div className="glass-group" style={{ marginBottom: '2rem' }}>
               <button
                 type="button"
-                className={`${styles.copyBtn} ${copied ? styles.copied : ''}`}
+                className={`glass-btn glass-btn--sm ${copied ? 'glass-btn--done' : ''}`}
                 onClick={handleCopy}
               >
-                <span className={styles.labelIdle}>
-                  <CopyIcon />
-                  {copyStatus === 'failed' ? 'Press Ctrl+C' : 'Copy email'}
-                </span>
-                <span className={styles.labelDone} aria-hidden="true">
-                  <CheckIcon />
-                  Copied
-                </span>
+                {copied ? (
+                  <>
+                    <CheckIcon />
+                    Copied
+                  </>
+                ) : (
+                  <>
+                    <CopyIcon />
+                    {copyStatus === 'failed' ? 'Press Ctrl+C' : 'Copy email'}
+                  </>
+                )}
               </button>
-              <a className={styles.mailBtn} href={`mailto:${EMAIL}`}>
+              <a className="glass-btn glass-btn--sm" href={`mailto:${EMAIL}`}>
                 <ExternalLinkIcon />
                 Open mail app
               </a>

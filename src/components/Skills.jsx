@@ -101,7 +101,7 @@ function SkillModal({ selected, onClose }) {
       origin={selected ? { dx: selected.dx, dy: selected.dy } : undefined}
       overlayClassName={styles.overlay}
       panelClassName={styles.detail}
-      closeClassName={styles.closeBtn}
+      closeClassName="glass-btn glass-btn--icon glass-btn--corner"
       closeLabel="Close skill details"
       panelStyle={{ '--skill-color': accentOf(skill?.color) }}
     >
@@ -170,7 +170,7 @@ function SkillModal({ selected, onClose }) {
                   <button
                     key={p.id}
                     type="button"
-                    className={styles.projChip}
+                    className="glass-btn glass-btn--sm glass-btn--mono"
                     onClick={goToProjects}
                     title="Jump to the Projects section"
                   >
@@ -283,7 +283,9 @@ export default function Skills() {
                 aria-selected={selectedTab}
                 aria-controls="skills-panel"
                 tabIndex={selectedTab ? 0 : -1}
-                className={`${styles.tab} ${selectedTab ? styles.tabActive : ''}`}
+                className={`glass-btn glass-btn--sm glass-btn--grow ${
+                  selectedTab ? 'is-active' : 'glass-btn--quiet'
+                }`}
                 onClick={() => setActiveKey(group.key)}
                 onKeyDown={(e) => handleTabKeyDown(e, index)}
               >

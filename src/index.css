@@ -41,6 +41,26 @@
   initial-value: 0%;
 }
 
+/* Registered so the glass button light can glide to the cursor instead of
+   jumping. inherits: false keeps them from leaking into child elements. */
+@property --gx {
+  syntax: '<length-percentage>';
+  inherits: false;
+  initial-value: 88%;
+}
+
+@property --gy {
+  syntax: '<length-percentage>';
+  inherits: false;
+  initial-value: 0%;
+}
+
+@property --gi {
+  syntax: '<number>';
+  inherits: false;
+  initial-value: 0;
+}
+
 html {
   scroll-behavior: smooth;
 }
@@ -108,6 +128,251 @@ button:focus-visible,
 
 .skipLink:focus {
   top: 1rem;
+}
+
+/* =====================================================================
+   GLASS BUTTON  (global design for every button on the site)
+
+   Look: a dark, slightly cyan-tinted pill with a hairline edge. Two lobes
+   of light sit on opposite corners (top right and bottom left) and slide
+   along the edge toward the cursor, like the "View project" button.
+
+   The cursor position comes from useGlassButtons() in App.jsx, which sets
+   --gx, --gy (px inside the button) and --gi (0 to 1, how close the cursor
+   is). With no cursor nearby the properties are removed and the light rests
+   at its idle corners.
+
+   Usage:  <button className="glass-btn">Label</button>
+           <a className="glass-btn glass-btn--sm" href="...">Label</a>
+
+   Modifiers
+     --sm        smaller padding and text
+     --icon      round icon-only button (48px, 42px on phones)
+     --corner    icon button pinned to the top right of a popup
+     --mono      monospace label
+     --accent    stronger cyan tint (primary actions)
+     --quiet     no fill until hovered (inactive tabs)
+     --done      green (success state)
+     --block     full width
+     --grow      fills its row on phones (tabs)
+     --desktop   hidden on phones
+     --disabled  not clickable, dimmed
+     is-active   selected state (tabs)
+     --------------------------------------------------------------------- */
+
+.glass-btn {
+  --gb-color: #00d4ff;
+  --gb-base: rgba(71, 85, 105, 0.55);
+  --gb-tint: 8%;
+  --gb-py: 14px;
+  --gb-px: 28px;
+  --gb-icon: 48px;
+
+  position: relative;
+  isolation: isolate;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5em;
+  margin: 0;
+  padding: var(--gb-py) var(--gb-px);
+  border: 0;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--gb-color) var(--gb-tint), transparent);
+  color: #ffffff;
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  text-transform: none;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  box-shadow: 0 10px 24px -14px rgba(0, 0, 0, 0.45);
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1),
+    background-color 0.25s ease,
+    color 0.2s ease,
+    box-shadow 0.25s ease,
+    --gx 0.18s linear,
+    --gy 0.18s linear,
+    --gi 0.3s ease;
+}
+
+/* The edge: a 1.4px ring cut out of the button with a mask, painted with two
+   lobes of light (a bright one and a dimmer one on the opposite side) over a
+   faint grey hairline. */
+.glass-btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  border-radius: inherit;
+  padding: 1.4px;
+  background:
+    radial-gradient(
+      calc(55px + 90px * var(--gi, 0)) circle at var(--gx, 88%) var(--gy, 0%),
+      var(--gb-color),
+      transparent
+    ),
+    radial-gradient(
+      calc(45px + 70px * var(--gi, 0)) circle at calc(100% - var(--gx, 88%)) calc(100% - var(--gy, 0%)),
+      color-mix(in srgb, var(--gb-color) 50%, transparent),
+      transparent
+    ),
+    var(--gb-base);
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+/* A soft pool of light just inside the lit corner */
+.glass-btn::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: inherit;
+  background: radial-gradient(
+    120px circle at var(--gx, 88%) var(--gy, 0%),
+    color-mix(in srgb, var(--gb-color) 12%, transparent),
+    transparent 70%
+  );
+  pointer-events: none;
+}
+
+.glass-btn > * {
+  position: relative;
+  z-index: 2;
+}
+
+.glass-btn:hover {
+  --gb-tint: 14%;
+  transform: translateY(-1px);
+}
+
+.glass-btn:active {
+  transform: scale(0.97);
+}
+
+.glass-btn:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.55);
+  outline-offset: 3px;
+  border-radius: 999px;
+}
+
+.glass-btn__arrow {
+  display: inline-block;
+  transition: transform 0.2s;
+}
+
+.glass-btn:hover .glass-btn__arrow {
+  transform: translateX(4px);
+}
+
+/* ---------- Modifiers ---------- */
+
+.glass-btn--sm {
+  --gb-py: 10px;
+  --gb-px: 20px;
+  --gb-icon: 38px;
+  font-size: 0.95rem;
+}
+
+.glass-btn--mono {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+
+.glass-btn--icon {
+  width: var(--gb-icon);
+  height: var(--gb-icon);
+  padding: 0;
+  flex-shrink: 0;
+}
+
+.glass-btn--corner {
+  --gb-icon: 34px;
+  position: absolute;
+  top: 0.9rem;
+  right: 0.9rem;
+  z-index: 3;
+}
+
+.glass-btn--accent {
+  --gb-tint: 18%;
+}
+
+.glass-btn--accent:hover {
+  --gb-tint: 26%;
+}
+
+.glass-btn--quiet {
+  --gb-tint: 0%;
+  --gb-base: rgba(71, 85, 105, 0.25);
+  color: var(--text-muted);
+  box-shadow: none;
+}
+
+.glass-btn--quiet:hover {
+  --gb-tint: 8%;
+  color: #ffffff;
+}
+
+.glass-btn.is-active {
+  --gb-tint: 20%;
+  --gb-base: color-mix(in srgb, var(--gb-color) 65%, transparent);
+  color: #ffffff;
+}
+
+.glass-btn--done,
+.glass-btn--done:hover {
+  --gb-color: #00ff88;
+  --gb-tint: 14%;
+}
+
+.glass-btn--block {
+  display: flex;
+  width: 100%;
+}
+
+.glass-btn--disabled {
+  opacity: 0.5;
+  cursor: default;
+  pointer-events: none;
+  box-shadow: none;
+}
+
+/* Buttons that sit side by side */
+.glass-group {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+@media (max-width: 768px) {
+  .glass-btn--desktop {
+    display: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .glass-btn--icon:not(.glass-btn--corner) {
+    --gb-icon: 42px;
+  }
+
+  .glass-btn--grow {
+    flex: 1;
+    --gb-px: 10px;
+  }
 }
 
 /* Respect the OS-level "reduce motion" accessibility setting.

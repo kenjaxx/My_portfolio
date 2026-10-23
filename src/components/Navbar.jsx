@@ -10,7 +10,6 @@ export default function Navbar() {
   const [activeHref, setActiveHref] = useState('')
   const wrapRef = useRef(null)
   const pillRef = useRef(null)
-  
 
   // Scrolled style + the two edge cases the observer can't catch:
   // back at the top (nothing active) and at the very bottom (last link active).
@@ -52,26 +51,24 @@ export default function Navbar() {
     return () => observer.disconnect()
   }, [])
 
+  const handlePointerMove = (e) => {
+    if (e.pointerType !== 'mouse') return
+    const pill = pillRef.current
+    if (!pill) return
+    pill.dataset.hover = 'true'
+    const rect = pill.getBoundingClientRect()
+    pill.style.setProperty('--x', `${e.clientX - rect.left}px`)
+    pill.style.setProperty('--y', `${e.clientY - rect.top}px`)
+  }
 
-
-const handlePointerMove = (e) => {
-  if (e.pointerType !== 'mouse') return
-  const pill = pillRef.current
-  if (!pill) return
-  pill.dataset.hover = 'true'
-  const rect = pill.getBoundingClientRect()
-  pill.style.setProperty('--x', `${e.clientX - rect.left}px`)
-  pill.style.setProperty('--y', `${e.clientY - rect.top}px`)
-}
-
-const handlePointerLeave = () => {
-  const pill = pillRef.current
-  if (!pill) return
-  delete pill.dataset.hover
-  // Hand control back to the CSS sweep.
-  pill.style.removeProperty('--x')
-  pill.style.removeProperty('--y')
-}
+  const handlePointerLeave = () => {
+    const pill = pillRef.current
+    if (!pill) return
+    delete pill.dataset.hover
+    // Hand control back to the CSS sweep.
+    pill.style.removeProperty('--x')
+    pill.style.removeProperty('--y')
+  }
 
   // Close the mobile menu with Escape.
   useEffect(() => {
@@ -161,7 +158,11 @@ const handlePointerLeave = () => {
             </ul>
 
             {CONTACT.resume && (
-              <a href={CONTACT.resume} download className={styles.ctaBtn}>
+              <a
+                href={CONTACT.resume}
+                download
+                className="glass-btn glass-btn--sm glass-btn--desktop"
+              >
                 Resume
               </a>
             )}
@@ -207,7 +208,12 @@ const handlePointerLeave = () => {
                 )
               })}
               {CONTACT.resume && (
-                <a href={CONTACT.resume} download className={styles.mobileCta}>
+                <a
+                  href={CONTACT.resume}
+                  download
+                  className="glass-btn glass-btn--block"
+                  style={{ marginTop: '0.3rem' }}
+                >
                   Resume
                 </a>
               )}

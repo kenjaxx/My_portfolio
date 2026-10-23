@@ -140,14 +140,14 @@ export default function Hero() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 1, duration: 0.6 }}
           >
-            <button className={styles.btnPrimary} onClick={scrollToProjects}>
+            <button type="button" className="glass-btn glass-btn--accent" onClick={scrollToProjects}>
               View My Work
-              <span className={styles.btnArrow} aria-hidden="true">
+              <span className="glass-btn__arrow" aria-hidden="true">
                 →
               </span>
             </button>
 
-            <a href={CONTACT.resume} download className={styles.textLink}>
+            <a href={CONTACT.resume} download className="glass-btn glass-btn--sm">
               <DownloadIcon /> Resume
             </a>
 
@@ -155,7 +155,7 @@ export default function Hero() {
               href={CONTACT.github}
               target="_blank"
               rel="noopener noreferrer"
-              className={styles.textLink}
+              className="glass-btn glass-btn--sm"
             >
               <FaGithub size={15} aria-hidden="true" /> GitHub
             </a>

@@ -114,8 +114,8 @@ function ChevronIcon({ direction }) {
 
    A glass button whose edge catches the light and follows the cursor
    (SpecularButton, from React Bits). The chunk loads lazily, and while it
-   loads (and on low-power devices) a plain button with the same label and
-   size is shown instead, so nothing jumps. */
+   loads (and on low-power devices) the global .glass-btn is shown instead,
+   which has the same label, size and look, so nothing jumps. */
 
 function ViewButton({ onClick }) {
   const content = (
@@ -126,7 +126,7 @@ function ViewButton({ onClick }) {
   )
 
   const plain = (
-    <button type="button" className={styles.viewBtnPlain} onClick={onClick}>
+    <button type="button" className="glass-btn" onClick={onClick}>
       {content}
     </button>
   )
@@ -183,7 +183,7 @@ function ProjectModal({ selected, onClose }) {
       origin={selected ? { dx: selected.dx, dy: selected.dy } : undefined}
       overlayClassName={styles.overlay}
       panelClassName={styles.detail}
-      closeClassName={styles.closeBtn}
+      closeClassName="glass-btn glass-btn--icon glass-btn--corner"
       closeLabel="Close project details"
       panelStyle={{ '--project-color': project?.color || 'var(--purple)' }}
       onOpened={() => setReady(true)}
@@ -262,14 +262,16 @@ function ProjectModal({ selected, onClose }) {
                 href={project.live}
                 target="_blank"
                 rel="noopener noreferrer"
-                className={styles.liveBtn}
+                className="glass-btn glass-btn--accent"
                 aria-label={`View ${project.title} live`}
               >
                 View Live
                 <ExternalIcon />
               </a>
             ) : (
-              <span className={styles.liveBtnDisabled}>Live demo coming soon</span>
+              <span className="glass-btn glass-btn--sm glass-btn--mono glass-btn--disabled">
+                Live demo coming soon
+              </span>
             )}
 
             {project.github && (
@@ -277,7 +279,7 @@ function ProjectModal({ selected, onClose }) {
                 href={project.github}
                 target="_blank"
                 rel="noopener noreferrer"
-                className={styles.codeBtn}
+                className="glass-btn"
                 aria-label={`${project.title} source code on GitHub`}
               >
                 <FaGithub size={16} aria-hidden="true" />
@@ -476,7 +478,7 @@ export default function Projects() {
           <div className={styles.dock}>
             <button
               type="button"
-              className={styles.navBtn}
+              className="glass-btn glass-btn--icon"
               onClick={goPrev}
               aria-label="Previous project"
             >
@@ -487,7 +489,7 @@ export default function Projects() {
 
             <button
               type="button"
-              className={styles.navBtn}
+              className="glass-btn glass-btn--icon"
               onClick={goNext}
               aria-label="Next project"
             >

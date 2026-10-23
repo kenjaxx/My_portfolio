@@ -8,8 +8,12 @@ import Projects from './components/Projects'
 import Contact from './components/Contact'
 import Footer from './components/Footer'
 import { getDeviceTier } from './utils/deviceTier'
+import { useGlassButtons } from './hooks/useGlassButtons'
 
 export default function App() {
+  // One shared listener that makes the light on every .glass-btn follow the cursor.
+  useGlassButtons()
+
   // Download the lazy chunks after the first paint, while the browser is idle.
   // Skipped entirely on data-saver connections.
   useEffect(() => {

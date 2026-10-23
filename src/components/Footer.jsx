@@ -19,7 +19,7 @@ export default function Footer() {
           href={CONTACT.github}
           target="_blank"
           rel="noopener noreferrer"
-          className={styles.ghLink}
+          className="glass-btn glass-btn--sm glass-btn--mono"
         >
           <FaGithub size={16} aria-hidden="true" />
           {GITHUB_LABEL}
