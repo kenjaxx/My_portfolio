@@ -81,6 +81,16 @@
   padding: 1.5rem 0 2.5rem;
 }
 
+/* Performance: when the WebGL canvas is drawing the glass (the normal case),
+   the DOM tiles don't need their own backdrop blur. It was blurring nothing
+   but the flat page background, once per tile, every frame. The blur stays in
+   the CSS fallback (no WebGL), which is the case where plates exist in the
+   DOM (.glass-icon-plate). */
+.glassWrap :global(.glass-icons:not(:has(.glass-icon-plate)) .glass-icon-glass) {
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+
 .glassWrap :global(.glass-icon-label) {
   font-family: var(--font-mono);
   font-size: 0.72rem;

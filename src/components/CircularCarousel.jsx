@@ -53,7 +53,17 @@ const PRESETS = {
 };
 const EMPTY_ITEMS = [];
 const INTRO_LENGTH = { assemble: 1500, rise: 1400, spin: 1800, none: 0 };
-const TILES = 8;
+
+// How many vertical strips each card is cut into to follow the curve of the
+// ring. More strips = smoother curve but more layers for the GPU.
+//   FRONT: the side you look at. 8 keeps the curve smooth at this ring size
+//          (with only 4 projects each card bends through about 87 degrees,
+//          so fewer strips would show visible facets).
+//   BACK:  the inner side seen through the ring. It is darkened and far away,
+//          so half the strips are enough.
+const TILES_FRONT = 8;
+const TILES_BACK = 4;
+
 const OVERLAP = 2.5;
 const DRAG_THRESHOLD = 5;
 const SPRING = 118;
@@ -80,6 +90,27 @@ const rotateY = (p, degrees) => {
   const c = Math.cos(r);
   const s = Math.sin(r);
   return [p[0] * c + p[2] * s, p[1], -p[0] * s + p[2] * c];
+};
+
+// Cuts one card into `total` strips that follow the curve of the ring.
+const makeTiles = (total, { along, axis, curveValue, inward, radius }) => {
+  const length = along / total;
+  const bend = curveValue > 0.001 ? radius / curveValue : 0;
+  return Array.from({ length: total }, (_, index) => {
+    const start = index * length - (index > 0 ? OVERLAP / 2 : 0);
+    const end = (index + 1) * length + (index < total - 1 ? OVERLAP / 2 : 0);
+    const center = (start + end) / 2 - along / 2;
+    const alpha = bend ? center / bend : 0;
+    const shift = bend ? bend * Math.sin(alpha) : center;
+    const sink = bend ? bend * (1 - Math.cos(alpha)) : 0;
+    const depth = inward ? sink : -sink;
+    const turn = ((inward ? -alpha : alpha) * 180) / Math.PI;
+    const move =
+      axis === 'x'
+        ? `translate3d(0px, ${shift}px, ${depth}px) rotateX(${-turn}deg)`
+        : `translate3d(${shift}px, 0px, ${depth}px) rotateY(${turn}deg)`;
+    return { index, total, start, end, size: end - start, move };
+  });
 };
 
 const Digits = ({ value }) => (
@@ -169,26 +200,30 @@ const CircularCarousel = ({
     return Math.max(chord + (arc - chord) * curveValue, along * 0.6);
   }, [count, along, gap, curveValue, layout.spread]);
 
-  const tiles = useMemo(() => {
-    const total = curveValue > 0.001 ? TILES : 1;
-    const length = along / total;
-    const bend = curveValue > 0.001 ? radius / curveValue : 0;
-    return Array.from({ length: total }, (_, index) => {
-      const start = index * length - (index > 0 ? OVERLAP / 2 : 0);
-      const end = (index + 1) * length + (index < total - 1 ? OVERLAP / 2 : 0);
-      const center = (start + end) / 2 - along / 2;
-      const alpha = bend ? center / bend : 0;
-      const shift = bend ? bend * Math.sin(alpha) : center;
-      const sink = bend ? bend * (1 - Math.cos(alpha)) : 0;
-      const depth = layout.inward ? sink : -sink;
-      const turn = ((layout.inward ? -alpha : alpha) * 180) / Math.PI;
-      const move =
-        axis === 'x'
-          ? `translate3d(0px, ${shift}px, ${depth}px) rotateX(${-turn}deg)`
-          : `translate3d(${shift}px, 0px, ${depth}px) rotateY(${turn}deg)`;
-      return { index, total, start, end, size: end - start, move };
-    });
-  }, [along, axis, curveValue, layout.inward, radius]);
+  // Strips for the front face and for the (darker, distant) back face.
+  const frontTiles = useMemo(
+    () =>
+      makeTiles(curveValue > 0.001 ? TILES_FRONT : 1, {
+        along,
+        axis,
+        curveValue,
+        inward: layout.inward,
+        radius
+      }),
+    [along, axis, curveValue, layout.inward, radius]
+  );
+
+  const backTiles = useMemo(
+    () =>
+      makeTiles(curveValue > 0.001 ? TILES_BACK : 1, {
+        along,
+        axis,
+        curveValue,
+        inward: layout.inward,
+        radius
+      }),
+    [along, axis, curveValue, layout.inward, radius]
+  );
 
   const rootRef = useRef(null);
   const stageRef = useRef(null);
@@ -884,8 +919,8 @@ const CircularCarousel = ({
                   aria-roledescription="slide"
                   aria-label={`${item.title || item.alt || `Image ${index + 1}`}, ${index + 1} of ${count}`}
                 >
-                  {tiles.map(tile => renderTile(item, tile, false, index))}
-                  {layout.backfaces && tiles.map(tile => renderTile(item, tile, true, index))}
+                  {frontTiles.map(tile => renderTile(item, tile, false, index))}
+                  {layout.backfaces && backTiles.map(tile => renderTile(item, tile, true, index))}
                 </div>
               ))}
             </div>

@@ -248,7 +248,13 @@ export default function About() {
             {useLanyard ? (
               <div className={styles.lanyardWrap}>
                 {/* Mounted only once the section is in view, so the chunk loads
-                    (usually already prefetched) and the drop-in plays on scroll. */}
+                    (usually already prefetched) and the drop-in plays on scroll.
+
+                    breeze={0}: the badge settles after the drop-in and the
+                    simulation goes to sleep, so nothing renders until you grab
+                    or flip it. (Any breeze above 0 keeps the physics running
+                    every frame while the badge is on screen. If you want a hint
+                    of sway back, try 0.1, at the cost of constant rendering.) */}
                 {inView && (
                   <Suspense fallback={null}>
                     <Lanyard
@@ -267,7 +273,7 @@ export default function About() {
                       gravity={1}
                       damping={0.5}
                       elasticity={0.5}
-                      breeze={0.3}
+                      breeze={0}
                       interactive
                       intro
                     />

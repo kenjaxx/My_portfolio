@@ -9,10 +9,14 @@ import Contact from './components/Contact'
 import Footer from './components/Footer'
 import { getDeviceTier } from './utils/deviceTier'
 import { useGlassButtons } from './hooks/useGlassButtons'
+import { usePauseOffscreen } from './hooks/usePauseOffscreen'
 
 export default function App() {
   // One shared listener that makes the light on every .glass-btn follow the cursor.
   useGlassButtons()
+
+  // Pauses CSS animations in sections that are scrolled out of view.
+  usePauseOffscreen()
 
   // Download the lazy chunks after the first paint, while the browser is idle.
   // Skipped entirely on data-saver connections.

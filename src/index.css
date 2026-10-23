@@ -375,6 +375,58 @@ button:focus-visible,
   }
 }
 
+/* =====================================================================
+   PERFORMANCE: sections that are off-screen
+
+   1) content-visibility: auto
+      Tells the browser to skip layout, style and paint work for a section
+      while it is far from the viewport. It renders again automatically as you
+      scroll near it. The Hero is left out on purpose (it is always the first
+      thing on screen).
+
+      contain-intrinsic-size is the height the browser assumes for a skipped
+      section. "auto" means: once a section has been on screen, remember its
+      real height. The numbers below are first guesses; if the page jumps when
+      you click a nav link for the first time, nudge them closer to each
+      section's real height (read it in DevTools).
+
+      To switch this off entirely, delete the block below.
+
+   2) [data-offscreen] (set by usePauseOffscreen in App.jsx)
+      Pauses every CSS animation inside a section that is scrolled away.
+      ===================================================================== */
+
+#about,
+#skills,
+#projects,
+#contact {
+  content-visibility: auto;
+  contain-intrinsic-size: auto var(--cv-height, 900px);
+}
+
+#about {
+  --cv-height: 1000px;
+}
+
+#skills {
+  --cv-height: 950px;
+}
+
+#projects {
+  --cv-height: 1100px;
+}
+
+#contact {
+  --cv-height: 800px;
+}
+
+[data-offscreen],
+[data-offscreen] *,
+[data-offscreen] *::before,
+[data-offscreen] *::after {
+  animation-play-state: paused !important;
+}
+
 /* Respect the OS-level "reduce motion" accessibility setting.
    This disables our hand-rolled CSS keyframe animations (cursor blink,
    scroll-hint float, avatar ring spin, status dot pulse, etc).
