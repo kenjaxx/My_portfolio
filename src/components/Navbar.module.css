@@ -24,36 +24,58 @@
 
 /* ---------- The pill: spotlight border ---------- */
 
-/* --x / --y are written by Navbar.jsx (cursor position, or the idle sweep).
+/* --x / --y are written by Navbar.jsx while a mouse is over the pill.
    The outer element draws the light as a 1.5px ring using ::before + a mask,
-   so the glass inside stays see-through. */
+   so the glass inside stays see-through.
+
+   Performance note: --x / --y are registered properties, so animating them
+   repaints the pill (and the blur behind it) on every frame. That is why
+   there is no endless idle sweep any more: the light plays one sweep right
+   after load (.pillIntro), then rests at the top centre until hovered. */
 .pill {
   --ring: rgba(0, 212, 255, 0.18);
   pointer-events: auto;
   position: relative;
   border-radius: 999px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
-  transition: box-shadow 0.3s ease;
-  /* Idle sweep. 4.4s each way matches the old sin(t / 1400) period. */
-  animation: spotlightSweep 4.4s ease-in-out infinite alternate;
+  /* When the mouse leaves, the light glides back to its resting spot. */
+  transition:
+    box-shadow 0.3s ease,
+    --x 0.4s ease,
+    --y 0.4s ease;
 }
 
-/* While a mouse is over the pill, JS drives --x/--y and the sweep stops. */
+/* One sweep (left, right, back to the middle), then Navbar.jsx removes this
+   class. 50% / 0% is the resting position, so there is no jump at the end. */
+.pillIntro {
+  animation: spotlightIntro 8s ease-in-out 1;
+}
+
+/* While a mouse is over the pill, JS drives --x/--y directly. The transition
+   is switched off so the light follows the cursor without lag. */
 .pill[data-hover='true'] {
   animation: none;
+  transition: box-shadow 0.3s ease;
 }
 
-@keyframes spotlightSweep {
-  from {
+@keyframes spotlightIntro {
+  0% {
+    --x: 50%;
+  }
+  25% {
     --x: 2%;
   }
-  to {
+  75% {
     --x: 98%;
+  }
+  100% {
+    --x: 50%;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .pill {
+  .pill,
+  .pillIntro {
     animation: none;
   }
 }
@@ -86,6 +108,10 @@
 
 /* ---------- The pill: glass body ---------- */
 
+/* The blur is 8px instead of 16px, and the background is a little more
+   opaque to make up for it. A fixed backdrop-filter has to be re-rendered
+   whenever anything behind it changes (the hero canvases animate constantly),
+   so a smaller blur radius is a direct saving. */
 .pillInner {
   position: relative;
   display: flex;
@@ -93,15 +119,15 @@
   gap: 1.5rem;
   padding: 0.4rem 0.45rem 0.4rem 1.3rem;
   border-radius: inherit;
-  background: rgba(14, 14, 24, 0.62);
-  backdrop-filter: blur(16px) saturate(140%);
-  -webkit-backdrop-filter: blur(16px) saturate(140%);
+  background: rgba(14, 14, 24, 0.7);
+  backdrop-filter: blur(8px) saturate(140%);
+  -webkit-backdrop-filter: blur(8px) saturate(140%);
   overflow: hidden;
   transition: background 0.3s ease;
 }
 
 .pillScrolled .pillInner {
-  background: rgba(10, 10, 15, 0.82);
+  background: rgba(10, 10, 15, 0.88);
 }
 
 /* Soft inner glow that tracks the same point as the ring */
@@ -116,6 +142,25 @@
 /* Keep real content above the glow layer */
 .pillInner > * {
   position: relative;
+}
+
+/* ---------- Lite mode (weak devices) ----------
+   Navbar.jsx sets data-lite="true" on the header for low-power devices.
+   No backdrop-filter at all: a solid, slightly transparent bar instead. */
+.header[data-lite='true'] .pillInner {
+  background: rgba(12, 12, 20, 0.92);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.header[data-lite='true'] .pillScrolled .pillInner {
+  background: rgba(10, 10, 15, 0.95);
+}
+
+.header[data-lite='true'] .mobileMenu {
+  background: rgba(10, 10, 15, 0.96);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
 }
 
 /* ---------- Logo ---------- */
@@ -267,10 +312,10 @@
   gap: 0.25rem;
   padding: 0.75rem;
   border-radius: 24px;
-  background: rgba(10, 10, 15, 0.88);
+  background: rgba(10, 10, 15, 0.92);
   border: 1px solid rgba(0, 212, 255, 0.22);
-  backdrop-filter: blur(16px) saturate(140%);
-  -webkit-backdrop-filter: blur(16px) saturate(140%);
+  backdrop-filter: blur(8px) saturate(140%);
+  -webkit-backdrop-filter: blur(8px) saturate(140%);
   box-shadow: 0 16px 48px rgba(0, 0, 0, 0.55);
 }
 

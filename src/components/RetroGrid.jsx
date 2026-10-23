@@ -15,6 +15,11 @@ import styles from './RetroGrid.module.css'
 
   It renders the perspective floor with a WebGL shader and falls back to a
   CSS-only grid if WebGL isn't available.
+
+  Performance props:
+    maxPixelRatio  resolution multiplier cap (1 = one shader run per CSS pixel,
+                   0.75 = even fewer, scaled up by the browser)
+    maxFps         frame-rate cap for the animation (0 = no cap)
 */
 
 const ANIMATION_DURATION_SECONDS = 15
@@ -29,6 +34,10 @@ const MAX_ANGLE = 89
 const MAX_DEVICE_PIXEL_RATIO = 2
 const MIN_ANGLE = 1
 const PERSPECTIVE_PX = 200
+
+// A frame is drawn if at least (1000 / maxFps - this) ms have passed. The small
+// tolerance lets a 30fps cap land exactly on every second frame of a 60Hz screen.
+const FRAME_TOLERANCE_MS = 2
 
 const VERTEX_SHADER_SOURCE = `
 attribute vec2 a_position;
@@ -352,7 +361,8 @@ export default function RetroGrid({
   opacity = 0.5,
   lineColor = 'rgba(0, 212, 255, 0.55)',
   fadeColor = 'var(--bg)',
-  maxPixelRatio = MAX_DEVICE_PIXEL_RATIO, // cap this at 1 on weak devices
+  maxPixelRatio = MAX_DEVICE_PIXEL_RATIO, // cap this at 1 (or lower) on weak devices
+  maxFps = 30, // frame-rate cap for the animation, 0 = uncapped
   className = '',
   style,
 }) {
@@ -364,14 +374,17 @@ export default function RetroGrid({
   const lineColorRef = useRef(lineColor)
   const syncSceneRef = useRef(null)
   const maxPixelRatioRef = useRef(maxPixelRatio)
+  const maxFpsRef = useRef(maxFps)
 
   // Keep the render loop in sync with prop changes without rebuilding WebGL.
   useEffect(() => {
     angleRef.current = angle
     cellSizeRef.current = cellSize
     lineColorRef.current = lineColor
+    maxPixelRatioRef.current = maxPixelRatio
+    maxFpsRef.current = maxFps
     syncSceneRef.current?.()
-  }, [angle, cellSize, lineColor])
+  }, [angle, cellSize, lineColor, maxPixelRatio, maxFps])
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -390,6 +403,7 @@ export default function RetroGrid({
     let color = resolveLineColor(lineColorRef.current, container)
     let positionBuffer = null
     let programInfo = null
+    let lastDrawTime = 0
 
     const getContext = () => {
       const nextGl = canvas.getContext('webgl', {
@@ -508,7 +522,15 @@ export default function RetroGrid({
     }
 
     const frame = (timestamp) => {
-      draw(timestamp)
+      // Frame-rate cap: skip the (expensive) draw if it's too soon, but keep
+      // the loop alive. The grid scrolls slowly, so 30fps looks identical.
+      const fps = maxFpsRef.current
+      const minFrameMs = fps > 0 ? 1000 / fps - FRAME_TOLERANCE_MS : 0
+
+      if (timestamp - lastDrawTime >= minFrameMs) {
+        lastDrawTime = timestamp
+        draw(timestamp)
+      }
 
       if (!reducedMotion.matches && isVisible) {
         animationFrameId = requestAnimationFrame(frame)

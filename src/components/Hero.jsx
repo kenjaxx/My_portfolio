@@ -38,12 +38,17 @@ export default function Hero() {
 
   return (
     <section className={styles.hero}>
+      {/* The grid floor is a faint, slow-moving background, so it is drawn at
+          1x resolution (0.75x on weak devices) and capped at 30fps. You can't
+          see the difference, but the GPU does about a quarter of the work on
+          a retina screen. */}
       <RetroGrid
         angle={65}
         cellSize={60}
         opacity={0.4}
         lineColor="rgba(0, 212, 255, 0.55)"
-        maxPixelRatio={tier.lowPower ? 1 : 2}
+        maxPixelRatio={tier.lowPower ? 0.75 : 1}
+        maxFps={30}
       />
       <div className={styles.glowOrb1}></div>
       <div className={styles.glowOrb2}></div>
@@ -71,6 +76,9 @@ export default function Hero() {
             <h1 className={styles.nameText}>{NAME}</h1>
 
             <div className={styles.particles} aria-hidden="true">
+              {/* idleDrift is 0: the particles settle after the intro and the
+                  canvas stops redrawing. It wakes up again only for hover
+                  repel, click bursts and the intro itself. */}
               <ParticleText
                 text={NAME}
                 fontFamily="Rajdhani"
@@ -86,12 +94,12 @@ export default function Hero() {
                 stagger={420}
                 particleSize={2}
                 density={tier.lowPower ? 6 : 4}
-                maxParticles={tier.lowPower ? 1100 : 5200}
+                maxParticles={tier.lowPower ? 1100 : 1800}
                 clickBurst
                 burstStrength={1}
                 pointerRepel={tier.coarse ? 0 : 40}
                 repelRadius={120}
-                idleDrift={tier.lowPower ? 0 : 0.7}
+                idleDrift={0}
                 trigger="mount"
                 glow={!tier.lowPower}
               />

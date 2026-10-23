@@ -1,15 +1,31 @@
 import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { NAV_LINKS, CONTACT } from '../data'
+import { getDeviceTier } from '../utils/deviceTier'
 import styles from './Navbar.module.css'
+
+// Read once at module load. Weak devices get a solid bar instead of the blur.
+const tier = getDeviceTier()
+
+// Length of the one-off spotlight sweep in Navbar.module.css (8s), plus a hair.
+const INTRO_MS = 8100
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
   // Empty string = hero / top of page, so no link is highlighted there.
   const [activeHref, setActiveHref] = useState('')
+  // True while the one-off spotlight sweep is playing.
+  const [intro, setIntro] = useState(true)
   const wrapRef = useRef(null)
   const pillRef = useRef(null)
+
+  // The sweep only plays once after load. After that the light rests at the
+  // top centre of the pill until a mouse hovers it.
+  useEffect(() => {
+    const id = setTimeout(() => setIntro(false), INTRO_MS)
+    return () => clearTimeout(id)
+  }, [])
 
   // Scrolled style + the two edge cases the observer can't catch:
   // back at the top (nothing active) and at the very bottom (last link active).
@@ -55,6 +71,9 @@ export default function Navbar() {
     if (e.pointerType !== 'mouse') return
     const pill = pillRef.current
     if (!pill) return
+    // Hovering takes over from the intro sweep. (React skips the re-render
+    // when the value is already false, so this is free on later moves.)
+    setIntro(false)
     pill.dataset.hover = 'true'
     const rect = pill.getBoundingClientRect()
     pill.style.setProperty('--x', `${e.clientX - rect.left}px`)
@@ -65,7 +84,7 @@ export default function Navbar() {
     const pill = pillRef.current
     if (!pill) return
     delete pill.dataset.hover
-    // Hand control back to the CSS sweep.
+    // Hand control back to the CSS: the light glides to its resting spot.
     pill.style.removeProperty('--x')
     pill.style.removeProperty('--y')
   }
@@ -106,6 +125,7 @@ export default function Navbar() {
   return (
     <motion.header
       className={`${styles.header} ${scrolled ? styles.headerScrolled : ''}`}
+      data-lite={tier.lowPower ? 'true' : undefined}
       initial={{ y: -80, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.6, ease: 'easeOut' }}
@@ -114,7 +134,9 @@ export default function Navbar() {
         {/* ---------- The floating glass pill with spotlight border ---------- */}
         <nav
           ref={pillRef}
-          className={`${styles.pill} ${scrolled ? styles.pillScrolled : ''}`}
+          className={`${styles.pill} ${intro ? styles.pillIntro : ''} ${
+            scrolled ? styles.pillScrolled : ''
+          }`}
           aria-label="Primary"
           onPointerMove={handlePointerMove}
           onPointerLeave={handlePointerLeave}
