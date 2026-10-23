@@ -1,8 +1,8 @@
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import { useState, useRef, useEffect, useCallback, memo, lazy, Suspense } from 'react'
 import { FaGithub, FaExclamationTriangle, FaLightbulb, FaCheckCircle } from 'react-icons/fa'
 import { useInView } from '../hooks/useInView'
-import { PROJECTS, CONTACT } from '../data'
+import { PROJECTS } from '../data'
 import Modal from './Modal'
 import styles from './Projects.module.css'
 
@@ -20,13 +20,14 @@ const REPEATS = 1
 // Then it starts spinning again by itself.
 const RESUME_DELAY = 2000
 
+// The ring itself has no captions any more. The project name, number and
+// tagline are drawn above the carousel (see the "showcase" block below).
 const ITEMS = Array.from({ length: REPEATS }, () => SHOWN)
   .flat()
   .map((p) => ({
     src: p.image,
     alt: p.title,
     title: p.title,
-    subtitle: `Project ${p.id}`,
   }))
 
 // The three cards shown in every project popup.
@@ -248,6 +249,10 @@ export default function Projects() {
   // around the ring). This is what pauses the spinning.
   const [overCard, setOverCard] = useState(false)
 
+  // Index of the card at the front of the ring. The carousel reports it
+  // through onChange, and the header above the ring follows it.
+  const [active, setActive] = useState(0)
+
   // The carousel fills this with { next, prev }. After either one runs, the
   // carousel holds still for RESUME_DELAY ms and then drifts again.
   const controlsRef = useRef(null)
@@ -294,6 +299,11 @@ export default function Projects() {
   // Spin all the time, except while the mouse is on a card or the popup is open.
   const paused = overCard || !!selected
 
+  // The project at the front of the ring, for the header above it.
+  const slot = active % SHOWN.length
+  const current = SHOWN[slot]
+  const numberText = String(slot + 1).padStart(2, '0')
+
   return (
     <section id="projects" className={styles.section} ref={ref}>
       <div className={styles.inner}>
@@ -315,6 +325,37 @@ export default function Projects() {
         </motion.h2>
         <div className={styles.divider} />
       </div>
+
+      {/* Header above the ring: a big faded number behind the project name,
+          then a one-line tagline and a hint. It changes as the ring turns. */}
+      <motion.div
+        className={styles.showcase}
+        initial={{ opacity: 0, y: 20 }}
+        animate={inView ? { opacity: 1, y: 0 } : {}}
+        transition={{ delay: 0.2, duration: 0.5 }}
+      >
+        <AnimatePresence mode="wait" initial={false}>
+          <motion.div
+            key={current.id}
+            className={styles.showcaseInner}
+            style={{ '--hdr-color': current.color }}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.25 }}
+          >
+            <span className={styles.bigNum} aria-hidden="true">
+              {numberText}
+            </span>
+            <h3 className={styles.showTitle}>{current.title}</h3>
+            <p className={styles.showTagline}>{current.tagline}</p>
+          </motion.div>
+        </AnimatePresence>
+
+        <p className={styles.hint}>
+          Use the arrows or drag to browse · click a card to open it
+        </p>
+      </motion.div>
 
       <motion.div
         className={styles.stage}
@@ -342,11 +383,11 @@ export default function Projects() {
               speed={12}
               direction="left"
               pauseOnHover={false}
-              captions
               depthFade={0.6}
               fadeColor="#0a0a0f"
               focusOnClick={false}
               onItemClick={handleItemClick}
+              onChange={setActive}
               controlsRef={controlsRef}
               resumeDelay={RESUME_DELAY}
             />
@@ -376,29 +417,6 @@ export default function Projects() {
           </>
         )}
       </motion.div>
-
-      <p className={styles.hint}>
-        Use the arrows or drag to browse · hover a card to pause · click a card to open it
-      </p>
-
-      <div className={styles.inner}>
-        <motion.div
-          className={styles.moreWrap}
-          initial={{ opacity: 0 }}
-          animate={inView ? { opacity: 1 } : {}}
-          transition={{ delay: 0.8 }}
-        >
-          <a
-            href={CONTACT.github}
-            target="_blank"
-            rel="noopener noreferrer"
-            className={styles.moreLink}
-          >
-            <FaGithub size={16} aria-hidden="true" />
-            See more on GitHub →
-          </a>
-        </motion.div>
-      </div>
 
       <ProjectModal selected={selected} onClose={closeModal} />
     </section>

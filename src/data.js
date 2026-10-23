@@ -56,19 +56,21 @@ export const SKILL_GROUPS = [
 ]
 
 /*
-  Each project popup shows three short cards instead of one long paragraph:
+  Each project has:
 
-  problem   what was wrong or missing (amber card)
-  solution  what you built (cyan card)
-  result    what the visitor gets (green card)
+  tagline   one short line shown under the project name above the carousel
+  problem   what was wrong or missing (amber card in the popup)
+  solution  what you built (cyan card in the popup)
+  result    what the visitor gets (green card in the popup)
 
-  The cards are narrow, so keep each line under about 10 words.
+  Keep the tagline under about 7 words, and each card line under about 10.
   These are first drafts written from your old descriptions. Edit freely.
 */
 export const PROJECTS = [
   {
     id: '001',
     title: 'Billify',
+    tagline: 'Track bills and budgets in one place',
     problem: 'Bills get missed and spending is hard to track.',
     solution: 'Sorts bills by status and category, with live budgets.',
     result: 'Paid, unpaid and overdue at a glance. Export to CSV or PDF.',
@@ -82,6 +84,7 @@ export const PROJECTS = [
   {
     id: '002',
     title: 'Closet — AI Outfit Matcher',
+    tagline: 'AI that picks your outfit',
     problem: 'A full closet, but nothing to wear.',
     solution: 'Gemini tags each photo, then pairs pieces from your wardrobe.',
     result: 'Outfit ideas for any occasion or weather.',
@@ -95,6 +98,7 @@ export const PROJECTS = [
   {
     id: '003',
     title: 'Rehearse',
+    tagline: 'AI mock interviews with instant feedback',
     problem: 'Interview practice rarely comes with real feedback.',
     solution: 'AI scores your spoken or typed answers.',
     result: 'Tracks filler words and pace, with saved history and PDF export.',
@@ -108,6 +112,7 @@ export const PROJECTS = [
   {
     id: '004',
     title: 'House Selling Site',
+    tagline: 'A single-page property showcase',
     problem: 'Property details are scattered and hard to act on.',
     solution: 'A static page with pricing, room details and a gallery.',
     result: 'Visitors schedule a tour or contact the agent in one click.',
@@ -120,8 +125,8 @@ export const PROJECTS = [
   },
 ]
 
-// The single source of truth for contact details. Contact, Footer, Hero and
-// Projects all read from here, so a change only has to be made once.
+// The single source of truth for contact details. Contact, Footer and Hero
+// read from here, so a change only has to be made once.
 export const CONTACT = {
   github: 'https://github.com/kenjaxx',
   linkedin: 'https://www.linkedin.com/in/kenji-ermita-1375b1392/',
