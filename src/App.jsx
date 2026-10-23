@@ -17,6 +17,7 @@ export default function App() {
     if (tier.saveData) return
 
     const run = () => {
+      import('./components/SpecularButton')
       import('./components/CircularCarousel')
       import('./components/GlassIcons')
       import('./components/SplitFlapText')

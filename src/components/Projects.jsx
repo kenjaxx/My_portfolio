@@ -1,13 +1,19 @@
 import { motion, AnimatePresence } from 'framer-motion'
 import { useState, useRef, useEffect, useCallback, memo, lazy, Suspense } from 'react'
-import { FaGithub, FaExclamationTriangle, FaLightbulb, FaCheckCircle } from 'react-icons/fa'
+import { FaGithub, FaExclamationTriangle, FaLightbulb, FaCheckCircle, FaEye } from 'react-icons/fa'
 import { useInView } from '../hooks/useInView'
 import { PROJECTS } from '../data'
+import { getDeviceTier } from '../utils/deviceTier'
 import Modal from './Modal'
 import styles from './Projects.module.css'
 
 const Carousel = memo(lazy(() => import('./CircularCarousel')))
 const SplitFlapText = lazy(() => import('./SplitFlapText'))
+const SpecularButton = lazy(() => import('./SpecularButton'))
+
+// Read once at module load. Weak devices get a plain button instead of the
+// WebGL specular one.
+const tier = getDeviceTier()
 
 // Only projects that have a cover image go on the ring.
 const SHOWN = PROJECTS.filter((p) => p.image)
@@ -101,6 +107,56 @@ function ChevronIcon({ direction }) {
         <polyline points="9 5 16 12 9 19" />
       )}
     </svg>
+  )
+}
+
+/* ---------- The "View project" button ----------
+
+   A glass button whose edge catches the light and follows the cursor
+   (SpecularButton, from React Bits). The chunk loads lazily, and while it
+   loads (and on low-power devices) a plain button with the same label and
+   size is shown instead, so nothing jumps. */
+
+function ViewButton({ onClick }) {
+  const content = (
+    <>
+      <FaEye size={16} aria-hidden="true" />
+      View project
+    </>
+  )
+
+  const plain = (
+    <button type="button" className={styles.viewBtnPlain} onClick={onClick}>
+      {content}
+    </button>
+  )
+
+  if (tier.lowPower) return plain
+
+  return (
+    <Suspense fallback={plain}>
+      <SpecularButton
+        className={styles.viewBtn}
+        size="md"
+        radius={999}
+        tint="#00d4ff"
+        tintOpacity={0.08}
+        textColor="#ffffff"
+        lineColor="#00d4ff"
+        baseColor="#475569"
+        intensity={1.1}
+        idleIntensity={0.55}
+        shineSize={14}
+        shineFade={40}
+        thickness={1.4}
+        glow={1}
+        followMouse
+        proximity={300}
+        onClick={onClick}
+      >
+        {content}
+      </SpecularButton>
+    </Suspense>
   )
 }
 
@@ -275,6 +331,7 @@ export default function Projects() {
 
   const handleStagePointerLeave = () => setOverCard(false)
 
+  // Clicking a card on the ring still opens it.
   const handleItemClick = useCallback((item, index) => {
     const project = SHOWN[index % SHOWN.length]
     if (!project) return
@@ -304,6 +361,22 @@ export default function Projects() {
   const current = SHOWN[slot]
   const numberText = String(slot + 1).padStart(2, '0')
 
+  // The "View project" button opens whichever project is at the front of the
+  // ring, and the popup grows out of the button itself.
+  const handleView = useCallback(
+    (event) => {
+      const project = SHOWN[slot]
+      if (!project) return
+
+      const rect = event.currentTarget.getBoundingClientRect()
+      const dx = rect.left + rect.width / 2 - window.innerWidth / 2
+      const dy = rect.top + rect.height / 2 - window.innerHeight / 2
+
+      setSelected({ project, dx, dy })
+    },
+    [slot]
+  )
+
   return (
     <section id="projects" className={styles.section} ref={ref}>
       <div className={styles.inner}>
@@ -327,7 +400,7 @@ export default function Projects() {
       </div>
 
       {/* Header above the ring: a big faded number behind the project name,
-          then a one-line tagline and a hint. It changes as the ring turns. */}
+          then a one-line tagline. It changes as the ring turns. */}
       <motion.div
         className={styles.showcase}
         initial={{ opacity: 0, y: 20 }}
@@ -351,10 +424,6 @@ export default function Projects() {
             <p className={styles.showTagline}>{current.tagline}</p>
           </motion.div>
         </AnimatePresence>
-
-        <p className={styles.hint}>
-          Use the arrows or drag to browse · click a card to open it
-        </p>
       </motion.div>
 
       <motion.div
@@ -393,30 +462,46 @@ export default function Projects() {
             />
           </Suspense>
         )}
+      </motion.div>
 
-        {/* Prev / next buttons beside the ring. They are siblings of the
-            carousel (not inside it), so they never interfere with dragging. */}
-        {inView && (
-          <>
+      {/* Control dock under the ring: previous, View project, next.
+          The dots show which project is at the front. */}
+      {inView && (
+        <motion.div
+          className={styles.dockWrap}
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5, duration: 0.5 }}
+        >
+          <div className={styles.dock}>
             <button
               type="button"
-              className={`${styles.arrow} ${styles.arrowLeft}`}
+              className={styles.navBtn}
               onClick={goPrev}
               aria-label="Previous project"
             >
               <ChevronIcon direction="left" />
             </button>
+
+            <ViewButton onClick={handleView} />
+
             <button
               type="button"
-              className={`${styles.arrow} ${styles.arrowRight}`}
+              className={styles.navBtn}
               onClick={goNext}
               aria-label="Next project"
             >
               <ChevronIcon direction="right" />
             </button>
-          </>
-        )}
-      </motion.div>
+          </div>
+
+          <div className={styles.dots} aria-hidden="true">
+            {SHOWN.map((p, i) => (
+              <span key={p.id} className={`${styles.dot} ${i === slot ? styles.dotOn : ''}`} />
+            ))}
+          </div>
+        </motion.div>
+      )}
 
       <ProjectModal selected={selected} onClose={closeModal} />
     </section>

@@ -1,5 +1,6 @@
 .section {
-  padding: 7rem 0 5rem;
+  /* top padding clears the floating navbar */
+  padding: 6rem 0 3rem;
   overflow: hidden;
 }
 
@@ -21,7 +22,7 @@
   font-size: clamp(2rem, 4vw, 3rem);
   font-weight: 800;
   color: #f1f5f9;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1rem;
   letter-spacing: -0.02em;
 }
 
@@ -29,7 +30,7 @@
   width: 100%;
   height: 1px;
   background: linear-gradient(90deg, rgba(0,212,255,0.3), rgba(124,58,237,0.2), transparent);
-  margin-bottom: 2rem;
+  margin-bottom: 1.25rem;
 }
 
 /* --- Showcase header above the ring --- */
@@ -39,7 +40,7 @@
 .showcase {
   text-align: center;
   padding: 0 2rem;
-  min-height: 15rem;
+  min-height: 10rem;
 }
 
 /* The big number, the name and the tagline share one grid. The number and
@@ -54,7 +55,7 @@
 .bigNum {
   grid-area: 1 / 1;
   font-family: var(--font-mono);
-  font-size: clamp(5.5rem, 15vw, 9.5rem);
+  font-size: clamp(4.5rem, 12vw, 7rem);
   font-weight: 700;
   line-height: 1;
   letter-spacing: 0.05em;
@@ -70,7 +71,7 @@
   margin: 0;
   max-width: 100%;
   font-family: var(--font-display);
-  font-size: clamp(2rem, 4.6vw, 3rem);
+  font-size: clamp(1.7rem, 3.8vw, 2.5rem);
   font-weight: 700;
   line-height: 1.15;
   letter-spacing: -0.01em;
@@ -80,38 +81,47 @@
 
 .showTagline {
   grid-area: 2 / 1;
-  margin: 0.4rem 0 0;
-  font-size: clamp(1rem, 2vw, 1.2rem);
+  margin: 0.3rem 0 0;
+  font-size: clamp(0.95rem, 1.8vw, 1.1rem);
   color: #b7c0d1;
-}
-
-.hint {
-  margin: 1.1rem 0 0;
-  font-family: var(--font-mono);
-  font-size: 0.85rem;
-  letter-spacing: 0.04em;
-  color: #94a3b8;
 }
 
 /* --- 3D ring --- */
 
 /* The carousel fills its parent, so this box needs an explicit height.
-   There are no captions inside the ring any more, so it needs less room
-   than before. */
+   The height follows the screen: whatever is left under the heading, the
+   showcase header and the control dock (about 31rem in total), never smaller
+   than 320px and never taller than 650px. The carousel scales its cards to
+   fit this box on its own.
+   The first `height` is a fallback for browsers without `svh`. */
 .stage {
   position: relative;
   width: 100%;
-  height: 650px;
+  height: clamp(320px, calc(100vh - 31rem), 650px);
+  height: clamp(320px, calc(100svh - 31rem), 650px);
 }
 
-/* --- Prev / next buttons beside the carousel --- */
+/* --- Control dock: previous, View project, next --- */
 
-.arrow {
-  position: absolute;
-  top: 50%;
-  z-index: 5;
-  width: 52px;
-  height: 52px;
+.dockWrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 1.1rem;
+  padding: 0 1rem;
+}
+
+.dock {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.navBtn {
+  flex-shrink: 0;
+  width: 48px;
+  height: 48px;
   display: grid;
   place-items: center;
   border-radius: 50%;
@@ -120,11 +130,10 @@
   border: 1px solid rgba(0, 212, 255, 0.35);
   box-shadow: 0 0 18px rgba(0, 212, 255, 0.18), 0 8px 24px rgba(0, 0, 0, 0.5);
   cursor: pointer;
-  transform: translateY(-50%);
   transition: color 0.2s, border-color 0.2s, background 0.2s, box-shadow 0.2s, scale 0.2s;
 }
 
-.arrow:hover {
+.navBtn:hover {
   color: var(--cyan);
   border-color: var(--cyan);
   background: rgba(0, 212, 255, 0.1);
@@ -132,16 +141,113 @@
   scale: 1.08;
 }
 
-.arrow:active {
+.navBtn:active {
   scale: 0.95;
 }
 
-.arrowLeft {
-  left: 1.5rem;
+/* The specular glass button. It is written as `.dock .viewBtn` (two classes)
+   so it wins over the component's own `.specular-button` font rules no matter
+   which stylesheet loads first. The label font and weight match the rest of
+   the site; the shape, glow and light come from the props in Projects.jsx. */
+.dock .viewBtn {
+  position: relative;
+  isolation: isolate;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5em;
+  margin: 0;
+  padding: 14px 28px;
+  border: 0;
+  border-radius: 999px;
+  background: color-mix(in srgb, #00d4ff 8%, transparent);
+  color: #ffffff;
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  cursor: pointer;
+  outline: none;
 }
 
-.arrowRight {
-  right: 1.5rem;
+/* The light canvas must sit on top of the button, taken out of the layout.
+   If this rule is missing, the canvas becomes a normal inline element, the
+   button grows to fit it, the canvas resizes to fit the button, and the
+   button balloons into a huge box. These rules are repeated here on purpose
+   so the button can't break even if SpecularButton.css fails to load. */
+.dock .viewBtn canvas {
+  position: absolute;
+  inset: -24px;
+  z-index: 1;
+  display: block;
+  width: calc(100% + 48px);
+  height: calc(100% + 48px);
+  pointer-events: none;
+}
+
+.dock .viewBtn > span {
+  position: relative;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  gap: inherit;
+}
+
+.dock .viewBtn:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.55);
+  outline-offset: 3px;
+}
+
+/* Same size and look without WebGL: shown while the specular chunk loads and
+   on low-power devices. */
+.viewBtnPlain {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5em;
+  padding: 14px 28px;
+  border-radius: 999px;
+  border: 1px solid rgba(0, 212, 255, 0.5);
+  background: rgba(0, 212, 255, 0.1);
+  color: #ffffff;
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  line-height: 1;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.viewBtnPlain:hover {
+  background: rgba(0, 212, 255, 0.18);
+  border-color: var(--cyan);
+}
+
+/* --- Dots: which project is at the front --- */
+
+.dots {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 1rem;
+}
+
+.dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  transition: width 0.3s ease, background 0.3s ease;
+}
+
+.dotOn {
+  width: 20px;
+  border-radius: 4px;
+  background: var(--cyan);
 }
 
 /* --- Expanded project popup --- */
@@ -398,33 +504,53 @@
     transform: none;
     transition: none;
   }
+
+  .dot {
+    transition: none;
+  }
 }
 
 @media (max-width: 640px) {
-  .showcase {
-    padding: 0 1.25rem;
-    min-height: 13rem;
+  .section {
+    padding: 5.5rem 0 2.5rem;
   }
 
+  .showcase {
+    padding: 0 1.25rem;
+    min-height: 9rem;
+  }
+
+  .bigNum {
+    font-size: clamp(3.8rem, 20vw, 5rem);
+  }
+
+  /* Phones: smaller reserve, because the heading wraps more. */
   .stage {
-    height: 380px;
+    height: clamp(280px, calc(100vh - 27rem), 380px);
+    height: clamp(280px, calc(100svh - 27rem), 380px);
+  }
+
+  .dock {
+    gap: 0.6rem;
+  }
+
+  .navBtn {
+    width: 42px;
+    height: 42px;
+  }
+
+  .dock .viewBtn,
+  .viewBtnPlain {
+    font-size: 0.95rem;
+  }
+
+  .dock .viewBtn,
+  .viewBtnPlain {
+    padding: 12px 20px;
   }
 
   .detail {
     padding: 2.4rem 1.2rem 1.6rem;
-  }
-
-  .arrow {
-    width: 40px;
-    height: 40px;
-  }
-
-  .arrowLeft {
-    left: 0.5rem;
-  }
-
-  .arrowRight {
-    right: 0.5rem;
   }
 
   /* Cards stack on phones, one per row. */
