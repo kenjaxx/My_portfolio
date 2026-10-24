@@ -132,15 +132,7 @@ export default function Hero() {
             </p>
           </motion.div>
 
-          <motion.p
-            className={styles.bio}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.8, duration: 0.6 }}
-          >
-            Full Stack Developer building pixel-perfect frontends &amp; robust backends — currently
-            open to freelance, internship, and collab work.
-          </motion.p>
+         
 
           <motion.div
             className={styles.ctaRow}
