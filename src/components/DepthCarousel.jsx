@@ -4,7 +4,15 @@
 // Keyboard support lives on the root (ArrowLeft / ArrowRight) and on the dot buttons,
 // so the pointer handlers on the cards are an extra, not the only way in.
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import {
+  forwardRef,
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useMemo,
+  useRef,
+  useState,
+} from 'react'
 import gsap from 'gsap'
 import './DepthCarousel.css'
 
@@ -20,30 +28,44 @@ const DEFAULT_ITEMS = [
 const clamp = (v, min, max) => Math.min(Math.max(v, min), max)
 const normalizeItem = (it) => (typeof it === 'string' ? { image: it, alt: '' } : it)
 
-const DepthCarousel = ({
-  items = DEFAULT_ITEMS,
-  cardWidth = 300,
-  cardHeight = 380,
-  radius = 18,
-  tint = '#05060a',
-  depth = 220,
-  spread = 90,
-  tilt = 22,
-  tiltDirection = 'right',
-  perspective = 1400,
-  visibleCards = 4,
-  falloff = 0.2,
-  blur = 6,
-  duration = 700,
-  ease = 'power3.out',
-  autoplay = false,
-  autoplayDelay = 3200,
-  loop = true,
-  showControls = true,
-  showIndicators = true,
-  onChange,
-  className = '',
-}) => {
+/*
+  Changes from the stock component:
+  - No CSS `filter` (blur / brightness) on the cards. Filters on several large,
+    3D-transformed layers are re-rasterised every frame and were the main cause
+    of lag. Cards are darkened with the overlay span's opacity instead, which
+    the GPU can do without re-rasterising anything.
+  - Cards that are fully hidden get `visibility: hidden`, so they aren't painted.
+  - The old `blur` prop is gone; nothing needs it any more.
+  - A ref handle: `ref.current.goTo(index)` slides the carousel to a card. The
+    Certifications lightbox uses it to bring the carousel to the certificate
+    you were last looking at when the lightbox closes.
+*/
+const DepthCarousel = forwardRef(function DepthCarousel(
+  {
+    items = DEFAULT_ITEMS,
+    cardWidth = 300,
+    cardHeight = 380,
+    radius = 18,
+    tint = '#05060a',
+    depth = 220,
+    spread = 90,
+    tilt = 22,
+    tiltDirection = 'right',
+    perspective = 1400,
+    visibleCards = 4,
+    falloff = 0.2,
+    duration = 700,
+    ease = 'power3.out',
+    autoplay = false,
+    autoplayDelay = 3200,
+    loop = true,
+    showControls = true,
+    showIndicators = true,
+    onChange,
+    className = '',
+  },
+  ref
+) {
   const data = useMemo(() => (Array.isArray(items) ? items : []).map(normalizeItem), [items])
   const count = data.length
 
@@ -78,7 +100,6 @@ const DepthCarousel = ({
       tiltDirection,
       visibleCards,
       falloff,
-      blur,
       duration,
       ease,
       loop,
@@ -115,17 +136,15 @@ const DepthCarousel = ({
       let opacity = d < 0 ? Math.max(0, 1 + d) : 1
       if (!shown) opacity = 0
 
-      const brightness = Math.max(0.15, 1 - back * cfg.falloff)
-      const blurPx =
-        cfg.blur > 0 ? Math.min(cfg.blur, (back / Math.max(1, cfg.visibleCards)) * cfg.blur) : 0
       const zi = Math.round(2000 - d * 20)
 
-      el.style.transform = `translate(-50%, -50%) scale(${sc}) translateX(${tx.toFixed(2)}px) translateZ(${tz.toFixed(2)}px) rotateY(${ry.toFixed(3)}deg)`
+      el.style.transform = `translate(-50%, -50%) scale(${sc}) translate3d(${tx.toFixed(2)}px, 0, ${tz.toFixed(2)}px) rotateY(${ry.toFixed(3)}deg)`
       el.style.opacity = opacity.toFixed(3)
-      el.style.filter = `brightness(${brightness.toFixed(3)}) blur(${blurPx.toFixed(2)}px)`
+      el.style.visibility = opacity < 0.01 ? 'hidden' : 'visible'
       el.style.zIndex = String(zi)
       el.style.pointerEvents = shown && opacity > 0.05 ? 'auto' : 'none'
 
+      // Darkening for cards further back: a plain overlay instead of a filter.
       const ov = overlayRefs.current[i]
       if (ov) ov.style.opacity = clamp(back * cfg.falloff * 1.25, 0, 0.86).toFixed(3)
     }
@@ -185,6 +204,15 @@ const DepthCarousel = ({
 
   const navigateBy = useCallback((step) => setFocus(focusRef.current + step, true), [setFocus])
 
+  // Lets a parent move the carousel: ref.current.goTo(3)
+  useImperativeHandle(
+    ref,
+    () => ({
+      goTo: (index) => setFocus(index, true),
+    }),
+    [setFocus]
+  )
+
   useEffect(() => {
     const root = rootRef.current
     if (!root) return
@@ -205,9 +233,9 @@ const DepthCarousel = ({
     const onWheel = (e) => {
       const cfg = cfgRef.current
       if (cfg.count < 2) return
-      // Changed from the stock component: only horizontal gestures (trackpad swipe,
-      // Shift + wheel) turn the carousel. A normal vertical wheel is left alone so the
-      // page keeps scrolling when the cursor passes over the carousel.
+      // Only horizontal gestures (trackpad swipe, Shift + wheel) turn the carousel.
+      // A normal vertical wheel is left alone so the page keeps scrolling when the
+      // cursor passes over the carousel.
       if (Math.abs(e.deltaX) <= Math.abs(e.deltaY)) return
       e.preventDefault()
       tweenRef.current?.kill()
@@ -351,7 +379,6 @@ const DepthCarousel = ({
     tiltDirection,
     visibleCards,
     falloff,
-    blur,
     cardWidth,
     cardHeight,
     radius,
@@ -399,6 +426,7 @@ const DepthCarousel = ({
               src={item.image}
               alt={item.alt || ''}
               draggable={false}
+              decoding="async"
             />
             <span
               className="depth-carousel__tint"
@@ -465,6 +493,6 @@ const DepthCarousel = ({
       )}
     </div>
   )
-}
+})
 
 export default DepthCarousel

@@ -2,6 +2,7 @@ import { useState, useMemo, useRef, useEffect, useCallback, lazy, Suspense } fro
 import { motion } from 'framer-motion'
 import { useInView } from '../hooks/useInView'
 import { CERTIFICATIONS, CERT_FILTERS } from '../data'
+import Modal from './Modal'
 import styles from './Certifications.module.css'
 
 // Lazy chunk (it pulls in gsap), so it stays out of the first paint.
@@ -21,12 +22,35 @@ function useIsMobile() {
   return mobile
 }
 
+function ArrowIcon({ direction }) {
+  return (
+    <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+      <path
+        d={direction === 'left' ? 'M15 5l-7 7 7 7' : 'M9 5l7 7-7 7'}
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  )
+}
+
 export default function Certifications() {
   const [ref, inView] = useInView()
   const [activeKey, setActiveKey] = useState(CERT_FILTERS[0].key)
   const [activeIndex, setActiveIndex] = useState(0)
+
+  // Lightbox state. `viewerIndex` is the cert shown in the lightbox, which can
+  // move away from the carousel while it is open. The carousel catches up on close.
+  const [viewerOpen, setViewerOpen] = useState(false)
+  const [viewerIndex, setViewerIndex] = useState(0)
+  const [viewerOrigin, setViewerOrigin] = useState({ dx: 0, dy: 0 })
+
   const isMobile = useIsMobile()
   const tabRefs = useRef({})
+  const carouselRef = useRef(null)
 
   const visible = useMemo(
     () =>
@@ -46,7 +70,10 @@ export default function Certifications() {
     [visible]
   )
 
-  const current = visible[Math.min(activeIndex, visible.length - 1)]
+  const total = visible.length
+  const safeActive = Math.min(activeIndex, total - 1)
+  const current = visible[safeActive]
+  const viewerCert = visible[Math.min(viewerIndex, total - 1)]
 
   const countFor = (key) =>
     key === 'all' ? CERTIFICATIONS.length : CERTIFICATIONS.filter((c) => c.category === key).length
@@ -57,6 +84,64 @@ export default function Certifications() {
   }, [])
 
   const handleChange = useCallback((index) => setActiveIndex(index), [])
+
+  const openViewer = useCallback(
+    (event) => {
+      // Keyboard activation has no pointer position, so grow from the centre.
+      const hasPointer = event && (event.clientX || event.clientY)
+      setViewerOrigin({
+        dx: hasPointer ? event.clientX - window.innerWidth / 2 : 0,
+        dy: hasPointer ? event.clientY - window.innerHeight / 2 : 0,
+      })
+      setViewerIndex(safeActive)
+      setViewerOpen(true)
+    },
+    [safeActive]
+  )
+
+  // On close, move the carousel to whichever cert was last shown in the viewer.
+  const closeViewer = useCallback(() => {
+    setViewerOpen(false)
+    if (viewerIndex !== safeActive) carouselRef.current?.goTo(viewerIndex)
+  }, [viewerIndex, safeActive])
+
+  const showNext = useCallback(() => {
+    if (total < 2) return
+    setViewerIndex((i) => (i + 1) % total)
+  }, [total])
+
+  const showPrev = useCallback(() => {
+    if (total < 2) return
+    setViewerIndex((i) => (i - 1 + total) % total)
+  }, [total])
+
+  // Left / Right arrow keys flip through certificates while the viewer is open.
+  useEffect(() => {
+    if (!viewerOpen) return undefined
+    const onKeyDown = (e) => {
+      if (e.key === 'ArrowRight') {
+        e.preventDefault()
+        showNext()
+      } else if (e.key === 'ArrowLeft') {
+        e.preventDefault()
+        showPrev()
+      }
+    }
+    document.addEventListener('keydown', onKeyDown)
+    return () => document.removeEventListener('keydown', onKeyDown)
+  }, [viewerOpen, showNext, showPrev])
+
+  // Preload the neighbours so flipping feels instant.
+  useEffect(() => {
+    if (!viewerOpen || total < 2) return
+    ;[1, -1].forEach((step) => {
+      const cert = visible[(viewerIndex + step + total) % total]
+      if (cert) {
+        const img = new Image()
+        img.src = cert.image
+      }
+    })
+  }, [viewerOpen, viewerIndex, visible, total])
 
   // Arrow keys / Home / End move between tabs (roving tabindex pattern).
   const handleTabKeyDown = (event, index) => {
@@ -94,39 +179,66 @@ export default function Certifications() {
           Certifications
         </motion.h2>
 
+        {/* Tabs, then the actions for the card in front, both centred. */}
         <motion.div
-          className={styles.tabs}
-          role="tablist"
-          aria-label="Certification categories"
+          className={styles.toolbar}
           initial={{ opacity: 0, y: 20 }}
           animate={inView ? { opacity: 1, y: 0 } : {}}
           transition={{ delay: 0.15, duration: 0.5 }}
         >
-          {CERT_FILTERS.map((filter, index) => {
-            const selectedTab = activeKey === filter.key
-            return (
+          <div className={styles.tabs} role="tablist" aria-label="Certification categories">
+            {CERT_FILTERS.map((filter, index) => {
+              const selectedTab = activeKey === filter.key
+              return (
+                <button
+                  key={filter.key}
+                  ref={(el) => {
+                    tabRefs.current[filter.key] = el
+                  }}
+                  id={`certs-tab-${filter.key}`}
+                  role="tab"
+                  type="button"
+                  aria-selected={selectedTab}
+                  aria-controls="certs-panel"
+                  tabIndex={selectedTab ? 0 : -1}
+                  className={`glass-btn glass-btn--sm glass-btn--grow ${
+                    selectedTab ? 'is-active' : 'glass-btn--quiet'
+                  }`}
+                  onClick={() => selectFilter(filter.key)}
+                  onKeyDown={(e) => handleTabKeyDown(e, index)}
+                >
+                  {filter.label}
+                  <span className={styles.tabCount}>{countFor(filter.key)}</span>
+                </button>
+              )
+            })}
+          </div>
+
+          {current && (
+            <div className={`glass-group ${styles.actions}`}>
               <button
-                key={filter.key}
-                ref={(el) => {
-                  tabRefs.current[filter.key] = el
-                }}
-                id={`certs-tab-${filter.key}`}
-                role="tab"
                 type="button"
-                aria-selected={selectedTab}
-                aria-controls="certs-panel"
-                tabIndex={selectedTab ? 0 : -1}
-                className={`glass-btn glass-btn--sm glass-btn--grow ${
-                  selectedTab ? 'is-active' : 'glass-btn--quiet'
-                }`}
-                onClick={() => selectFilter(filter.key)}
-                onKeyDown={(e) => handleTabKeyDown(e, index)}
+                className="glass-btn glass-btn--sm glass-btn--accent"
+                onClick={openViewer}
               >
-                {filter.label}
-                <span className={styles.tabCount}>{countFor(filter.key)}</span>
+                View full size
+                <span aria-hidden="true">⤢</span>
               </button>
-            )
-          })}
+              {current.verify && (
+                <a
+                  href={current.verify}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="glass-btn glass-btn--sm glass-btn--mono"
+                >
+                  Verify credential
+                  <span className="glass-btn__arrow" aria-hidden="true">
+                    →
+                  </span>
+                </a>
+              )}
+            </div>
+          )}
         </motion.div>
 
         <div
@@ -143,18 +255,18 @@ export default function Certifications() {
               <Suspense fallback={null}>
                 <DepthCarousel
                   key={activeKey}
+                  ref={carouselRef}
                   items={items}
-                  cardWidth={isMobile ? 340 : 520}
-                  cardHeight={isMobile ? 240 : 366}
+                  cardWidth={isMobile ? 300 : 680}
+                  cardHeight={isMobile ? 211 : 479}
                   radius={14}
-                  depth={200}
-                  spread={80}
+                  depth={isMobile ? 140 : 220}
+                  spread={isMobile ? 40 : 90}
                   tilt={20}
                   tiltDirection="right"
-                  perspective={1400}
+                  perspective={1600}
                   visibleCards={3}
                   falloff={0.22}
-                  blur={4}
                   autoplay={false}
                   loop
                   onChange={handleChange}
@@ -178,34 +290,10 @@ export default function Certifications() {
                   <span>{current.date}</span>
                   {current.credentialId && <span>ID: {current.credentialId}</span>}
                   <span>
-                    {Math.min(activeIndex, visible.length - 1) + 1} / {visible.length}
+                    {safeActive + 1} / {total}
                   </span>
                 </p>
                 {current.detail && <p className={styles.detail}>{current.detail}</p>}
-
-                <div className={`glass-group ${styles.actions}`}>
-                  {current.verify && (
-                    <a
-                      href={current.verify}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="glass-btn glass-btn--sm glass-btn--accent"
-                    >
-                      Verify credential
-                      <span className="glass-btn__arrow" aria-hidden="true">
-                        →
-                      </span>
-                    </a>
-                  )}
-                  <a
-                    href={current.image}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="glass-btn glass-btn--sm glass-btn--mono"
-                  >
-                    View full size
-                  </a>
-                </div>
               </motion.div>
             )}
           </div>
@@ -213,6 +301,62 @@ export default function Certifications() {
 
         <p className={styles.hint}>Drag, swipe or use the arrow keys to browse</p>
       </div>
+
+      {/* Full-size viewer. Stays on the page, so closing it always brings you back.
+          The arrows let you flip through every certificate without leaving it. */}
+      <Modal
+        open={viewerOpen && Boolean(viewerCert)}
+        onClose={closeViewer}
+        label={viewerCert ? `${viewerCert.title} certificate, full size` : 'Certificate'}
+        origin={viewerOrigin}
+        overlayClassName={styles.viewerOverlay}
+        panelClassName={styles.viewerPanel}
+        closeClassName="glass-btn glass-btn--icon glass-btn--corner"
+        closeLabel="Close full size view"
+      >
+        {viewerCert && (
+          <>
+            <p className={styles.viewerTitle}>
+              {viewerCert.title}
+              <span className={styles.viewerCount}>
+                {' '}
+                · {Math.min(viewerIndex, total - 1) + 1} / {total}
+              </span>
+            </p>
+
+            <div className={styles.viewerStage}>
+              <img
+                key={viewerCert.id}
+                className={styles.viewerImg}
+                src={viewerCert.image}
+                alt={`${viewerCert.title} certificate from ${viewerCert.issuer}`}
+                decoding="async"
+              />
+
+              {total > 1 && (
+                <>
+                  <button
+                    type="button"
+                    className={`glass-btn glass-btn--icon ${styles.viewerNav} ${styles.viewerPrev}`}
+                    onClick={showPrev}
+                    aria-label="Previous certificate"
+                  >
+                    <ArrowIcon direction="left" />
+                  </button>
+                  <button
+                    type="button"
+                    className={`glass-btn glass-btn--icon ${styles.viewerNav} ${styles.viewerNext}`}
+                    onClick={showNext}
+                    aria-label="Next certificate"
+                  >
+                    <ArrowIcon direction="right" />
+                  </button>
+                </>
+              )}
+            </div>
+          </>
+        )}
+      </Modal>
     </section>
   )
 }
