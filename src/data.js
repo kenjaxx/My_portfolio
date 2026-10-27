@@ -1,12 +1,16 @@
 export const NAV_LINKS = [
   { label: 'about', href: '#about' },
-  { label: 'skills', href: '#skills' },
+  { label: 'certs', href: '#certifications' },
   { label: 'projects', href: '#projects' },
   { label: 'contact', href: '#contact' },
 ]
 
 export const ROLES = ['React Developer', 'Python Enthusiast', 'Problem Solver']
 
+/*
+  Kept for any component that still reads it (the Skills section itself is gone).
+  If nothing imports SKILL_GROUPS any more, this block can be deleted.
+*/
 export const SKILL_GROUPS = [
   {
     key: 'languages',
@@ -52,6 +56,137 @@ export const SKILL_GROUPS = [
       { name: 'Railway', color: '#a06afe' },
       { name: 'ServiceNow', color: '#62d84e' },
     ],
+  },
+]
+
+/*
+  Certifications shown in the carousel, newest first.
+
+  id            unique key
+  title         the course or program name
+  issuer        who issued it
+  date          shown as written
+  category      'cloud' | 'programming' | 'ai'   (see CERT_FILTERS)
+  image         file in public/images/certs/ (rendered 1040px wide WebP)
+  credentialId  optional, shown next to the date
+  verify        optional link to the public verification page (adds a "Verify credential" button)
+  detail        one or two lines under the title
+*/
+export const CERT_FILTERS = [
+  { key: 'all', label: 'All' },
+  { key: 'cloud', label: 'Cloud' },
+  { key: 'programming', label: 'Programming' },
+  { key: 'ai', label: 'AI & Data' },
+]
+
+export const CERTIFICATIONS = [
+  {
+    id: 'ai-prompting-program',
+    title: 'AI Prompting for Automation Level III',
+    issuer: 'Advanced Institute of Technology × StackTrek',
+    date: 'May 11–15, 2026',
+    category: 'ai',
+    image: '/images/certs/ai-prompting-program.webp',
+    credentialId: 'SAUT-CKFPU7ZJ5',
+    verify: '',
+    detail:
+      'Program completion covering data privacy and ethics, basic automation with AI tools, and generative AI.',
+  },
+  {
+    id: 'ai-automation-techniques',
+    title: 'Implement Basic Automation Techniques Using AI Tools',
+    issuer: 'Advanced Institute of Technology × StackTrek',
+    date: 'May 15, 2026',
+    category: 'ai',
+    image: '/images/certs/ai-automation-techniques.webp',
+    credentialId: 'SAUT-J3WSJDFJD',
+    verify: '',
+    detail: 'Micro-credential course. Passed the institutional competency assessment.',
+  },
+  {
+    id: 'ai-generative',
+    title: 'Utilize Generative AI',
+    issuer: 'Advanced Institute of Technology × StackTrek',
+    date: 'May 13, 2026',
+    category: 'ai',
+    image: '/images/certs/ai-generative.webp',
+    credentialId: 'SAUT-593DSFVYA',
+    verify: '',
+    detail: 'Micro-credential course. Passed the institutional competency assessment.',
+  },
+  {
+    id: 'ai-data-privacy',
+    title: 'Ensure Compliance with Data Privacy and Ethics',
+    issuer: 'Advanced Institute of Technology × StackTrek',
+    date: 'May 13, 2026',
+    category: 'ai',
+    image: '/images/certs/ai-data-privacy.webp',
+    credentialId: 'SAUT-H6R8F59XT',
+    verify: '',
+    detail: 'Micro-credential course. Passed the institutional competency assessment.',
+  },
+  {
+    id: 'aws-cloud-architecting',
+    title: 'AWS Academy Graduate: Cloud Architecting',
+    issuer: 'AWS Academy',
+    date: 'Dec 6, 2025',
+    category: 'cloud',
+    image: '/images/certs/aws-cloud-architecting.webp',
+    verify: 'https://www.credly.com/go/kRCEEwKO',
+    detail: 'Training badge for 60 course hours.',
+  },
+  {
+    id: 'sololearn-c',
+    title: 'Introduction to C',
+    issuer: 'SoloLearn',
+    date: 'Nov 23, 2025',
+    category: 'programming',
+    image: '/images/certs/sololearn-c.webp',
+    credentialId: 'CC-U26G4YAX',
+    verify: '',
+    detail: 'Theoretical and practical understanding of C.',
+  },
+  {
+    id: 'sololearn-java',
+    title: 'Introduction to Java',
+    issuer: 'SoloLearn',
+    date: 'Nov 21, 2025',
+    category: 'programming',
+    image: '/images/certs/sololearn-java.webp',
+    credentialId: 'CC-UO7UVBLB',
+    verify: '',
+    detail: 'Theoretical and practical understanding of Java.',
+  },
+  {
+    id: 'aws-cloud-foundations',
+    title: 'AWS Academy Graduate: Cloud Foundations',
+    issuer: 'AWS Academy',
+    date: 'Sep 25, 2025',
+    category: 'cloud',
+    image: '/images/certs/aws-cloud-foundations.webp',
+    verify: 'https://www.credly.com/go/NxFY17m3',
+    detail: 'Training badge for 20 course hours.',
+  },
+  {
+    id: 'kaggle-data-viz',
+    title: 'Data Visualization',
+    issuer: 'Kaggle',
+    date: 'Sep 7, 2024',
+    category: 'ai',
+    image: '/images/certs/kaggle-data-viz.webp',
+    verify: '',
+    detail: 'Kaggle Learn course on building and reading charts with data.',
+  },
+  {
+    id: 'sololearn-html',
+    title: 'Introduction to HTML',
+    issuer: 'SoloLearn',
+    date: 'Feb 6, 2024',
+    category: 'programming',
+    image: '/images/certs/sololearn-html.webp',
+    credentialId: 'CC-NJTSOFFJ',
+    verify: '',
+    detail: 'Theoretical and practical understanding of HTML.',
   },
 ]
 

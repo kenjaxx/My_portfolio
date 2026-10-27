@@ -5,7 +5,7 @@ export default defineConfig({
   plugins: [react()],
 
   // Pre-bundle everything at startup. Your lazy-loaded parts (Three.js, the
-  // carousel, the glass tiles) import these late, which makes Vite re-bundle
+  // carousels, gsap) import these late, which makes Vite re-bundle
   // mid-session and causes the white screen.
   optimizeDeps: {
     include: [
@@ -16,6 +16,7 @@ export default defineConfig({
       'motion/react',
       'react-icons/fa',
       'three',
+      'gsap',
     ],
   },
 })
