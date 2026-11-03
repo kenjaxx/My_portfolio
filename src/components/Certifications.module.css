@@ -6,10 +6,9 @@
     rgba(124, 58, 237, 0.03) 50%,
     transparent 100%
   );
-  /* Same off-screen saving index.css gives the other sections. Declared here
-     because this section no longer has the old #skills id. */
-  content-visibility: auto;
-  contain-intrinsic-size: auto 1200px;
+  /* No content-visibility here on purpose. The carousel is 3D and only mounts
+     once the section is visible, and skipping / re-rendering it as you scroll
+     past made the browser throw away and re-rasterise its layers every time. */
 }
 
 /* Wider than the other sections so the bigger carousel has room. */

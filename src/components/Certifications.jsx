@@ -8,6 +8,11 @@ import styles from './Certifications.module.css'
 // Lazy chunk (it pulls in gsap), so it stays out of the first paint.
 const DepthCarousel = lazy(() => import('./DepthCarousel'))
 
+// The carousel uses a smaller copy of each certificate ("name.webp", made by
+// scripts/optimize-certs.mjs). The big "name-full.webp" is only loaded by the
+// "View full size" viewer, and as a fallback if the small copy is missing.
+const thumbOf = (src) => src.replace(/-full\.webp$/, '.webp')
+
 function useIsMobile() {
   const [mobile, setMobile] = useState(
     () => typeof window !== 'undefined' && window.matchMedia('(max-width: 640px)').matches
@@ -61,10 +66,13 @@ export default function Certifications() {
   )
 
   // Rebuilt only when the filter changes, so the carousel isn't reset by other renders.
+  // `image` is the small copy; `fallback` is the full-size file, used only if the
+  // small one fails to load.
   const items = useMemo(
     () =>
       visible.map((cert) => ({
-        image: cert.image,
+        image: thumbOf(cert.image),
+        fallback: cert.image,
         alt: `${cert.title} certificate from ${cert.issuer}`,
       })),
     [visible]

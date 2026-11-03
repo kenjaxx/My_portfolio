@@ -6,9 +6,11 @@
 
 import {
   forwardRef,
+  memo,
   useCallback,
   useEffect,
   useImperativeHandle,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -25,17 +27,30 @@ const DEFAULT_ITEMS = [
   { image: 'https://picsum.photos/seed/depth6/800/1000', alt: 'Slide 6' },
 ]
 
+// 1x1 transparent GIF. Cards that are still far away from the front get this
+// instead of their real image, so nothing is downloaded or decoded for them yet.
+const BLANK = 'data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=='
+
 const clamp = (v, min, max) => Math.min(Math.max(v, min), max)
 const normalizeItem = (it) => (typeof it === 'string' ? { image: it, alt: '' } : it)
 
 /*
   Changes from the stock component:
-  - No CSS `filter` (blur / brightness) on the cards. Filters on several large,
-    3D-transformed layers are re-rasterised every frame and were the main cause
-    of lag. Cards are darkened with the overlay span's opacity instead, which
-    the GPU can do without re-rasterising anything.
-  - Cards that are fully hidden get `visibility: hidden`, so they aren't painted.
-  - The old `blur` prop is gone; nothing needs it any more.
+  - No CSS `filter` (blur / brightness) on the cards. Cards are darkened with
+    the overlay span's opacity instead, which the GPU can do for free.
+  - No `overflow: hidden` + border-radius on the cards (see the CSS file). That
+    combination makes the browser clip every 3D card through an extra surface
+    on every frame. The image and the tint carry the rounded corners instead.
+  - Cards that are fully hidden get `visibility: hidden` and lose their
+    `will-change` layer, and they are skipped entirely while they stay hidden.
+  - Images load lazily: a card only gets its real `src` once it is within
+    `visibleCards + 1` places of the front, and keeps it afterwards.
+  - An item can have a `fallback` image, used once if `image` fails to load.
+  - The wheel listener is passive, so scrolling the page with the mouse over the
+    carousel is never held up. Horizontal wheel / trackpad swipes still turn it.
+  - The first layout runs before paint (useLayoutEffect), so cards never flash
+    stacked on top of each other.
+  - Wrapped in `memo`, so parent re-renders don't re-render the cards.
   - A ref handle: `ref.current.goTo(index)` slides the carousel to a card. The
     Certifications lightbox uses it to bring the carousel to the certificate
     you were last looking at when the lightbox closes.
@@ -73,6 +88,8 @@ const DepthCarousel = forwardRef(function DepthCarousel(
   const stageRef = useRef(null)
   const cardRefs = useRef([])
   const overlayRefs = useRef([])
+  const shownRef = useRef([]) // last known visible / hidden state of each card
+  const loadedRef = useRef(new Set()) // cards that have been given their real image
 
   const posRef = useRef(0)
   const focusRef = useRef(0)
@@ -90,7 +107,7 @@ const DepthCarousel = forwardRef(function DepthCarousel(
 
   // Keep the latest props in refs so the event handlers below never go stale.
   // Declared before every other effect, so the refs are current when they run.
-  useEffect(() => {
+  useLayoutEffect(() => {
     onChangeRef.current = onChange
     cfgRef.current = {
       count,
@@ -114,6 +131,7 @@ const DepthCarousel = forwardRef(function DepthCarousel(
     if (!n) return
     const dir = cfg.tiltDirection === 'left' ? -1 : 1
     const sc = scaleRef.current
+    const shownState = shownRef.current
 
     for (let i = 0; i < n; i++) {
       const el = cardRefs.current[i]
@@ -125,24 +143,37 @@ const DepthCarousel = forwardRef(function DepthCarousel(
         if (d > n / 2) d -= n
       }
 
-      const back = Math.max(0, d)
       const az = Math.abs(d)
-      const shown = az <= cfg.visibleCards + 0.5
+      const inRange = az <= cfg.visibleCards + 0.5
+      const opacity = inRange ? (d < 0 ? Math.max(0, 1 + d) : 1) : 0
 
+      // Fully hidden: switch it off once, then skip it until it comes back.
+      if (opacity < 0.01) {
+        if (shownState[i] !== false) {
+          el.style.visibility = 'hidden'
+          el.style.pointerEvents = 'none'
+          el.style.willChange = 'auto'
+          shownState[i] = false
+        }
+        continue
+      }
+
+      if (shownState[i] !== true) {
+        el.style.visibility = 'visible'
+        el.style.willChange = 'transform, opacity'
+        shownState[i] = true
+      }
+
+      const back = Math.max(0, d)
       const tz = -cfg.depth * d
       const tx = dir * cfg.spread * d
       const ry = dir * cfg.tilt * clamp(d, 0, 1)
-
-      let opacity = d < 0 ? Math.max(0, 1 + d) : 1
-      if (!shown) opacity = 0
-
       const zi = Math.round(2000 - d * 20)
 
       el.style.transform = `translate(-50%, -50%) scale(${sc}) translate3d(${tx.toFixed(2)}px, 0, ${tz.toFixed(2)}px) rotateY(${ry.toFixed(3)}deg)`
       el.style.opacity = opacity.toFixed(3)
-      el.style.visibility = opacity < 0.01 ? 'hidden' : 'visible'
       el.style.zIndex = String(zi)
-      el.style.pointerEvents = shown && opacity > 0.05 ? 'auto' : 'none'
+      el.style.pointerEvents = opacity > 0.05 ? 'auto' : 'none'
 
       // Darkening for cards further back: a plain overlay instead of a filter.
       const ov = overlayRefs.current[i]
@@ -230,14 +261,14 @@ const DepthCarousel = forwardRef(function DepthCarousel(
   useEffect(() => {
     const el = rootRef.current
     if (!el) return
+    // Passive on purpose: a non-passive wheel listener makes the browser wait for
+    // the main thread before it can scroll the page, which shows up as scroll lag
+    // whenever the mouse is over the carousel.
     const onWheel = (e) => {
       const cfg = cfgRef.current
       if (cfg.count < 2) return
       // Only horizontal gestures (trackpad swipe, Shift + wheel) turn the carousel.
-      // A normal vertical wheel is left alone so the page keeps scrolling when the
-      // cursor passes over the carousel.
       if (Math.abs(e.deltaX) <= Math.abs(e.deltaY)) return
-      e.preventDefault()
       tweenRef.current?.kill()
       const delta = e.deltaMode === 1 ? e.deltaX * 24 : e.deltaX
       const step = clamp(delta / (cfg.cardWidth * 0.9), -0.6, 0.6)
@@ -246,7 +277,7 @@ const DepthCarousel = forwardRef(function DepthCarousel(
       if (wheelTimerRef.current) clearTimeout(wheelTimerRef.current)
       wheelTimerRef.current = setTimeout(() => setFocus(Math.round(posRef.current), true), 130)
     }
-    el.addEventListener('wheel', onWheel, { passive: false })
+    el.addEventListener('wheel', onWheel, { passive: true })
     return () => {
       el.removeEventListener('wheel', onWheel)
       if (wheelTimerRef.current) clearTimeout(wheelTimerRef.current)
@@ -369,7 +400,8 @@ const DepthCarousel = forwardRef(function DepthCarousel(
     }
   }, [autoplay, autoplayDelay, count, navigateBy])
 
-  useEffect(() => {
+  // Runs before the first paint, so cards never show up stacked in one spot.
+  useLayoutEffect(() => {
     layout(posRef.current)
   }, [
     layout,
@@ -410,31 +442,50 @@ const DepthCarousel = forwardRef(function DepthCarousel(
       onKeyDown={onKeyDown}
     >
       <div className="depth-carousel__stage" ref={stageRef}>
-        {data.map((item, i) => (
-          <div
-            key={i}
-            className="depth-carousel__card"
-            ref={(el) => (cardRefs.current[i] = el)}
-            style={{ width: cardWidth, height: cardHeight, borderRadius: radius }}
-            aria-roledescription="slide"
-            aria-label={`${i + 1} of ${count}`}
-            aria-hidden={active !== i}
-            onClick={() => onCardClick(i)}
-          >
-            <img
-              className="depth-carousel__img"
-              src={item.image}
-              alt={item.alt || ''}
-              draggable={false}
-              decoding="async"
-            />
-            <span
-              className="depth-carousel__tint"
-              ref={(el) => (overlayRefs.current[i] = el)}
-              style={{ background: tint }}
-            />
-          </div>
-        ))}
+        {data.map((item, i) => {
+          // Distance from the front card. Cards from one behind the front up to
+          // `visibleCards + 1` ahead get their real image; the rest wait.
+          let d = i - active
+          if (loop && count > 1) {
+            d = ((d % count) + count) % count
+            if (d > count / 2) d -= count
+          }
+          if (d >= -1 && d <= visibleCards + 1) loadedRef.current.add(i)
+          const src = loadedRef.current.has(i) ? item.image : BLANK
+
+          return (
+            <div
+              key={i}
+              className="depth-carousel__card"
+              ref={(el) => (cardRefs.current[i] = el)}
+              style={{ width: cardWidth, height: cardHeight, borderRadius: radius }}
+              aria-roledescription="slide"
+              aria-label={`${i + 1} of ${count}`}
+              aria-hidden={active !== i}
+              onClick={() => onCardClick(i)}
+            >
+              <img
+                className="depth-carousel__img"
+                src={src}
+                alt={item.alt || ''}
+                draggable={false}
+                decoding="async"
+                onError={(e) => {
+                  // The small copy is missing: fall back to the full-size file, once.
+                  const img = e.currentTarget
+                  if (!item.fallback || img.dataset.fallback) return
+                  img.dataset.fallback = '1'
+                  img.src = item.fallback
+                }}
+              />
+              <span
+                className="depth-carousel__tint"
+                ref={(el) => (overlayRefs.current[i] = el)}
+                style={{ background: tint }}
+              />
+            </div>
+          )
+        })}
       </div>
 
       {showControls && count > 1 && (
@@ -495,4 +546,4 @@ const DepthCarousel = forwardRef(function DepthCarousel(
   )
 })
 
-export default DepthCarousel
+export default memo(DepthCarousel)
