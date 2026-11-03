@@ -187,7 +187,7 @@ export default function Certifications() {
           Certifications
         </motion.h2>
 
-        {/* Tabs, then the actions for the card in front, both centred. */}
+        {/* Tabs, then the action for the card in front, both centred. */}
         <motion.div
           className={styles.toolbar}
           initial={{ opacity: 0, y: 20 }}
@@ -232,19 +232,6 @@ export default function Certifications() {
                 View full size
                 <span aria-hidden="true">⤢</span>
               </button>
-              {current.verify && (
-                <a
-                  href={current.verify}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="glass-btn glass-btn--sm glass-btn--mono"
-                >
-                  Verify credential
-                  <span className="glass-btn__arrow" aria-hidden="true">
-                    →
-                  </span>
-                </a>
-              )}
             </div>
           )}
         </motion.div>
