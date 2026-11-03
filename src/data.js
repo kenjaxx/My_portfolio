@@ -67,7 +67,7 @@ export const SKILL_GROUPS = [
   issuer        who issued it
   date          shown as written
   category      'cloud' | 'programming' | 'ai'   (see CERT_FILTERS)
-  image         file in public/images/certs/ (rendered 1040px wide WebP)
+  image         file in public/images/certs/ (the "-full.webp" versions)
   credentialId  optional, shown next to the date
   verify        optional link to the public verification page (adds a "Verify credential" button)
   detail        one or two lines under the title
@@ -86,7 +86,7 @@ export const CERTIFICATIONS = [
     issuer: 'Advanced Institute of Technology × StackTrek',
     date: 'May 11–15, 2026',
     category: 'ai',
-    image: '/images/certs/ai-prompting-program.webp',
+    image: '/images/certs/ai-prompting-program-full.webp',
     credentialId: 'SAUT-CKFPU7ZJ5',
     verify: '',
     detail:
@@ -98,7 +98,7 @@ export const CERTIFICATIONS = [
     issuer: 'Advanced Institute of Technology × StackTrek',
     date: 'May 15, 2026',
     category: 'ai',
-    image: '/images/certs/ai-automation-techniques.webp',
+    image: '/images/certs/ai-automation-techniques-full.webp',
     credentialId: 'SAUT-J3WSJDFJD',
     verify: '',
     detail: 'Micro-credential course. Passed the institutional competency assessment.',
@@ -109,7 +109,7 @@ export const CERTIFICATIONS = [
     issuer: 'Advanced Institute of Technology × StackTrek',
     date: 'May 13, 2026',
     category: 'ai',
-    image: '/images/certs/ai-generative.webp',
+    image: '/images/certs/ai-generative-full.webp',
     credentialId: 'SAUT-593DSFVYA',
     verify: '',
     detail: 'Micro-credential course. Passed the institutional competency assessment.',
@@ -120,7 +120,7 @@ export const CERTIFICATIONS = [
     issuer: 'Advanced Institute of Technology × StackTrek',
     date: 'May 13, 2026',
     category: 'ai',
-    image: '/images/certs/ai-data-privacy.webp',
+    image: '/images/certs/ai-data-privacy-full.webp',
     credentialId: 'SAUT-H6R8F59XT',
     verify: '',
     detail: 'Micro-credential course. Passed the institutional competency assessment.',
@@ -131,7 +131,7 @@ export const CERTIFICATIONS = [
     issuer: 'AWS Academy',
     date: 'Dec 6, 2025',
     category: 'cloud',
-    image: '/images/certs/aws-cloud-architecting.webp',
+    image: '/images/certs/aws-cloud-architecting-full.webp',
     verify: 'https://www.credly.com/go/kRCEEwKO',
     detail: 'Training badge for 60 course hours.',
   },
@@ -141,7 +141,7 @@ export const CERTIFICATIONS = [
     issuer: 'SoloLearn',
     date: 'Nov 23, 2025',
     category: 'programming',
-    image: '/images/certs/sololearn-c.webp',
+    image: '/images/certs/sololearn-c-full.webp',
     credentialId: 'CC-U26G4YAX',
     verify: '',
     detail: 'Theoretical and practical understanding of C.',
@@ -152,7 +152,7 @@ export const CERTIFICATIONS = [
     issuer: 'SoloLearn',
     date: 'Nov 21, 2025',
     category: 'programming',
-    image: '/images/certs/sololearn-java.webp',
+    image: '/images/certs/sololearn-java-full.webp',
     credentialId: 'CC-UO7UVBLB',
     verify: '',
     detail: 'Theoretical and practical understanding of Java.',
@@ -163,7 +163,7 @@ export const CERTIFICATIONS = [
     issuer: 'AWS Academy',
     date: 'Sep 25, 2025',
     category: 'cloud',
-    image: '/images/certs/aws-cloud-foundations.webp',
+    image: '/images/certs/aws-cloud-foundations-full.webp',
     verify: 'https://www.credly.com/go/NxFY17m3',
     detail: 'Training badge for 20 course hours.',
   },
@@ -173,7 +173,7 @@ export const CERTIFICATIONS = [
     issuer: 'Kaggle',
     date: 'Sep 7, 2024',
     category: 'ai',
-    image: '/images/certs/kaggle-data-viz.webp',
+    image: '/images/certs/kaggle-data-viz-full.webp',
     verify: '',
     detail: 'Kaggle Learn course on building and reading charts with data.',
   },
@@ -183,7 +183,7 @@ export const CERTIFICATIONS = [
     issuer: 'SoloLearn',
     date: 'Feb 6, 2024',
     category: 'programming',
-    image: '/images/certs/sololearn-html.webp',
+    image: '/images/certs/sololearn-html-full.webp',
     credentialId: 'CC-NJTSOFFJ',
     verify: '',
     detail: 'Theoretical and practical understanding of HTML.',
