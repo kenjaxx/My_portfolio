@@ -42,7 +42,9 @@
   isolation: isolate;
 }
 
-/* Soft glow behind the photo that slowly changes shape */
+/* Soft glow behind the photo. It only turns and swells (transform), which the
+   GPU handles on its own. It used to also animate border-radius, which forces
+   a repaint on every frame. */
 .blob {
   position: absolute;
   left: 5%;
@@ -50,6 +52,7 @@
   width: 90%;
   height: 90%;
   z-index: 0;
+  border-radius: 50%;
   background: radial-gradient(
     circle at 30% 30%,
     rgba(0, 212, 255, 0.42),
@@ -95,7 +98,7 @@
   box-shadow: 0 0 8px var(--purple);
 }
 
-/* The photo: now a full circle that fills almost the whole stage,
+/* The photo: a full circle that fills almost the whole stage,
    matching the dashed orbit ring, so there's no visible gap or
    mismatched background around it. */
 .arch {
@@ -141,11 +144,9 @@
 @keyframes blobMorph {
   0%,
   100% {
-    border-radius: 50% 50% 45% 55%;
     transform: rotate(0deg) scale(1);
   }
   50% {
-    border-radius: 60% 40% 55% 45%;
     transform: rotate(180deg) scale(1.08);
   }
 }
@@ -183,7 +184,9 @@
   color: #f8fafc;
 }
 
-/* A light sweep slides across "Full Stack" */
+/* "Full Stack" rests on the cyan-white-purple look from the old design.
+   The .shine class (added from About.jsx once the section is in view) plays
+   one light sweep that ends exactly on that resting position. */
 .headingGradient {
   background: linear-gradient(
     110deg,
@@ -193,18 +196,22 @@
     var(--cyan) 80%
   );
   background-size: 250% 100%;
+  background-position: 50% 0;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  animation: shine 5s linear infinite;
+}
+
+.shine {
+  animation: shine 2.4s cubic-bezier(0.22, 0.61, 0.36, 1) 1 both;
 }
 
 @keyframes shine {
   from {
-    background-position: 200% 0;
+    background-position: 140% 0;
   }
   to {
-    background-position: -200% 0;
+    background-position: 50% 0;
   }
 }
 
@@ -215,9 +222,16 @@
   max-width: 560px;
 }
 
-/* --- Flip cards ---
+/* --- Spotlight flip cards ---
 
    --c (set inline from ABOUT.cards in data.js) is the card's accent color.
+   --mx / --my (set by the pointer handler in About.jsx) are the cursor
+   position inside the card, in px.
+
+   The front face has three layers of light:
+     ::before  a soft glow that follows the cursor
+     ::after   a thin bright ring on the edge, strongest near the cursor
+     .icon     the accent-colored icon tile, which lifts a little on hover
    The turn is a 3D rotation of .inner. Both faces sit on top of each other
    and hide their backs (backface-visibility), so only one shows at a time. */
 
@@ -249,6 +263,8 @@
 }
 
 .card {
+  --mx: 50%;
+  --my: 0%;
   display: block;
   position: relative;
   width: 100%;
@@ -292,7 +308,7 @@
   padding: 1.1rem 1.2rem;
   border-radius: 12px;
   background: #111118;
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   overflow: hidden;
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
@@ -303,8 +319,56 @@
   justify-content: flex-end;
 }
 
+/* Soft glow that follows the cursor */
+.front::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(
+    240px circle at var(--mx) var(--my),
+    color-mix(in srgb, var(--c) 22%, transparent),
+    transparent 70%
+  );
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+/* Thin ring on the edge that brightens near the cursor.
+   Same masking trick as the navbar and the glass buttons. */
+.front::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: radial-gradient(170px circle at var(--mx) var(--my), var(--c), transparent 70%);
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+/* Keyboard focus lights the card too, so keyboard users get the same feedback. */
+.card:focus-visible .front::before,
+.card:focus-visible .front::after {
+  opacity: 1;
+}
+
 @media (hover: hover) {
-  .card:hover .front {
+  .card:hover .front::before,
+  .card:hover .front::after {
+    opacity: 1;
+  }
+
+  .card:hover .icon {
+    transform: translateY(-3px) scale(1.08);
+    background: color-mix(in srgb, var(--c) 22%, transparent);
     border-color: color-mix(in srgb, var(--c) 60%, transparent);
   }
 }
@@ -316,31 +380,43 @@
   transform: rotateY(180deg);
 }
 
-/* The big faint number in the corner of the front */
-.wm {
+/* Icon tile in the top left of the front face */
+.icon {
   position: absolute;
-  right: 0.9rem;
-  bottom: -0.9rem;
-  font-family: var(--font-mono);
-  font-size: 4.8rem;
-  font-weight: 700;
-  line-height: 1;
+  top: 1.1rem;
+  left: 1.2rem;
+  z-index: 1;
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  border-radius: 11px;
+  font-size: 1.1rem;
   color: var(--c);
-  opacity: 0.12;
-  pointer-events: none;
-  user-select: none;
+  background: color-mix(in srgb, var(--c) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--c) 35%, transparent);
+  transition:
+    transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1),
+    background 0.25s ease,
+    border-color 0.25s ease;
 }
 
-.accent {
-  width: 28px;
-  height: 3px;
-  border-radius: 2px;
-  background: var(--c);
-  margin-bottom: 0.75rem;
+/* Small card number in the top right corner */
+.num {
+  position: absolute;
+  top: 1.2rem;
+  right: 1.2rem;
+  z-index: 1;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.12em;
+  color: var(--text-dim);
+  user-select: none;
 }
 
 .cardTitle {
   position: relative;
+  z-index: 1;
   font-size: 1.2rem;
   font-weight: 700;
   line-height: 1.2;
@@ -349,6 +425,7 @@
 
 .hint {
   position: relative;
+  z-index: 1;
   margin-top: 0.4rem;
   font-family: var(--font-mono);
   font-size: 0.72rem;
@@ -420,26 +497,32 @@
   box-shadow: 0 0 10px var(--cyan);
 }
 
-/* The current role: glowing green dot that pulses */
+/* The current role: a green dot with a ring that spreads out and fades.
+   The ring is a separate layer that only scales and fades (transform and
+   opacity), so it never repaints. The old version animated box-shadow. */
 .dotNow {
   background: var(--green);
-  box-shadow:
-    0 0 0 0 rgba(0, 255, 136, 0.55),
-    0 0 10px var(--green);
-  animation: nowPulse 2s ease-in-out infinite;
+  box-shadow: 0 0 10px var(--green);
 }
 
-@keyframes nowPulse {
-  0%,
-  100% {
-    box-shadow:
-      0 0 0 0 rgba(0, 255, 136, 0.55),
-      0 0 10px var(--green);
+.dotNow::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 2px solid var(--green);
+  animation: nowRing 2s ease-out infinite;
+  pointer-events: none;
+}
+
+@keyframes nowRing {
+  from {
+    transform: scale(1);
+    opacity: 0.7;
   }
-  50% {
-    box-shadow:
-      0 0 0 8px rgba(0, 255, 136, 0),
-      0 0 16px var(--green);
+  to {
+    transform: scale(2.6);
+    opacity: 0;
   }
 }
 
@@ -518,17 +601,17 @@
 @media (prefers-reduced-motion: reduce) {
   .orbit,
   .blob,
-  .dotNow {
+  .shine {
     animation: none;
   }
 
-  .headingGradient {
-    animation: none;
-    background-position: 0 0;
+  .dotNow::after {
+    display: none;
   }
 
   .inner,
-  .face {
+  .face,
+  .icon {
     transition: none;
   }
 }

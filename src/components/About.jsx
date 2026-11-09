@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion'
-import { useMemo, useState, lazy, Suspense } from 'react'
+import { useMemo, useRef, useState, lazy, Suspense } from 'react'
+import { FaLayerGroup, FaShieldAlt, FaBolt, FaRocket } from 'react-icons/fa'
 import { useInView } from '../hooks/useInView'
 import { PROFILE, ABOUT } from '../data'
 import { getDeviceTier } from '../utils/deviceTier'
@@ -36,15 +37,55 @@ const cardIn = {
   }),
 }
 
-/* ---------- Flip cards ----------
+// One icon per card, keyed by the card's id in data.js.
+const CARD_ICONS = {
+  fullstack: FaLayerGroup,
+  ownership: FaShieldAlt,
+  learn: FaBolt,
+  ready: FaRocket,
+}
+
+// How long (ms) a measured card position is reused while the mouse moves.
+// Measuring on every mouse move would force a layout each time.
+const RECT_TTL = 250
+
+/* ---------- Spotlight flip cards ----------
 
    Each card is a real <button>, so it works with mouse, touch and keyboard
    (Enter / Space) and is announced as a toggle by screen readers. Both faces
    stay in the DOM, so the title and the text are always readable by assistive
    tech, whichever side is showing. The turn itself is pure CSS (see
-   About.module.css). */
+   About.module.css).
+
+   Spotlight: while a mouse moves over the card, --mx / --my (px, relative to
+   the card) are written straight onto the element. CSS uses them to place a
+   soft glow and a bright edge ring under the cursor. No React state is
+   involved, so moving the mouse never re-renders anything, and the card's
+   position is cached for a moment so a mouse move does no layout reads. */
 
 function FlipCard({ card, index, flipped, onToggle, inView }) {
+  const Icon = CARD_ICONS[card.id] ?? FaLayerGroup
+  const rectCache = useRef({ rect: null, at: 0 })
+
+  const handlePointerMove = (e) => {
+    if (e.pointerType !== 'mouse') return
+    const el = e.currentTarget
+    const cache = rectCache.current
+    const now = performance.now()
+
+    if (!cache.rect || now - cache.at > RECT_TTL) {
+      cache.rect = el.getBoundingClientRect()
+      cache.at = now
+    }
+
+    el.style.setProperty('--mx', `${e.clientX - cache.rect.left}px`)
+    el.style.setProperty('--my', `${e.clientY - cache.rect.top}px`)
+  }
+
+  const handlePointerLeave = () => {
+    rectCache.current.rect = null
+  }
+
   return (
     <motion.li
       className={styles.cardItem}
@@ -59,13 +100,17 @@ function FlipCard({ card, index, flipped, onToggle, inView }) {
         style={{ '--c': card.color }}
         aria-pressed={flipped}
         onClick={onToggle}
+        onPointerMove={handlePointerMove}
+        onPointerLeave={handlePointerLeave}
       >
         <span className={styles.inner}>
           <span className={`${styles.face} ${styles.front}`}>
-            <span className={styles.wm} aria-hidden="true">
+            <span className={styles.icon} aria-hidden="true">
+              <Icon />
+            </span>
+            <span className={styles.num} aria-hidden="true">
               {card.num}
             </span>
-            <span className={styles.accent} aria-hidden="true" />
             <span className={styles.cardTitle}>{card.title}</span>
             <span className={styles.hint} aria-hidden="true">
               <span className={styles.hintTouch}>Tap to flip</span>
@@ -157,7 +202,7 @@ function supportsWebGL() {
     const gl = canvas.getContext('webgl2') || canvas.getContext('webgl')
     webglSupport = Boolean(gl)
     // Free the probe context right away so it doesn't count against the
-    // limit (RetroGrid, GlassIcons and Lanyard need theirs).
+    // limit (RetroGrid and Lanyard need theirs).
     gl?.getExtension('WEBGL_lose_context')?.loseContext()
   } catch {
     webglSupport = false
@@ -291,7 +336,12 @@ export default function About() {
             </motion.span>
 
             <motion.h2 className={styles.heading} {...reveal(2)}>
-              <span className={styles.headingGradient}>{ABOUT.headingGradient}</span>{' '}
+              {/* The light sweep plays once when the section scrolls into view,
+                  then rests. (An endless animation on clipped text repaints it
+                  on every frame.) */}
+              <span className={`${styles.headingGradient} ${inView ? styles.shine : ''}`}>
+                {ABOUT.headingGradient}
+              </span>{' '}
               {ABOUT.headingRest}
             </motion.h2>
 
