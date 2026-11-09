@@ -36,11 +36,12 @@
 /* --- Showcase header above the ring --- */
 
 /* Fixed minimum height, so the ring below doesn't jump when a longer
-   project name wraps onto two lines. */
+   project name wraps onto two lines. It was 10rem; trimmed to 8.75rem
+   (together with a slightly smaller big number) to give the ring more room. */
 .showcase {
   text-align: center;
   padding: 0 2rem;
-  min-height: 10rem;
+  min-height: 8.75rem;
 }
 
 /* The big number, the name and the tagline share one grid. The number and
@@ -55,7 +56,7 @@
 .bigNum {
   grid-area: 1 / 1;
   font-family: var(--font-mono);
-  font-size: clamp(4.5rem, 12vw, 7rem);
+  font-size: clamp(4.5rem, 10vw, 6.25rem);
   font-weight: 700;
   line-height: 1;
   letter-spacing: 0.05em;
@@ -89,16 +90,19 @@
 /* --- 3D ring --- */
 
 /* The carousel fills its parent, so this box needs an explicit height.
+   The carousel scales its cards down to fit this box, so this height is what
+   decides how big the project cards look.
    The height follows the screen: whatever is left under the heading, the
-   showcase header and the control dock (about 31rem in total), never smaller
-   than 320px and never taller than 650px. The carousel scales its cards to
-   fit this box on its own.
+   showcase header and the control dock (about 26rem in total; it was 31rem
+   before the ring was enlarged), never smaller than 360px and never taller
+   than 620px. Above about 573px the cards stop growing anyway (they hit their
+   full 800px width), so there is no point in a taller box.
    The first `height` is a fallback for browsers without `svh`. */
 .stage {
   position: relative;
   width: 100%;
-  height: clamp(320px, calc(100vh - 31rem), 650px);
-  height: clamp(320px, calc(100svh - 31rem), 650px);
+  height: clamp(360px, calc(100vh - 26rem), 620px);
+  height: clamp(360px, calc(100svh - 26rem), 620px);
 }
 
 /* --- Control dock: previous, View project, next --- */
@@ -524,7 +528,9 @@
     font-size: clamp(3.8rem, 20vw, 5rem);
   }
 
-  /* Phones: smaller reserve, because the heading wraps more. */
+  /* Phones: smaller reserve, because the heading wraps more. The cards are
+     limited by the screen width here, not the height, so this box is
+     unchanged. */
   .stage {
     height: clamp(280px, calc(100vh - 27rem), 380px);
     height: clamp(280px, calc(100svh - 27rem), 380px);

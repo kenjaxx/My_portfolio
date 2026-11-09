@@ -26,6 +26,21 @@ const REPEATS = 1
 // Then it starts spinning again by itself.
 const RESUME_DELAY = 2000
 
+// Card size on the ring. This is the largest the cards can ever be (in CSS
+// pixels); the carousel scales them down on its own to fit the box that
+// .stage in Projects.module.css gives it, so the on-screen size is decided by
+// that box on most screens, and by this number on big, tall ones.
+//   CARD_WIDTH   was 680. 800 keeps the cover images sharp (they are 1360px
+//                wide) while letting big screens show larger cards.
+//   CARD_ASPECT  width / height of each card. Unchanged.
+//   CARD_GAP     space between cards on the ring. Scaled up with the cards
+//                (24 * 800 / 680, rounded) so the ring keeps the same look.
+//   CARD_RADIUS  corner radius, scaled the same way (18 -> 21).
+const CARD_WIDTH = 800
+const CARD_ASPECT = 1.6
+const CARD_GAP = 28
+const CARD_RADIUS = 21
+
 // The ring itself has no captions any more. The project name, number and
 // tagline are drawn above the carousel (see the "showcase" block below).
 const ITEMS = Array.from({ length: REPEATS }, () => SHOWN)
@@ -446,10 +461,10 @@ export default function Projects() {
               items={ITEMS}
               preset="cylinder"
               intro="rise"
-              cardWidth={680}
-              aspectRatio={1.6}
-              gap={24}
-              cornerRadius={18}
+              cardWidth={CARD_WIDTH}
+              aspectRatio={CARD_ASPECT}
+              gap={CARD_GAP}
+              cornerRadius={CARD_RADIUS}
               autoplay={paused ? 'off' : 'drift'}
               speed={12}
               direction="left"
