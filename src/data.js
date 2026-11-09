@@ -233,20 +233,6 @@ export const PROJECTS = [
     featured: false,
     color: '#7c3aed',
   },
-  {
-    id: '004',
-    title: 'House Selling Site',
-    tagline: 'A single-page property showcase',
-    problem: 'Property details are scattered and hard to act on.',
-    solution: 'A static page with pricing, room details and a gallery.',
-    result: 'Visitors schedule a tour or contact the agent in one click.',
-    tags: ['HTML', 'CSS', 'JavaScript'],
-    github: 'https://github.com/kenjaxx/house-selling-site',
-    live: 'https://kenjaxx.github.io/house-selling-site/',
-    image: '/images/house-selling-cover.webp',
-    featured: false,
-    color: '#7c3aed',
-  },
 ]
 
 // The single source of truth for contact details. Contact, Footer and Hero
@@ -313,7 +299,7 @@ export const ABOUT = {
   // For stats, `num` + `suffix` count up. `text` is shown as-is (no counting).
   stats: [
     { num: 30, suffix: '+', label: 'Technologies' },
-    { num: 4, suffix: '', label: 'Live apps' },
+    { num: 3, suffix: '', label: 'Live apps' },
     { text: '<24h', label: 'Reply time' },
   ],
 

@@ -61,7 +61,7 @@ const ENTRIES = [
     Icon: CodeIcon,
     label: "Projects",
     title: "Tons of live apps",
-    text: "Billify, Rehearse, Closet, House Selling Site, and more.",
+    text: "Billify, Rehearse, Closet, and more.",
   },
   {
     id: "education",
