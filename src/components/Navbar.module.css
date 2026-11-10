@@ -119,9 +119,7 @@
   gap: 1.5rem;
   padding: 0.4rem 0.45rem 0.4rem 1.3rem;
   border-radius: inherit;
-  background: rgba(14, 14, 24, 0.7);
-  backdrop-filter: blur(8px) saturate(140%);
-  -webkit-backdrop-filter: blur(8px) saturate(140%);
+  background: rgba(12, 12, 20, 0.92);
   overflow: hidden;
   transition: background 0.3s ease;
 }
