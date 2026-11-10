@@ -3,6 +3,7 @@ import { motion, useReducedMotion, useScroll, useTransform } from 'framer-motion
 import RetroGrid from './RetroGrid'
 import TechTimeline from './TechTimeline'
 import SplitFlapText from './SplitFlapText'
+import { STATUS } from '../status'
 import { getDeviceTier } from '../utils/deviceTier'
 import { useHeroParallax } from '../hooks/useHeroParallax'
 import styles from './Hero.module.css'
@@ -16,14 +17,26 @@ const ROLE = 'Full Stack Developer'
 const NAME_SIZE = 'min(108px, calc((100vw - 48px) / 10.8))'
 const ROLE_SIZE = 'min(34px, calc((100vw - 48px) / 18.4))'
 
+/* ---------- Colors ----------
+   Amber board. TILE_COLOR is a very dark warm brown that is almost the same as
+   the page background, so the tiles read as barely-there panels. It stays
+   opaque on purpose: the flaps must cover the tile behind them while turning.
+   GRID_COLOR is the perspective grid on the floor. It is cyan to match the rest
+   of the site; try 'rgba(255, 181, 71, 0.45)' for an all-amber hero. */
+const TILE_COLOR = '#15100a'
+const NAME_COLOR = '#ffc766'
+const ROLE_COLOR = '#e0a040'
+const GRID_COLOR = 'rgba(0, 212, 255, 0.55)'
+
 /* ---------- Entrance timing ----------
-   Fewer flips per character than before (every flip step is a React state
+   Fewer flips per character than the original (every flip step is a React state
    update plus new DOM for the flaps, so this is the main saving during the
    intro). Rough timeline:
-     name board   0.35s -> about 3.0s
-     role board   1.6s  -> about 3.4s
-     reflection   fades in at 3.2s, after the name has settled
-     scroll cue   3.4s
+     name board    0.35s -> about 3.0s
+     role board    1.6s  -> about 3.4s
+     reflection    fades in at 3.2s, after the name has settled
+     status pill   3.4s
+     scroll cue    3.6s
 */
 const NAME_FLIP_SECONDS = 0.2
 const NAME_STAGGER_SECONDS = 0.09
@@ -35,15 +48,18 @@ const ROLE_FLIPS_PER_CHAR = 4
 
 const ROLE_DELAY_MS = 1600
 const REFLECT_DELAY_MS = 3200
-const CUE_DELAY_SECONDS = 3.4
+const STATUS_DELAY_SECONDS = 3.4
+const CUE_DELAY_SECONDS = 3.6
 
-// Look shared by both boards. The cyan glow itself is in Hero.module.css.
+// Look shared by both boards. The amber rules, hinge, font and glow are in
+// Hero.module.css. glare stays at 0 on purpose: it animates a gradient on every
+// flap, which is repainted on the main thread and was a noticeable cost.
 const BOARD = {
   tileStyle: 'board',
-  tileColor: '#0f1c2b',
-  textColor: '#8ff0ff',
+  tileColor: TILE_COLOR,
+  textColor: NAME_COLOR,
   gap: '0.1em',
-  tileRadius: '0.12em',
+  tileRadius: '0.05em',
   order: 'left',
   charset: 'alphanumeric',
   glare: 0,
@@ -98,6 +114,10 @@ export default function Hero() {
   const nameScale = useTransform(scrollYProgress, [0, 1], [1, 0.55])
   const nameOpacity = useTransform(scrollYProgress, [0.1, 0.65], [1, 0])
 
+  // Status pill: drifts up a little and fades out early.
+  const statusY = useTransform(scrollYProgress, [0, 1], [0, -40])
+  const statusOpacity = useTransform(scrollYProgress, [0, 0.3], [1, 0])
+
   const gridOpacity = useTransform(scrollYProgress, [0.5, 0.95], [1, 0])
   const cueOpacity = useTransform(scrollYProgress, [0, 0.1], [1, 0])
 
@@ -126,6 +146,16 @@ export default function Hero() {
     return () => observer.disconnect()
   }, [sectionRef])
 
+  // The status link is a real anchor (so it works without JavaScript and shows
+  // up as a link to assistive tech), but we scroll smoothly instead of jumping
+  // and keep "#projects" out of the address bar.
+  const scrollToProjects = (event) => {
+    event.preventDefault()
+    document
+      .querySelector('#projects')
+      ?.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth' })
+  }
+
   return (
     <section ref={sectionRef} className={`${styles.hero} ${tier.lowPower ? styles.lite : ''}`}>
       {/* Grid floor: gridLayer fades on scroll, gridShift slides with the
@@ -138,7 +168,7 @@ export default function Hero() {
               angle={65}
               cellSize={60}
               opacity={0.4}
-              lineColor="rgba(0, 212, 255, 0.55)"
+              lineColor={GRID_COLOR}
               maxPixelRatio={0.75}
               maxFps={tier.lowPower ? 20 : 24}
             />
@@ -189,6 +219,7 @@ export default function Hero() {
                 {roleOn && (
                   <SplitFlapText
                     {...BOARD}
+                    textColor={ROLE_COLOR}
                     text={ROLE.toUpperCase()}
                     padTo={ROLE.length}
                     fontSize={ROLE_SIZE}
@@ -215,6 +246,29 @@ export default function Hero() {
 
                 <Reflection text={NAME} on={reflectOn} />
               </div>
+            </motion.div>
+          </motion.div>
+
+          {/* Availability line. It sits outside the aria-hidden board on
+              purpose, so screen readers can read it and reach the link.
+              statusLayer writes the scroll exit; the inner div writes the
+              entrance. */}
+          <motion.div
+            className={styles.statusLayer}
+            style={onScroll({ y: statusY, opacity: statusOpacity })}
+          >
+            <motion.div
+              className={styles.status}
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: STATUS_DELAY_SECONDS, duration: 0.6 }}
+            >
+              <span className={styles.statusDot} aria-hidden="true" />
+              <span className={styles.statusText}>{STATUS.short}</span>
+              <span className={styles.statusSep} aria-hidden="true" />
+              <a href="#projects" className={styles.statusLink} onClick={scrollToProjects}>
+                View my work <span aria-hidden="true">→</span>
+              </a>
             </motion.div>
           </motion.div>
         </div>
