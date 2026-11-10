@@ -20,6 +20,7 @@ export default function App() {
 
   // Download the lazy chunks after the first paint, while the browser is idle.
   // Skipped entirely on data-saver connections.
+  // SplitFlapText is no longer in this list: the Hero imports it directly now.
   useEffect(() => {
     const tier = getDeviceTier()
     if (tier.saveData) return
@@ -28,7 +29,6 @@ export default function App() {
       import('./components/SpecularButton')
       import('./components/CircularCarousel')
       import('./components/DepthCarousel')
-      import('./components/SplitFlapText')
       // Three.js is the biggest chunk, and low-power devices don't use it.
       if (!tier.lowPower) import('./components/Lanyard')
     }

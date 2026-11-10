@@ -1,14 +1,42 @@
+import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { FaGithub } from 'react-icons/fa'
 import RetroGrid from './RetroGrid'
 import TechTimeline from './TechTimeline'
-import ParticleText from './ParticleText'
-import RotatingText from './RotatingText'
-import { ROLES, CONTACT } from '../data'
+import SplitFlapText from './SplitFlapText'
+import { CONTACT } from '../data'
 import { getDeviceTier } from '../utils/deviceTier'
 import styles from './Hero.module.css'
 
 const NAME = 'Kenji Ermita'
+const ROLE = 'Full Stack Developer'
+
+// Font sizes that scale with the screen so the whole board always fits.
+// Name: 12 tiles are about 10.56em wide, so size = (screen width - padding) / 10.8,
+// capped at 108px. Role: 20 tiles are about 17.6em wide, capped at 34px.
+const NAME_SIZE = 'min(108px, calc((100vw - 48px) / 10.8))'
+const ROLE_SIZE = 'min(34px, calc((100vw - 48px) / 18.4))'
+
+// The role board starts flipping a moment after the name, so the two
+// animations play one after the other instead of at the same time.
+const ROLE_DELAY_MS = 900
+
+// Look shared by both boards. The cyan glow itself is in Hero.module.css.
+const BOARD = {
+  tileStyle: 'board',
+  tileColor: '#0f1c2b',
+  textColor: '#8ff0ff',
+  gap: '0.1em',
+  tileRadius: '0.12em',
+  flipDuration: 0.1,
+  stagger: 0.04,
+  flipsPerChar: 6,
+  order: 'left',
+  charset: 'alphanumeric',
+  glare: 0,
+  depth: 0.5,
+  intro: true,
+}
 
 function DownloadIcon() {
   return (
@@ -32,16 +60,21 @@ function DownloadIcon() {
 const tier = getDeviceTier()
 
 export default function Hero() {
+  const [roleOn, setRoleOn] = useState(false)
+
+  useEffect(() => {
+    const id = setTimeout(() => setRoleOn(true), ROLE_DELAY_MS)
+    return () => clearTimeout(id)
+  }, [])
+
   const scrollToProjects = () => {
     document.querySelector('#projects')?.scrollIntoView({ behavior: 'smooth' })
   }
 
   return (
-    <section className={styles.hero}>
+    <section className={`${styles.hero} ${tier.lowPower ? styles.lite : ''}`}>
       {/* The grid floor is a faint, slow-moving background, so it is drawn at
-          1x resolution (0.75x on weak devices) and capped at 30fps. You can't
-          see the difference, but the GPU does about a quarter of the work on
-          a retina screen. */}
+          1x resolution (0.75x on weak devices) and capped at 30fps. */}
       <RetroGrid
         angle={65}
         cellSize={60}
@@ -63,82 +96,50 @@ export default function Hero() {
 
       <div className={styles.inner}>
         <div className={styles.center}>
+          {/* The real heading for screen readers and search engines. The two
+              boards below are decoration, so they are hidden from assistive tech. */}
+          <h1 className={styles.srOnly}>
+            {NAME} – {ROLE}
+          </h1>
+
           <motion.div
-            className={styles.name}
+            className={styles.stack}
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.35, duration: 0.7 }}
+            aria-hidden="true"
           >
-            {/* The real heading. It is plain visible text, so it shows right away
-                (before the font loads and the particles are sampled) and it stays
-                available to screen readers and search engines. Once the particle
-                canvas has drawn, CSS fades it out so the two never overlap. */}
-            <h1 className={styles.nameText}>{NAME}</h1>
+            {/* Small role board above the name. The slot keeps its height
+                while the board waits to start, so nothing jumps. */}
+            <div className={`${styles.roleSlot} ${styles.board}`} style={{ fontSize: ROLE_SIZE }}>
+              {roleOn && (
+                <SplitFlapText
+                  {...BOARD}
+                  text={ROLE.toUpperCase()}
+                  padTo={ROLE.length}
+                  fontSize={ROLE_SIZE}
+                  flipsPerChar={4}
+                />
+              )}
+            </div>
 
-            <div className={styles.particles} aria-hidden="true">
-              {/* idleDrift is 0: the particles settle after the intro and the
-                  canvas stops redrawing. It wakes up again only for hover
-                  repel, click bursts and the intro itself. */}
-              <ParticleText
-                text={NAME}
-                fontFamily="Rajdhani"
-                fontWeight={700}
-                fontSize="clamp(3.5rem, 11vw, 8rem)"
-                color="#ffffff"
-                highlightColor="#00d4ff"
-                highlightMode="motion"
-                shape="circle"
-                intro="gather"
-                scatter={180}
-                gatherDuration={1600}
-                stagger={420}
-                particleSize={2}
-                density={tier.lowPower ? 6 : 4}
-                maxParticles={tier.lowPower ? 1100 : 1800}
-                clickBurst
-                burstStrength={1}
-                pointerRepel={tier.coarse ? 0 : 40}
-                repelRadius={120}
-                idleDrift={0}
-                trigger="mount"
-                glow={!tier.lowPower}
+            {/* Big name board. The soft mirror image underneath is a CSS
+                reflection (see .nameBoard), so it always matches the board. */}
+            <div className={`${styles.nameBoard} ${styles.board}`}>
+              <SplitFlapText
+                {...BOARD}
+                text={NAME.toUpperCase()}
+                padTo={NAME.length}
+                fontSize={NAME_SIZE}
               />
             </div>
           </motion.div>
 
           <motion.div
-            className={styles.roleBlock}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.6 }}
-          >
-            <p className={styles.roleCmd}>
-              <span className={styles.prompt}>$ </span>role --current
-            </p>
-            <p className={styles.roleOut}>
-              <RotatingText
-                texts={ROLES}
-                effect="slide"
-                direction="up"
-                staggerFrom="first"
-                staggerDuration={0.03}
-                rotationInterval={2500}
-                mainClassName={styles.roleVal}
-                splitLevelClassName={styles.roleWord}
-              />
-              <span className={styles.cursor} aria-hidden="true">
-                ▌
-              </span>
-            </p>
-          </motion.div>
-
-         
-
-          <motion.div
             className={styles.ctaRow}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 1, duration: 0.6 }}
+            transition={{ delay: 1.2, duration: 0.6 }}
           >
             <button type="button" className="glass-btn glass-btn--accent" onClick={scrollToProjects}>
               View My Work
