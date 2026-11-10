@@ -1,10 +1,8 @@
 import { useEffect, useState } from 'react'
 import { motion, useReducedMotion, useScroll, useTransform } from 'framer-motion'
-import { FaGithub } from 'react-icons/fa'
 import RetroGrid from './RetroGrid'
 import TechTimeline from './TechTimeline'
 import SplitFlapText from './SplitFlapText'
-import { CONTACT } from '../data'
 import { getDeviceTier } from '../utils/deviceTier'
 import { useHeroParallax } from '../hooks/useHeroParallax'
 import styles from './Hero.module.css'
@@ -19,27 +17,27 @@ const NAME_SIZE = 'min(108px, calc((100vw - 48px) / 10.8))'
 const ROLE_SIZE = 'min(34px, calc((100vw - 48px) / 18.4))'
 
 /* ---------- Entrance timing ----------
-   Slow, heavy flips. Rough timeline:
-     name board   0.35s -> about 3.3s
-     role board   1.8s  -> about 3.9s
-     buttons      3.2s
-   For an even slower flip raise NAME_FLIP_SECONDS (0.28 is very dramatic) and
-   push ROLE_DELAY_MS and CTA_DELAY_SECONDS back by the same amount. */
-const NAME_FLIP_SECONDS = 0.22
+   Fewer flips per character than before (every flip step is a React state
+   update plus new DOM for the flaps, so this is the main saving during the
+   intro). Rough timeline:
+     name board   0.35s -> about 3.0s
+     role board   1.6s  -> about 3.4s
+     reflection   fades in at 3.2s, after the name has settled
+     scroll cue   3.4s
+*/
+const NAME_FLIP_SECONDS = 0.2
 const NAME_STAGGER_SECONDS = 0.09
-const NAME_FLIPS_PER_CHAR = 8
+const NAME_FLIPS_PER_CHAR = 5
 
-const ROLE_FLIP_SECONDS = 0.16
+const ROLE_FLIP_SECONDS = 0.15
 const ROLE_STAGGER_SECONDS = 0.05
-const ROLE_FLIPS_PER_CHAR = 6
+const ROLE_FLIPS_PER_CHAR = 4
 
-const ROLE_DELAY_MS = 1800
-const CTA_DELAY_SECONDS = 3.2
+const ROLE_DELAY_MS = 1600
+const REFLECT_DELAY_MS = 3200
+const CUE_DELAY_SECONDS = 3.4
 
 // Look shared by both boards. The cyan glow itself is in Hero.module.css.
-// glare stays at 0 on purpose: it animates a gradient on every flap, which is
-// repainted on the main thread and was a noticeable cost. depth 0.6 still gives
-// the flaps a heavier shaded look while they turn.
 const BOARD = {
   tileStyle: 'board',
   tileColor: '#0f1c2b',
@@ -53,29 +51,35 @@ const BOARD = {
   intro: true,
 }
 
-function DownloadIcon() {
-  return (
-    <svg
-      width="14"
-      height="14"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      aria-hidden="true"
-    >
-      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-      <polyline points="7 10 12 15 17 10" />
-      <line x1="12" y1="15" x2="12" y2="3" />
-    </svg>
-  )
-}
-
 // Read once at module load.
 const tier = getDeviceTier()
 
+/* ---------- Static reflection ----------
+   A mirrored, non-animated copy of the name tiles. It is plain DOM (no
+   animation, no canvas, no live copy of the flip board), so after it has been
+   painted once it costs nothing, unlike -webkit-box-reflect, which re-drew the
+   whole board on every frame. It fades in once the flip has finished. */
+function Reflection({ text, on }) {
+  const chars = text.toUpperCase().split('')
+
+  return (
+    <div className={`${styles.reflection} ${on ? styles.reflectionOn : ''}`} aria-hidden="true">
+      <div className={styles.reflectionRow}>
+        {chars.map((char, i) => (
+          <span key={i} className={styles.rTile}>
+            <span className={styles.rChar}>{char === ' ' ? '' : char}</span>
+          </span>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 export default function Hero() {
   const [roleOn, setRoleOn] = useState(false)
+  const [reflectOn, setReflectOn] = useState(false)
+  // The WebGL grid only runs while the hero is on (or near) the screen.
+  const [gridOn, setGridOn] = useState(true)
 
   // Pointer parallax (grid + glow orbs). Only runs while the mouse is moving.
   const { sectionRef, gridRef, orbARef, orbBRef } = useHeroParallax()
@@ -83,9 +87,7 @@ export default function Hero() {
   /* ---------- Scroll-linked exit ----------
      scrollYProgress is 0 while the hero fills the screen and 1 once it has
      scrolled out of view. Only transform and opacity are animated, and each
-     moving element sits on its own compositor layer (will-change in the CSS),
-     so the GPU just scales the already-painted name board and nothing inside
-     it (the tiles, the glow, the reflection) is repainted while scrolling. */
+     moving element sits on its own compositor layer (will-change in the CSS). */
   const reduceMotion = useReducedMotion()
   const { scrollYProgress } = useScroll({
     target: sectionRef,
@@ -96,9 +98,6 @@ export default function Hero() {
   const nameScale = useTransform(scrollYProgress, [0, 1], [1, 0.55])
   const nameOpacity = useTransform(scrollYProgress, [0.1, 0.65], [1, 0])
 
-  const ctaY = useTransform(scrollYProgress, [0, 1], [0, -40])
-  const ctaOpacity = useTransform(scrollYProgress, [0, 0.3], [1, 0])
-
   const gridOpacity = useTransform(scrollYProgress, [0.5, 0.95], [1, 0])
   const cueOpacity = useTransform(scrollYProgress, [0, 0.1], [1, 0])
 
@@ -106,28 +105,44 @@ export default function Hero() {
   const onScroll = (values) => (reduceMotion ? undefined : values)
 
   useEffect(() => {
-    const id = setTimeout(() => setRoleOn(true), ROLE_DELAY_MS)
-    return () => clearTimeout(id)
+    const roleId = setTimeout(() => setRoleOn(true), ROLE_DELAY_MS)
+    const reflectId = setTimeout(() => setReflectOn(true), REFLECT_DELAY_MS)
+    return () => {
+      clearTimeout(roleId)
+      clearTimeout(reflectId)
+    }
   }, [])
 
-  const scrollToProjects = () => {
-    document.querySelector('#projects')?.scrollIntoView({ behavior: 'smooth' })
-  }
+  // Unmount the WebGL grid when the hero is well out of view (it is already
+  // faded to nothing by then), and bring it back when the visitor returns.
+  useEffect(() => {
+    const section = sectionRef.current
+    if (!section || typeof IntersectionObserver === 'undefined') return undefined
+
+    const observer = new IntersectionObserver(([entry]) => setGridOn(entry.isIntersecting), {
+      rootMargin: '300px 0px',
+    })
+    observer.observe(section)
+    return () => observer.disconnect()
+  }, [sectionRef])
 
   return (
     <section ref={sectionRef} className={`${styles.hero} ${tier.lowPower ? styles.lite : ''}`}>
       {/* Grid floor: gridLayer fades on scroll, gridShift slides with the
-          pointer, RetroGrid is the WebGL shader (1x resolution, 30fps cap). */}
+          pointer, RetroGrid is the WebGL shader (lower resolution and a
+          24fps cap, since the lines are soft anyway). */}
       <motion.div className={styles.gridLayer} style={onScroll({ opacity: gridOpacity })}>
         <div ref={gridRef} className={styles.gridShift}>
-          <RetroGrid
-            angle={65}
-            cellSize={60}
-            opacity={0.4}
-            lineColor="rgba(0, 212, 255, 0.55)"
-            maxPixelRatio={tier.lowPower ? 0.75 : 1}
-            maxFps={30}
-          />
+          {gridOn && (
+            <RetroGrid
+              angle={65}
+              cellSize={60}
+              opacity={0.4}
+              lineColor="rgba(0, 212, 255, 0.55)"
+              maxPixelRatio={0.75}
+              maxFps={tier.lowPower ? 20 : 24}
+            />
+          )}
         </div>
       </motion.div>
 
@@ -184,9 +199,10 @@ export default function Hero() {
                 )}
               </div>
 
-              {/* Big name board. The soft mirror image underneath is a CSS
-                  reflection (see .nameBoard), so it always matches the board. */}
-              <div className={`${styles.nameBoard} ${styles.board}`}>
+              {/* Big name board. The font size on this wrapper is only used for
+                  the em-based spacing and the reflection; the board itself
+                  sets its own size. */}
+              <div className={`${styles.nameBoard} ${styles.board}`} style={{ fontSize: NAME_SIZE }}>
                 <SplitFlapText
                   {...BOARD}
                   text={NAME.toUpperCase()}
@@ -196,43 +212,9 @@ export default function Hero() {
                   stagger={NAME_STAGGER_SECONDS}
                   flipsPerChar={NAME_FLIPS_PER_CHAR}
                 />
+
+                <Reflection text={NAME} on={reflectOn} />
               </div>
-            </motion.div>
-          </motion.div>
-
-          <motion.div
-            className={styles.ctaLayer}
-            style={onScroll({ y: ctaY, opacity: ctaOpacity })}
-          >
-            <motion.div
-              className={styles.ctaRow}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: CTA_DELAY_SECONDS, duration: 0.6 }}
-            >
-              <button
-                type="button"
-                className="glass-btn glass-btn--accent"
-                onClick={scrollToProjects}
-              >
-                View My Work
-                <span className="glass-btn__arrow" aria-hidden="true">
-                  →
-                </span>
-              </button>
-
-              <a href={CONTACT.resume} download className="glass-btn glass-btn--sm">
-                <DownloadIcon /> Resume
-              </a>
-
-              <a
-                href={CONTACT.github}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="glass-btn glass-btn--sm"
-              >
-                <FaGithub size={15} aria-hidden="true" /> GitHub
-              </a>
             </motion.div>
           </motion.div>
         </div>
@@ -244,7 +226,7 @@ export default function Hero() {
         aria-hidden="true"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ delay: CTA_DELAY_SECONDS + 0.4, duration: 0.6 }}
+        transition={{ delay: CUE_DELAY_SECONDS, duration: 0.6 }}
       >
         <motion.div style={onScroll({ opacity: cueOpacity })}>
           <span className={styles.cueMouse}>
